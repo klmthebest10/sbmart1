@@ -566,6 +566,20 @@
         [data-theme="dark"] #storeCloseStatusBadge { text-shadow: none !important; }
 
 [data-theme="dark"] .instant-on { outline-color: var(--dk-border); }
+/* Keterangan promo di kartu produk */
+.product-card-promo { color: #9A3412; }
+[data-theme="dark"] .product-card-promo { color: #F5C08B !important; }
+/* Scan barcode: bingkai bidik & notifikasi */
+.scan-frame { position: absolute; left: 7.5%; right: 7.5%; top: 50%; height: 42%; transform: translateY(-50%); border: 3px solid rgba(255,213,0,0.9); border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.25); overflow: hidden; }
+.scan-line { position: absolute; left: 0; right: 0; height: 2px; background: #FF003C; box-shadow: 0 0 8px #FF003C; animation: scanMove 1.6s ease-in-out infinite alternate; }
+@keyframes scanMove { from { top: 8%; } to { top: 92%; } }
+#barcodeReader video { width: 100% !important; display: block; }
+#barcodeReader img[alt="Info icon"], #barcodeReader #qr-shaded-region { display: none !important; }
+.scan-toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 9999998; padding: 10px 16px; border: 3px solid #000; font-weight: 700; font-size: 14px; box-shadow: 4px 4px 0 0 #000; max-width: 90vw; text-align: center; pointer-events: none; }
+.scan-toast.is-ok { background: #00FF66; color: #000; }
+.scan-toast.is-err { background: #FF003C; color: #fff; }
+[data-theme="dark"] .scan-toast.is-ok { background: #0E5A32; }
+[data-theme="dark"] .scan-toast.is-err { background: #7A1F2B; }
 /* Keranjang: baris produk terpilih (warna kalem, menyesuaikan mode terang/gelap) */
 .cart-item-row { background-color: #F6F1E7; border-left: 6px solid #B89B5E !important; }
 [data-theme="dark"] .cart-item-row { background-color: #1D5559 !important; border-left-color: #C9B27C !important; }
@@ -792,7 +806,8 @@
                 </div>
                 <div class="flex items-center gap-2 mb-4 transition-all" id="posSearchWrap">
                     <div class="flex-1 flex overflow-x-auto gap-3 py-2 no-scrollbar" id="adminPosCategoryFilter"></div>
-                    <input type="text" id="posInlineSearch" autocomplete="off" onkeyup="window.doPosInlineSearch()" placeholder="Cari produk..." class="d-none brutal-input flex-1 bg-white py-2 text-sm">
+                    <input type="text" id="posInlineSearch" autocomplete="off" onkeyup="window.doPosInlineSearch()" onkeydown="window.onPosSearchKeydown(event)" placeholder="Cari produk / scan barcode..." class="d-none brutal-input flex-1 bg-white py-2 text-sm">
+                    <button onclick="window.openBarcodeScanner('pos')" id="btnPosScan" class="d-none brutal-btn bg-white w-10 h-10 flex-shrink-0 flex items-center justify-center text-lg shadow-sm border-2 border-black" title="Scan Barcode (Kamera)" aria-label="Scan Barcode">📷</button>
                     <button onclick="window.togglePosSearch()" class="brutal-btn bg-white w-10 h-10 flex-shrink-0 flex items-center justify-center text-lg shadow-sm border-2 border-black">🔍</button>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4 product-grid-mobile-2" id="adminPosProductGrid"></div>
@@ -1257,6 +1272,15 @@
                                 </label>
                             </div>
 
+                            <!-- Scan Barcode -->
+                            <div class="set-card">
+                                <h4 class="set-title">Scan Barcode</h4>
+                                <label class="flex items-center gap-2 font-bold cursor-pointer bg-green-50 p-3 border-2 border-black w-full">
+                                    <input type="checkbox" id="setBarcodeEnabled" class="w-5 h-5 accent-black"> Aktifkan Scan Barcode
+                                </label>
+                                <p class="set-hint">Jika ON: muncul isian Barcode di form produk, dan di POS produk bisa dicari/ditambahkan ke keranjang dengan scanner barcode (USB/Bluetooth) atau kamera HP (tombol 📷).</p>
+                            </div>
+
                             <!-- Promo -->
                             <div class="set-card">
                                 <h4 class="set-title">Promo</h4>
@@ -1383,7 +1407,11 @@
             <div class="p-4 overflow-y-auto flex-1 bg-white">
                 <div class="mb-4 bg-gray-100 p-2 border-2 border-black">
                     <label class="block font-bold mb-1 text-sm uppercase">Waktu Transaksi (Opsional)</label>
-                    <input type="datetime-local" id="customOrderDate" class="brutal-input py-1 text-sm bg-white">
+                    <input type="hidden" id="customOrderDate" value="">
+                    <div class="flex gap-2">
+                        <button type="button" onclick="window.pickOrderDateTime()" id="btnOrderDate" class="brutal-btn bg-white flex-1 py-2 px-3 text-sm normal-case text-left flex justify-between items-center"><span id="orderDateLabel">Sekarang (otomatis)</span><span>🕒</span></button>
+                        <button type="button" onclick="window.clearOrderDateTime()" id="btnOrderDateClear" class="brutal-btn bg-danger text-white px-2 d-none inline-flex items-center justify-center" title="Kembali ke waktu sekarang"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
+                    </div>
                 </div>
 
                 <div id="cartItemsList" class="mb-2 border-b-2 border-black pb-2"></div>
@@ -1424,16 +1452,16 @@
                     <label class="block font-bold mb-2 uppercase">Metode Pembayaran</label>
                     <div class="flex gap-1.5 md:gap-2 flex-nowrap w-full" id="payMethodGridContainer">
                         <label class="brutal-btn bg-white text-center py-2 px-1 flex-1 min-w-0 flex justify-center items-center cursor-pointer has-[:checked]:bg-main text-[11px] sm:text-xs md:text-sm whitespace-nowrap">
-                            <input type="radio" name="payMethod" value="Cash" class="hidden" checked onchange="window.togglePaymentDetail()"> Cash
+                            <input type="radio" autocomplete="off" name="payMethod" value="Cash" class="hidden" checked onchange="window.togglePaymentDetail()"> Cash
                         </label>
                         <label class="brutal-btn bg-white text-center py-2 px-1 flex-1 min-w-0 flex justify-center items-center cursor-pointer has-[:checked]:bg-main text-[11px] sm:text-xs md:text-sm whitespace-nowrap">
-                            <input type="radio" name="payMethod" value="Transfer" class="hidden" onchange="window.togglePaymentDetail()"> Transfer
+                            <input type="radio" autocomplete="off" name="payMethod" value="Transfer" class="hidden" onchange="window.togglePaymentDetail()"> Transfer
                         </label>
                         <label id="wrapperPayCard" class="brutal-btn bg-white text-center py-2 px-1 flex-1 min-w-0 flex justify-center items-center cursor-pointer has-[:checked]:bg-main text-[11px] sm:text-xs md:text-sm whitespace-nowrap d-none">
-                            <input type="radio" name="payMethod" value="Kartu" class="hidden" onchange="window.togglePaymentDetail()"> Kartu
+                            <input type="radio" autocomplete="off" name="payMethod" value="Kartu" class="hidden" onchange="window.togglePaymentDetail()"> Kartu
                         </label>
                         <label id="wrapperPayHutang" class="brutal-btn bg-white text-center py-2 px-1 flex-1 min-w-0 flex justify-center items-center cursor-pointer has-[:checked]:bg-danger has-[:checked]:text-white text-[11px] sm:text-xs md:text-sm whitespace-nowrap d-none">
-                            <input type="radio" name="payMethod" value="Hutang" class="hidden" onchange="window.togglePaymentDetail()"> Hutang
+                            <input type="radio" autocomplete="off" name="payMethod" value="Hutang" class="hidden" onchange="window.togglePaymentDetail()"> Hutang
                         </label>
                     </div>
                 </div>
@@ -1454,7 +1482,8 @@
                 </div>
                 <div id="payDetailHutang" class="p-4 bg-danger text-white border-2 border-black mb-4 d-none">
                     <label class="block font-bold mb-2">Pilih Pelanggan Terdaftar:</label>
-                    <select id="selectHutangCustomer" class="brutal-input text-black w-full bg-white" onchange="window.onHutangCustomerSelect()"></select>
+                    <input type="hidden" id="selectHutangCustomer" value="">
+                    <button type="button" onclick="window.pickHutangCustomer()" class="brutal-btn bg-white text-black w-full py-2 px-3 text-sm normal-case text-left flex justify-between items-center"><span id="hutangCustLabel" class="truncate">-- Pilih Nama Pelanggan --</span><span>▼</span></button>
                     <label class="block font-bold mt-3 mb-2">Atau Tulis Nama Pelanggan Baru:</label>
                     <input type="text" id="inputHutangNewCustomer" maxlength="80" autocomplete="off" class="brutal-input text-black w-full bg-white" placeholder="Nama pelanggan baru (otomatis disimpan)" oninput="window.onHutangNewNameInput()">
                     <p class="text-[11px] italic mt-2 leading-tight">Nama baru otomatis ditambahkan ke daftar pelanggan saat transaksi diproses.</p>
@@ -1466,11 +1495,11 @@
                 </div>
             </div>
             
-            <div class="p-4 border-t-4 border-black bg-gray-100 flex justify-center gap-3 shrink-0">
-                <button id="btnCheckoutProcess" onclick="window.processCheckout(false)" class="brutal-btn bg-success text-black w-36 py-2.5 text-xs md:text-sm uppercase flex flex-row items-center justify-center gap-2">
+            <div class="p-4 border-t-4 border-black bg-gray-100 grid grid-cols-2 gap-3 shrink-0">
+                <button id="btnCheckoutProcess" onclick="window.processCheckout(false)" class="brutal-btn bg-success text-black w-full py-2.5 text-xs md:text-sm uppercase flex flex-row items-center justify-center gap-2">
                     <span class="text-base leading-none">✅</span> <span class="font-bold">Proses</span>
                 </button>
-                <button id="btnCheckoutPrint" onclick="window.processCheckout(true)" class="brutal-btn bg-accent text-black w-36 py-2.5 text-xs md:text-sm uppercase flex flex-row items-center justify-center gap-2">
+                <button id="btnCheckoutPrint" onclick="window.processCheckout(true)" class="brutal-btn bg-accent text-black w-full py-2.5 text-xs md:text-sm uppercase flex flex-row items-center justify-center gap-2">
                     <span class="text-base leading-none">🖨️</span> <span class="font-bold">Nota</span>
                 </button>
             </div>
@@ -1495,6 +1524,13 @@
                 <div class="mb-3">
                     <label class="block font-bold mb-1">Harga (Won)</label>
                     <input type="number" id="prodPrice" class="brutal-input bg-white" required>
+                </div>
+                <div id="prodBarcodeWrapper" class="mb-3 d-none">
+                    <label class="block font-bold mb-1">Barcode <span class="font-normal text-[10px] text-gray-500">(opsional — ketik, tembak dengan scanner, atau scan kamera)</span></label>
+                    <div class="flex gap-2">
+                        <input type="text" id="prodBarcode" maxlength="64" autocomplete="off" inputmode="numeric" class="brutal-input bg-white flex-1 min-w-0" placeholder="Contoh: 8991234567890" onkeydown="if(event.key==='Enter'){event.preventDefault();}">
+                        <button type="button" onclick="window.openBarcodeScanner('field')" class="brutal-btn bg-white px-3 shrink-0 text-lg" title="Scan dengan kamera">📷</button>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label class="block font-bold mb-1">Gambar Produk</label>
@@ -1761,6 +1797,112 @@
         </div>
     </div>
 
+    <!-- Modal Edit Pelanggan (await window.customCustomerForm) -->
+    <div id="modalCustomerEdit" class="fixed inset-0 modal-backdrop d-none z-[99999] flex items-center justify-center p-4">
+        <div class="brutal-box bg-white w-full max-w-sm relative flex flex-col max-h-[95vh] overflow-hidden">
+            <div class="p-3 border-b-4 border-black font-bold uppercase bg-accent shrink-0">Edit Pelanggan</div>
+            <div class="p-4 overflow-y-auto bg-white space-y-3">
+                <div>
+                    <label class="block font-bold mb-1 text-sm">Nama Pelanggan</label>
+                    <input type="text" id="custEditName" maxlength="80" autocomplete="off" class="brutal-input bg-white">
+                </div>
+                <div>
+                    <label class="block font-bold mb-1 text-sm">Kontak (No. Telp / WA)</label>
+                    <input type="text" id="custEditWa" maxlength="30" inputmode="tel" autocomplete="off" class="brutal-input bg-white">
+                </div>
+                <div>
+                    <label class="block font-bold mb-1 text-sm">Alamat</label>
+                    <textarea id="custEditAddress" maxlength="500" rows="3" class="brutal-input bg-white text-sm"></textarea>
+                </div>
+                <button type="button" id="btnCustEditDelete" class="brutal-btn bg-danger text-white w-full py-2 text-sm">🗑 Hapus Pelanggan</button>
+            </div>
+            <div class="p-0 flex border-t-4 border-black shrink-0">
+                <button id="btnCustEditCancel" class="brutal-btn flex-1 bg-white hover:bg-gray-200 py-3 font-bold border-none border-r-4 border-black shadow-none">Batal</button>
+                <button id="btnCustEditSave" class="brutal-btn flex-1 bg-main hover:bg-yellow-400 py-3 font-bold border-none shadow-none">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Waktu Transaksi (await window.customDateTimePicker) -->
+    <div id="modalDateTime" class="fixed inset-0 modal-backdrop d-none z-[99999] flex items-center justify-center p-4">
+        <div class="brutal-box bg-white w-full max-w-xs relative flex flex-col overflow-hidden">
+            <div class="p-3 border-b-4 border-black font-bold uppercase bg-main">Waktu Transaksi</div>
+            <div class="p-4 bg-white space-y-4">
+                <div>
+                    <div class="text-xs font-bold uppercase mb-1">Tanggal</div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="window.dtShift('day',-1)" class="brutal-btn bg-white w-10 h-10 inline-flex items-center justify-center">◀</button>
+                        <div id="dtDateLabel" class="flex-1 text-center font-bold text-sm border-2 border-black py-2 bg-gray-50"></div>
+                        <button type="button" onclick="window.dtShift('day',1)" class="brutal-btn bg-white w-10 h-10 inline-flex items-center justify-center">▶</button>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-xs font-bold uppercase mb-1">Jam</div>
+                    <div class="flex items-center justify-center gap-2">
+                        <div class="flex flex-col items-center gap-1">
+                            <button type="button" onclick="window.dtShift('hour',1)" class="brutal-btn bg-white w-12 h-8 text-xs">▲</button>
+                            <div id="dtHour" class="w-12 text-center font-bold text-2xl border-2 border-black py-1 bg-gray-50">00</div>
+                            <button type="button" onclick="window.dtShift('hour',-1)" class="brutal-btn bg-white w-12 h-8 text-xs">▼</button>
+                        </div>
+                        <div class="font-bold text-2xl">:</div>
+                        <div class="flex flex-col items-center gap-1">
+                            <button type="button" onclick="window.dtShift('minute',5)" class="brutal-btn bg-white w-12 h-8 text-xs">▲</button>
+                            <div id="dtMinute" class="w-12 text-center font-bold text-2xl border-2 border-black py-1 bg-gray-50">00</div>
+                            <button type="button" onclick="window.dtShift('minute',-5)" class="brutal-btn bg-white w-12 h-8 text-xs">▼</button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="window.dtSetNow()" class="brutal-btn bg-white w-full py-2 text-xs">⟲ Pakai Waktu Sekarang</button>
+            </div>
+            <div class="p-0 flex border-t-4 border-black">
+                <button id="btnDtCancel" class="brutal-btn flex-1 bg-white hover:bg-gray-200 py-3 font-bold border-none border-r-4 border-black shadow-none">Batal</button>
+                <button id="btnDtOk" class="brutal-btn flex-1 bg-main hover:bg-yellow-400 py-3 font-bold border-none shadow-none">Pakai</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pilih Pelanggan (await window.customPickCustomer) -->
+    <div id="modalPickCustomer" class="fixed inset-0 modal-backdrop d-none z-[99999] flex items-center justify-center p-4">
+        <div class="brutal-box bg-white w-full max-w-sm relative flex flex-col max-h-[85vh] overflow-hidden">
+            <div class="p-3 border-b-4 border-black font-bold uppercase bg-danger text-white shrink-0">Pilih Pelanggan</div>
+            <div class="p-3 border-b-2 border-black bg-white shrink-0">
+                <input type="text" id="pickCustSearch" autocomplete="off" oninput="window.renderPickCustomerList()" placeholder="Cari nama pelanggan..." class="brutal-input bg-white text-sm">
+            </div>
+            <div id="pickCustList" class="p-3 overflow-y-auto flex-1 bg-gray-50 space-y-1.5"></div>
+            <div class="p-0 flex border-t-4 border-black shrink-0">
+                <button id="btnPickCustCancel" class="brutal-btn flex-1 bg-white hover:bg-gray-200 py-3 font-bold border-none shadow-none">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Scan Barcode (kamera) -->
+    <div id="modalBarcodeScan" class="fixed inset-0 modal-backdrop d-none z-[99990] flex items-center justify-center p-3">
+        <div class="brutal-box bg-white w-full max-w-md relative flex flex-col max-h-[95vh] overflow-hidden">
+            <div class="p-3 border-b-4 border-black font-bold uppercase bg-main flex justify-between items-center shrink-0">
+                <span id="scanTitle">📷 Scan Barcode</span>
+                <button onclick="window.closeBarcodeScanner()" class="bg-white text-black font-bold px-2 py-1 border-2 border-black text-sm inline-flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
+            </div>
+            <div class="bg-black relative shrink-0">
+                <div id="barcodeReader" class="w-full" style="min-height:220px;"></div>
+                <div class="scan-frame pointer-events-none"><div class="scan-line"></div></div>
+            </div>
+            <div class="p-3 bg-white shrink-0">
+                <div id="scanStatus" class="text-xs font-bold text-center">Arahkan kamera ke barcode produk…</div>
+                <div class="flex gap-2 mt-2">
+                    <input type="text" id="scanManualInput" inputmode="numeric" autocomplete="off" class="brutal-input bg-white text-sm flex-1 min-w-0" placeholder="Atau ketik kode barcode lalu Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();window.submitManualBarcode();}">
+                    <button type="button" onclick="window.submitManualBarcode()" class="brutal-btn bg-accent px-3 text-xs shrink-0">OK</button>
+                </div>
+            </div>
+            <div id="scanLogWrap" class="px-3 pb-3 overflow-y-auto bg-white d-none" style="max-height:30vh;">
+                <div class="text-[11px] font-bold uppercase border-t-2 border-black pt-2 mb-1">Ditambahkan ke keranjang</div>
+                <div id="scanLog" class="space-y-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifikasi singkat (hasil scan) -->
+    <div id="scanToast" class="scan-toast d-none"></div>
+
     <!-- Custom Dialog: Non-native dialogs -->
     <div id="modalCustomDialog" class="fixed inset-0 modal-backdrop d-none z-[999999] flex items-center justify-center p-4">
         <div class="brutal-box bg-white w-full max-w-sm relative flex flex-col overflow-hidden">
@@ -1914,6 +2056,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 expWarnMonths: 1,
                 promoEnabled: false,
                 publicHistoryEnabled: false,
+                barcodeEnabled: false,
                 priceTagColor: "#FFD500",
                 hideStoreStatusBadge: false,
                 scheduleOpenEnabled: false,
@@ -2245,6 +2388,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     expWarnMonths: Math.max(1, parseInt(s.exp_warn_months) || 1),
                     promoEnabled: Boolean(s.promo_enabled),
                     publicHistoryEnabled: Boolean(s.public_history_enabled),
+                    barcodeEnabled: Boolean(s.barcode_enabled),
                     priceTagColor: /^#[0-9a-fA-F]{6}$/.test(s.price_tag_color || '') ? s.price_tag_color : '#FFD500',
                     hideStoreStatusBadge: Boolean(s.hide_store_status_badge),
                     scheduleOpenEnabled: Boolean(s.schedule_open_enabled),
@@ -2292,7 +2436,8 @@ measurementId: "G-ZVZ3QHEPKC"
                         availFlag: prod.available === true || prod.available === 'true' || prod.available === 1 || prod.available === '1',
                         stock: Math.max(0, parseInt(prod.stock) || 0),
                         minStock: Math.max(0, parseInt(prod.min_stock) || 0),
-                        expDates: Array.isArray(prod.exp_dates) ? prod.exp_dates.filter(Boolean) : []
+                        expDates: Array.isArray(prod.exp_dates) ? prod.exp_dates.filter(Boolean) : [],
+                        barcode: prod.barcode || ''
                     };
                 });
             }
@@ -2460,6 +2605,9 @@ measurementId: "G-ZVZ3QHEPKC"
 
         loadLocalDataCache();
         window.recomputeAvailability();
+        // Setelah refresh, browser bisa memulihkan pilihan radio terakhir (mis. Transfer). Paksa kembali ke Cash.
+        const cashDefault = document.querySelector('input[name="payMethod"][value="Cash"]');
+        if (cashDefault) cashDefault.checked = true;
         await autoSetupDatabase();
         const savedUser = localStorage.getItem('wi_user');
         if (savedUser) { 
@@ -2740,7 +2888,10 @@ measurementId: "G-ZVZ3QHEPKC"
         const infoIconHtml = hasInfo
             ? `<button type="button" onclick="event.stopPropagation(); window.showProductInfo('${p.id}')" class="product-info-badge" style="pointer-events:auto;" title="Info Produk" aria-label="Info Produk">i</button>`
             : '';
-        const nameRowHtml = `<div class="flex items-start justify-between gap-1 mb-2 flex-1"><h3 class="product-card-name font-bold text-xs md:text-sm leading-tight">${escapeHTML(p.name)}</h3>${infoIconHtml}</div>`;
+        const promoTxt = window.promoTextForProduct ? window.promoTextForProduct(p) : '';
+        // Promo aktif yang terkait produk: tampil kecil & miring di bawah nama produk, diawali ikon kado.
+        const promoLineHtml = promoTxt ? `<div class="product-card-promo text-[10px] md:text-[11px] italic leading-snug mt-1">🎁 ${escapeHTML(promoTxt)}</div>` : '';
+        const nameRowHtml = `<div class="flex items-start justify-between gap-1 mb-2 flex-1"><div class="min-w-0"><h3 class="product-card-name font-bold text-xs md:text-sm leading-tight">${escapeHTML(p.name)}</h3>${promoLineHtml}</div>${infoIconHtml}</div>`;
         // Keterangan produk ini hanya TERLIHAT (via CSS) saat tampilan katalog 1 kolom di HP (akses umum/pelanggan);
         // di layout lain elemen ini tetap ada di HTML tapi disembunyikan, jadi tidak perlu render ulang kartu saat
         // admin berganti pilihan jumlah kolom.
@@ -2903,7 +3054,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const q = (inp && !inp.classList.contains('d-none')) ? inp.value.toLowerCase().trim() : '';
         let list;
         if (q) {
-            list = sortByBestSeller(STATE.data.products.filter(p => p.available && p.name.toLowerCase().includes(q)));
+            list = sortByBestSeller(STATE.data.products.filter(p => p.available && (p.name.toLowerCase().includes(q) || (window.isBarcodeOn() && String(p.barcode || '').toLowerCase().includes(q)))));
             grid.innerHTML = list.map(p => buildProductCard(p, 'pos')).join('') || '<p class="col-span-full font-bold text-center mt-4">Produk tidak ditemukan.</p>';
         } else {
             list = sortByBestSeller(STATE.data.products.filter(p => p.cat === STATE.activeCategoryPOS));
@@ -2923,6 +3074,7 @@ measurementId: "G-ZVZ3QHEPKC"
 
     window.renderAdminPOS = () => { 
         window.applyProductGridMobile(); 
+        if (window.syncBarcodeUI) window.syncBarcodeUI();
         buildCategoryFilter('adminPosCategoryFilter', 'activeCategoryPOS', 'selectCatPOS'); 
         renderPosGrid();
         window.updateCartUI(); 
@@ -2987,6 +3139,7 @@ measurementId: "G-ZVZ3QHEPKC"
     window.openCart = () => {
         document.getElementById('cartPanelTitle').textContent = STATE.user ? 'Keranjang Kasir' : 'Keranjang Anda';
         document.getElementById('customOrderDate').value = '';
+        window.syncOrderDateLabel();
 
         const cashRadio = document.querySelector('input[name="payMethod"][value="Cash"]');
         if (cashRadio) cashRadio.checked = true;
@@ -3133,14 +3286,7 @@ measurementId: "G-ZVZ3QHEPKC"
         }
 
         if (isCustOn) {
-            const sorted = [...STATE.data.customers].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            const opts = '<option value="">-- Pilih Nama Pelanggan --</option>' + sorted.map(c => `<option value="${c.id}">${escapeHTML(c.name)}</option>`).join('');
-            const el = document.getElementById('selectHutangCustomer');
-            if (el) {
-                const val = el.value;
-                el.innerHTML = opts;
-                el.value = val;
-            }
+            window.syncHutangCustomerLabel();
         }
 
         window.renderCartExtras();
@@ -3152,10 +3298,90 @@ measurementId: "G-ZVZ3QHEPKC"
     window.onHutangCustomerSelect = () => {
         const sel = document.getElementById('selectHutangCustomer');
         if (sel && sel.value) document.getElementById('inputHutangNewCustomer').value = '';
+        window.syncHutangCustomerLabel();
     };
     window.onHutangNewNameInput = () => {
         const inp = document.getElementById('inputHutangNewCustomer');
-        if (inp && inp.value.trim()) document.getElementById('selectHutangCustomer').value = '';
+        if (inp && inp.value.trim()) { document.getElementById('selectHutangCustomer').value = ''; window.syncHutangCustomerLabel(); }
+    };
+    window.syncHutangCustomerLabel = () => {
+        const id = document.getElementById('selectHutangCustomer').value;
+        const c = id ? STATE.data.customers.find(x => x.id === id) : null;
+        if (id && !c) document.getElementById('selectHutangCustomer').value = '';
+        const lbl = document.getElementById('hutangCustLabel');
+        if (lbl) lbl.textContent = c ? c.name : '-- Pilih Nama Pelanggan --';
+    };
+
+    // Popup daftar pelanggan (custom, berbasis Promise): const id = await window.customPickCustomer()
+    window.renderPickCustomerList = () => {
+        const q = (document.getElementById('pickCustSearch').value || '').toLowerCase().trim();
+        const cur = document.getElementById('selectHutangCustomer').value;
+        const list = [...STATE.data.customers].filter(c => (c.name || '').toLowerCase().includes(q)).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        document.getElementById('pickCustList').innerHTML = (cur ? `<button type="button" data-id="" class="pick-cust-item brutal-btn bg-white w-full text-left px-3 py-2 text-xs normal-case italic">✕ Kosongkan pilihan</button>` : '')
+            + (list.length ? list.map(c => `<button type="button" data-id="${c.id}" class="pick-cust-item brutal-btn ${c.id === cur ? 'bg-main' : 'bg-white'} w-full text-left px-3 py-2 text-sm normal-case flex justify-between items-center gap-2"><span class="font-bold truncate">${escapeHTML(c.name)}</span></button>`).join('')
+            : '<p class="text-center text-sm font-bold text-gray-500 py-4">Pelanggan tidak ditemukan.</p>');
+    };
+    window.customPickCustomer = () => new Promise(resolve => {
+        document.getElementById('pickCustSearch').value = '';
+        window.renderPickCustomerList();
+        window.openModal('modalPickCustomer');
+        const box = document.getElementById('pickCustList');
+        box.onclick = (e) => {
+            const btn = e.target.closest('.pick-cust-item');
+            if (!btn) return;
+            window.closeModal('modalPickCustomer');
+            resolve(btn.dataset.id || '');
+        };
+        document.getElementById('btnPickCustCancel').onclick = () => { window.closeModal('modalPickCustomer'); resolve(null); };
+    });
+    window.pickHutangCustomer = async () => {
+        if (!STATE.data.customers.length) return await window.customAlert('Belum ada pelanggan terdaftar. Tulis nama pelanggan baru di kolom bawahnya.', 'Info');
+        const id = await window.customPickCustomer();
+        if (id === null) return;
+        document.getElementById('selectHutangCustomer').value = id;
+        window.onHutangCustomerSelect();
+    };
+
+    // ===== Waktu transaksi lewat popup aplikasi (await window.customDateTimePicker) =====
+    const dtPad = n => String(n).padStart(2, '0');
+    const dtToLocalValue = d => `${d.getFullYear()}-${dtPad(d.getMonth() + 1)}-${dtPad(d.getDate())}T${dtPad(d.getHours())}:${dtPad(d.getMinutes())}`;
+    window.dtRender = () => {
+        const d = STATE.dtTemp;
+        document.getElementById('dtDateLabel').textContent = `${['Min','Sen','Sel','Rab','Kam','Jum','Sab'][d.getDay()]}, ${dtPad(d.getDate())} ${['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][d.getMonth()]} ${d.getFullYear()}`;
+        document.getElementById('dtHour').textContent = dtPad(d.getHours());
+        document.getElementById('dtMinute').textContent = dtPad(d.getMinutes());
+    };
+    window.dtShift = (unit, n) => {
+        const d = new Date(STATE.dtTemp);
+        if (unit === 'day') d.setDate(d.getDate() + n);
+        if (unit === 'hour') d.setHours((d.getHours() + n + 24) % 24);
+        if (unit === 'minute') { const m = Math.floor(d.getMinutes() / 5) * 5; d.setMinutes((m + n + 60) % 60); }
+        STATE.dtTemp = d;
+        window.dtRender();
+    };
+    window.dtSetNow = () => { STATE.dtTemp = new Date(); window.dtRender(); };
+    window.customDateTimePicker = (initial) => new Promise(resolve => {
+        STATE.dtTemp = initial ? new Date(initial) : new Date();
+        window.dtRender();
+        window.openModal('modalDateTime');
+        document.getElementById('btnDtCancel').onclick = () => { window.closeModal('modalDateTime'); resolve(null); };
+        document.getElementById('btnDtOk').onclick = () => { window.closeModal('modalDateTime'); resolve(new Date(STATE.dtTemp)); };
+    });
+    window.syncOrderDateLabel = () => {
+        const v = document.getElementById('customOrderDate').value;
+        document.getElementById('orderDateLabel').textContent = v ? safeDate(new Date(v).toISOString()) : 'Sekarang (otomatis)';
+        document.getElementById('btnOrderDateClear').classList.toggle('d-none', !v);
+    };
+    window.pickOrderDateTime = async () => {
+        const cur = document.getElementById('customOrderDate').value;
+        const d = await window.customDateTimePicker(cur || null);
+        if (!d) return;
+        document.getElementById('customOrderDate').value = dtToLocalValue(d);
+        window.syncOrderDateLabel();
+    };
+    window.clearOrderDateTime = () => {
+        document.getElementById('customOrderDate').value = '';
+        window.syncOrderDateLabel();
     };
 
     window.changeQty = (index, delta) => {
@@ -3418,6 +3644,9 @@ measurementId: "G-ZVZ3QHEPKC"
             if(document.getElementById('cartNote')) document.getElementById('cartNote').value = '';
             document.getElementById('selectHutangCustomer').value = '';
             document.getElementById('inputHutangNewCustomer').value = '';
+            document.getElementById('customOrderDate').value = '';
+            window.syncOrderDateLabel();
+            window.syncHutangCustomerLabel();
 
             if (!STATE.user) {
                 // Pengunjung publik tidak memuat seluruh riwayat; simpan transaksinya agar nota bisa langsung dibuka.
@@ -3461,6 +3690,12 @@ measurementId: "G-ZVZ3QHEPKC"
         window.openModal('modalReceiptPopup');
     };
 
+    // Logo toko di atas nama toko pada nota (logo bawaan "WI" jika belum diatur).
+    const receiptLogoHtml = () => {
+        const src = STATE.data.settings.logoUrl || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><rect width='60' height='60' fill='%23FFD500'/><text x='50%' y='60%' font-size='22' font-weight='bold' text-anchor='middle' fill='black'>WI</text></svg>";
+        return `<img src="${src}" alt="" style="width:56px; height:56px; object-fit:cover; display:block; margin:0 auto 8px; border:1px solid #000;">`;
+    };
+
     window.generateReceiptHtml = (order, custName, targetId, receiptType) => {
     let itemsHtml = (order.items || []).map(i => `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${i.qty}x ${escapeHTML(i.name)}</span><span>${formatWon(i.price * i.qty)}</span></div>`).join('')
         + (order.bonusItems || []).map(b => `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${b.qty}x ${escapeHTML(b.name)} (Bonus)</span><span>${formatWon(0)}</span></div>`).join('');
@@ -3468,7 +3703,7 @@ measurementId: "G-ZVZ3QHEPKC"
     if(receiptType === 'DEBT_RECAP') {
         const cust = STATE.data.customers.find(c => c.id === order.custId); 
         const hutangOrders = STATE.data.orders.filter(o => o.custId === order.custId && o.type === 'Hutang' && o.paymentStatus === 'Unpaid');
-        let html = `<div class="receipt-88mm" id="printReceiptCore"><div style="text-align:center; border-bottom:2px dashed black; padding-bottom:12px; margin-bottom:12px;"><h2 style="margin:0; font-size:18px; font-weight:bold; text-transform:uppercase;">${escapeHTML(STATE.data.settings.storeName||'WARUNG INDONESIA')}</h2><p style="margin:4px 0 0; font-size:12px; font-weight:bold;">NOTA HUTANG - ${escapeHTML(cust?.name || '-')}</p></div>`;
+        let html = `<div class="receipt-88mm" id="printReceiptCore"><div style="text-align:center; border-bottom:2px dashed black; padding-bottom:12px; margin-bottom:12px;">${receiptLogoHtml()}<h2 style="margin:0; font-size:18px; font-weight:bold; text-transform:uppercase;">${escapeHTML(STATE.data.settings.storeName||'WARUNG INDONESIA')}</h2><p style="margin:4px 0 0; font-size:12px; font-weight:bold;">NOTA HUTANG - ${escapeHTML(cust?.name || '-')}</p></div>`;
         if(hutangOrders.length === 0) html += `<div style="text-align:center; font-size:12px; font-weight:bold;">Tidak ada hutang belum lunas.</div>`;
         else { 
             html += hutangOrders.map(o => `<div style="border-bottom:1px dashed #aaa; padding-bottom:8px; margin-bottom:8px; font-size:12px;"><div style="font-weight:bold;">Tgl: ${safeDate(o.date)} (Inv: ${o.id})</div>${o.items.map(i => `<div style="display:flex;justify-content:space-between;"><span>- ${i.qty}x ${escapeHTML(i.name)}</span><span>${formatWon(i.price*i.qty)}</span></div>`).join('')}${(o.extras || []).map(x => `<div style="display:flex;justify-content:space-between;"><span>+ ${escapeHTML(x.name)}</span><span>${formatWon(x.amount)}</span></div>`).join('')}${o.notes ? `<div style="font-style:italic; margin-top:2px;">Catatan: ${escapeHTML(o.notes)}</div>` : ''}<div style="text-align:right; font-weight:bold; margin-top:4px;">Sub: ${formatWon(o.total)}</div>${o.debtPaid > 0 ? `<div style="text-align:right;">Sudah dicicil: ${formatWon(o.debtPaid)}</div><div style="text-align:right; font-weight:bold;">Sisa: ${formatWon(Math.max(0, o.total - o.debtPaid))}</div>` : ''}</div>`).join(''); 
@@ -3506,7 +3741,7 @@ measurementId: "G-ZVZ3QHEPKC"
         : '';
 
     const html = `<div class="receipt-88mm" id="printReceiptCore">
-            <div style="text-align:center; border-bottom:2px dashed black; padding-bottom:12px; margin-bottom:12px;"><h2 style="margin:0; font-size:18px; font-weight:bold; text-transform:uppercase;">${escapeHTML(STATE.data.settings.storeName||'WARUNG INDONESIA')}</h2><p style="margin:4px 0 0; font-size:12px; color:#555;">${safeDate(order.date)}</p></div>
+            <div style="text-align:center; border-bottom:2px dashed black; padding-bottom:12px; margin-bottom:12px;">${receiptLogoHtml()}<h2 style="margin:0; font-size:18px; font-weight:bold; text-transform:uppercase;">${escapeHTML(STATE.data.settings.storeName||'WARUNG INDONESIA')}</h2><p style="margin:4px 0 0; font-size:12px; color:#555;">${safeDate(order.date)}</p></div>
             <div style="font-size:12px; margin-bottom:12px; display:flex; flex-direction:column; gap:4px;"><div style="display:flex; justify-content:space-between;"><span>No:</span> <span style="font-weight:bold">${order.id}</span></div>${addressRow}<div style="display:flex; justify-content:space-between;"><span>Metode:</span> <span style="font-weight:bold">${order.type}</span></div>${custRow}${statusRow}${notesRow}</div>
             <div style="font-size:12px; border-bottom:2px dashed black; padding-bottom:12px; margin-bottom:12px;">${itemsHtml}</div>
             <div style="font-size:13px; font-weight:bold;"><div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Subtotal:</span> <span>${formatWon(order.subtotal)}</span></div>${order.ongkir > 0 ? `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Ongkir:</span> <span>${formatWon(order.ongkir)}</span></div>` : ''}${promoRows}${extraRows}<div style="display:flex; justify-content:space-between; font-size:16px; margin-top:8px; border-top:2px solid black; padding-top:8px;"><span>TOTAL:</span> <span>${formatWon(order.total)}</span></div>${cashRows}</div>
@@ -3551,6 +3786,7 @@ measurementId: "G-ZVZ3QHEPKC"
             await db.collection('shared_receipts').doc(token).set({
                 order_id: o.id,
                 store_name: storeName,
+                store_logo: STATE.data.settings.logoUrl || '',
                 date: o.date,
                 cust_name: custName,
                 order_type: o.orderType || '',
@@ -3628,6 +3864,7 @@ measurementId: "G-ZVZ3QHEPKC"
             if (!snap.exists) return fail('Nota tidak ditemukan atau link sudah tidak berlaku.');
             const r = snap.data();
             STATE.data.settings.storeName = r.store_name || STATE.data.settings.storeName;
+            STATE.data.settings.logoUrl = r.store_logo || '';
             const order = {
                 id: r.order_id, date: r.date, orderType: r.order_type, type: r.type, paymentStatus: r.payment_status,
                 items: r.items || [], subtotal: Number(r.subtotal || 0), ongkir: Number(r.ongkir || 0), total: Number(r.total || 0),
@@ -3709,7 +3946,7 @@ measurementId: "G-ZVZ3QHEPKC"
         if (csvBar) csvBar.classList.toggle('d-none', isCashier);
 
         const query = (document.getElementById('adminProductSearch')?.value || '').toLowerCase();
-        const sortedProducts = [...STATE.data.products].filter(p => p.name.toLowerCase().includes(query)).sort((a, b) => {
+        const sortedProducts = [...STATE.data.products].filter(p => p.name.toLowerCase().includes(query) || String(p.barcode || '').toLowerCase().includes(query)).sort((a, b) => {
             const catAIndex = STATE.data.categories.indexOf(a.cat);
             const catBIndex = STATE.data.categories.indexOf(b.cat);
             if (catAIndex !== catBIndex) return catAIndex - catBIndex;
@@ -3799,6 +4036,8 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('prodMinStock').required = isStockMode;
     };
     window.prepareProductFormExtras = (p) => {
+        window.syncBarcodeUI();
+        document.getElementById('prodBarcode').value = p ? (p.barcode || '') : '';
         document.querySelectorAll('input[name="prodSystem"]').forEach(r => { r.checked = Boolean(p) && r.value === (p.stockMode === 'stock' ? 'stock' : 'toggle'); });
         document.getElementById('prodStock').value = p ? Number(p.stock || 0) : '';
         document.getElementById('prodMinStock').value = p ? Number(p.minStock || 0) : '';
@@ -3838,6 +4077,11 @@ measurementId: "G-ZVZ3QHEPKC"
         if (isStockMode && (stockRaw === '' || isNaN(parseInt(stockRaw)) || parseInt(stockRaw) < 0)) {
             return await window.customAlert('Sisa stok wajib diisi (angka 0 atau lebih).', 'Peringatan');
         }
+        const barcodeVal = window.isBarcodeOn() ? normBarcode(document.getElementById('prodBarcode').value) : null;
+        if (barcodeVal) {
+            const dup = STATE.data.products.find(x => x.id !== document.getElementById('prodId').value && normBarcode(x.barcode) === barcodeVal);
+            if (dup) return await window.customAlert(`Barcode ${barcodeVal} sudah dipakai produk "${dup.name}". Satu barcode hanya untuk satu produk.`, 'Barcode Ganda');
+        }
         const expDates = Array.from(document.querySelectorAll('#prodExpList .prod-exp-input')).map(i => i.value).filter(Boolean);
         const uniqExp = [...new Set(expDates)].sort();
         showLoad();
@@ -3858,11 +4102,12 @@ measurementId: "G-ZVZ3QHEPKC"
             stock: stock,
             min_stock: minStock,
             availability_system: prodSystem,
-            exp_dates: uniqExp
+            exp_dates: uniqExp,
+            barcode: barcodeVal !== null ? barcodeVal : (oldProduct ? (oldProduct.barcode || '') : '')
         };
         const localProduct = {
             id: payload.id, name: payload.name, cat: payload.cat, price: payload.price, img: payload.img,
-            info: payload.info, availFlag: availFlag, available: availFlag, stockMode: prodSystem,
+            info: payload.info, availFlag: availFlag, available: availFlag, stockMode: prodSystem, barcode: payload.barcode,
             stock: stock, minStock: minStock, expDates: uniqExp
         };
         try {
@@ -4108,8 +4353,8 @@ measurementId: "G-ZVZ3QHEPKC"
                     <div class="grid grid-cols-2 gap-1.5 w-full min-w-[164px]">
                         <button onclick="window.payDebtInstallment('${c.id}')" class="brutal-btn bg-accent px-1 py-1 text-[10px] w-full">Cicil</button>
                         <button onclick="window.payDebt('${c.id}')" class="brutal-btn bg-success px-1 py-1 text-[10px] w-full">Lunas</button>
-                        <button onclick="window.viewDebtReceipt('${c.id}')" class="brutal-btn bg-main px-1 py-1 text-[10px] w-full whitespace-nowrap ${isCashier ? 'col-span-2' : ''}">Nota Hutang</button>
-                        ${!isCashier ? `<button onclick="window.deleteCustomer('${c.id}')" class="brutal-btn bg-danger text-white px-1 py-1 text-[10px] w-full">Hapus</button>` : ''}
+                        <button onclick="window.viewDebtReceipt('${c.id}')" class="brutal-btn bg-main px-1 py-1 text-[10px] w-full whitespace-nowrap">Nota Hutang</button>
+                        <button onclick="window.editCustomer('${c.id}')" class="brutal-btn bg-white px-1 py-1 text-[10px] w-full whitespace-nowrap">${isCashier ? 'Edit' : 'Edit/Hapus'}</button>
                     </div>`;
         if (!sortedCust.length) {
             tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center font-bold">Belum ada pelanggan. Pelanggan baru otomatis tersimpan saat menulis nama baru di pembayaran Hutang.</td></tr>`;
@@ -4242,6 +4487,63 @@ measurementId: "G-ZVZ3QHEPKC"
                 hideLoad();
                 await window.customAlert(e.message, 'Gagal');
             }
+        }
+    };
+
+    // Popup edit pelanggan (custom, berbasis Promise): hasil {action:'save', data} | {action:'delete'} | null
+    window.customCustomerForm = (c, allowDelete) => new Promise(resolve => {
+        document.getElementById('custEditName').value = c.name || '';
+        document.getElementById('custEditWa').value = c.wa || '';
+        document.getElementById('custEditAddress').value = c.address || '';
+        document.getElementById('btnCustEditDelete').classList.toggle('d-none', !allowDelete);
+        window.openModal('modalCustomerEdit');
+        document.getElementById('btnCustEditCancel').onclick = () => { window.closeModal('modalCustomerEdit'); resolve(null); };
+        document.getElementById('btnCustEditDelete').onclick = () => { window.closeModal('modalCustomerEdit'); resolve({ action: 'delete' }); };
+        document.getElementById('btnCustEditSave').onclick = async () => {
+            const data = {
+                name: document.getElementById('custEditName').value.trim(),
+                wa: document.getElementById('custEditWa').value.trim(),
+                address: document.getElementById('custEditAddress').value.trim()
+            };
+            if (!data.name) { await window.customAlert('Nama pelanggan wajib diisi.', 'Peringatan'); return; }
+            if (STATE.data.customers.some(x => x.id !== c.id && (x.name || '').toLowerCase() === data.name.toLowerCase())) { await window.customAlert('Nama pelanggan sudah dipakai pelanggan lain.', 'Peringatan'); return; }
+            window.closeModal('modalCustomerEdit');
+            resolve({ action: 'save', data });
+        };
+    });
+
+    window.editCustomer = async (id) => {
+        const c = STATE.data.customers.find(x => x.id === id);
+        if (!c) return;
+        const isCashier = STATE.user && STATE.user.role === 'cashier';
+        const res = await window.customCustomerForm(c, !isCashier);
+        if (!res) return;
+        if (res.action === 'delete') return await window.deleteCustomer(id);
+        showLoad();
+        try {
+            const nameChanged = res.data.name !== c.name;
+            if (!IS_PREVIEW && db) {
+                await db.collection('customers').doc(id).update(res.data);
+                // Nama baru ikut diperbarui di riwayat transaksi pelanggan ini (dipakai di nota & riwayat publik).
+                if (nameChanged) {
+                    const snap = await db.collection('orders').where('cust_id', '==', id).get();
+                    for (let i = 0; i < snap.docs.length; i += 450) {
+                        const batch = db.batch();
+                        snap.docs.slice(i, i + 450).forEach(d => batch.update(d.ref, { cust_name: res.data.name }));
+                        await batch.commit();
+                    }
+                }
+                await fetchAllData();
+            } else {
+                Object.assign(c, res.data);
+                if (nameChanged) STATE.data.orders.forEach(o => { if (o.custId === id) o.custName = res.data.name; });
+            }
+            hideLoad();
+            window.renderAdminCustomers();
+            await window.customAlert('Data pelanggan diperbarui!', 'Sukses');
+        } catch (e) {
+            hideLoad();
+            await window.customAlert(e.message, 'Gagal');
         }
     };
 
@@ -4637,6 +4939,7 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('setExpWarnMonths').value = Math.max(1, parseInt(STATE.data.settings.expWarnMonths) || 1);
         document.getElementById('setPromoEnabled').checked = Boolean(STATE.data.settings.promoEnabled);
         document.getElementById('setPublicHistoryEnabled').checked = Boolean(STATE.data.settings.publicHistoryEnabled);
+        document.getElementById('setBarcodeEnabled').checked = Boolean(STATE.data.settings.barcodeEnabled);
 
         STATE.tempOrderAlarmBase64 = STATE.data.settings.orderAlarmAudio || '';
         const orderAlarmInput = document.getElementById('setOrderAlarmFile');
@@ -4713,7 +5016,8 @@ measurementId: "G-ZVZ3QHEPKC"
             finance_enabled: document.getElementById('setFinanceEnabled') ? document.getElementById('setFinanceEnabled').checked : Boolean(STATE.data.settings.financeEnabled),
             exp_warn_months: Math.max(1, parseInt(document.getElementById('setExpWarnMonths').value) || 1),
             promo_enabled: document.getElementById('setPromoEnabled').checked,
-            public_history_enabled: document.getElementById('setPublicHistoryEnabled').checked
+            public_history_enabled: document.getElementById('setPublicHistoryEnabled').checked,
+            barcode_enabled: document.getElementById('setBarcodeEnabled').checked
         };
         // Password admin hanya ikut disimpan/di-hash kalau kolomnya benar-benar diisi ulang.
         // Kalau dikosongkan, password lama (hash-nya) tidak disentuh sama sekali.
@@ -4759,6 +5063,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 expWarnMonths: payload.exp_warn_months,
                 promoEnabled: payload.promo_enabled,
                 publicHistoryEnabled: payload.public_history_enabled,
+                barcodeEnabled: payload.barcode_enabled,
                 scheduleOpenEnabled: payload.schedule_open_enabled,
                 scheduleOpenDateTime: payload.schedule_open_datetime,
                 scheduleCloseEnabled: payload.schedule_close_enabled,
@@ -5178,7 +5483,6 @@ measurementId: "G-ZVZ3QHEPKC"
                 <div class="pt-body">
                     <div class="pt-name">${escapeHTML(p.name)}</div>
                     <div class="pt-price">${formatWon(p.price)}</div>
-                    <div class="pt-promo">${escapeHTML(promoTextForProduct(p))}</div>
                 </div>
             </div>`;
 
@@ -5237,7 +5541,7 @@ measurementId: "G-ZVZ3QHEPKC"
     };
 
     // Keterangan promo untuk tag: promo aktif yang melibatkan produk tsb.
-    const promoTextForProduct = (p) => {
+    const promoTextForProduct = window.promoTextForProduct = (p) => {
         const hits = window.getActivePromos().filter(pr => {
             if (pr.type === 'bxgy') return pr.buyId === p.id;
             if (pr.type === 'bxdisc') return pr.productId === p.id;
@@ -5274,7 +5578,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
     // EXPORT & IMPORT CSV PRODUK
     // ======================================================= //
-    const CSV_HEADERS = ['id', 'name', 'cat', 'price', 'system', 'available', 'stock', 'min_stock', 'exp_dates', 'info'];
+    const CSV_HEADERS = ['id', 'name', 'cat', 'price', 'system', 'available', 'stock', 'min_stock', 'exp_dates', 'barcode', 'info'];
     const csvCell = v => {
         const s = String(v === undefined || v === null ? '' : v);
         return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
@@ -5284,7 +5588,7 @@ measurementId: "G-ZVZ3QHEPKC"
         if (!STATE.data.products.length) return await window.customAlert('Belum ada produk untuk di-export.', 'Info');
         const rows = [CSV_HEADERS.join(',')].concat(STATE.data.products.map(p => [
             p.id, p.name, p.cat, Number(p.price || 0), p.stockMode === 'stock' ? 'STOK' : 'ONOFF', p.availFlag ? 'ON' : 'OFF',
-            Number(p.stock || 0), Number(p.minStock || 0), (p.expDates || []).join('|'), p.info || ''
+            Number(p.stock || 0), Number(p.minStock || 0), (p.expDates || []).join('|'), p.barcode || '', p.info || ''
         ].map(csvCell).join(',')));
         // BOM supaya huruf non-latin tetap terbaca rapi saat dibuka di Excel.
         const blob = new Blob(['﻿' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -5378,7 +5682,8 @@ measurementId: "G-ZVZ3QHEPKC"
                 stock: stockRaw === '' ? null : Math.round(Number(stockRaw)),
                 minStock: minRaw === '' ? null : Math.round(Number(minRaw)),
                 expDates: col('exp_dates') > -1 ? [...new Set(exp)].sort() : null,
-                info: col('info') > -1 ? get(r, 'info') : null
+                info: col('info') > -1 ? get(r, 'info') : null,
+                barcode: col('barcode') > -1 ? normBarcode(get(r, 'barcode')) : null
             });
         });
 
@@ -5403,7 +5708,8 @@ measurementId: "G-ZVZ3QHEPKC"
                     info: it.info !== null ? it.info : (old ? (old.info || '') : ''),
                     stock: it.stock !== null ? it.stock : (old ? Number(old.stock || 0) : 0),
                     minStock: it.minStock !== null ? it.minStock : (old ? Number(old.minStock || 0) : 0),
-                    expDates: it.expDates !== null ? it.expDates : (old ? (old.expDates || []) : [])
+                    expDates: it.expDates !== null ? it.expDates : (old ? (old.expDates || []) : []),
+                    barcode: it.barcode !== null ? it.barcode : (old ? (old.barcode || '') : '')
                 };
                 writes.push(prod);
             });
@@ -5411,7 +5717,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 // Firestore membatasi 500 operasi per batch -> dikirim bertahap.
                 const ops = [
                     ...newCats.map(c => ({ ref: db.collection('categories').doc(c), data: { id: c, name: c } })),
-                    ...writes.map(p => ({ ref: db.collection('products').doc(p.id), data: { id: p.id, name: p.name, cat: p.cat, price: p.price, available: p.availFlag, availability_system: p.stockMode, info: p.info, stock: p.stock, min_stock: p.minStock, exp_dates: p.expDates } }))
+                    ...writes.map(p => ({ ref: db.collection('products').doc(p.id), data: { id: p.id, name: p.name, cat: p.cat, price: p.price, available: p.availFlag, availability_system: p.stockMode, info: p.info, stock: p.stock, min_stock: p.minStock, exp_dates: p.expDates, barcode: p.barcode } }))
                 ];
                 for (let i = 0; i < ops.length; i += 450) {
                     const batch = db.batch();
@@ -5699,6 +6005,223 @@ measurementId: "G-ZVZ3QHEPKC"
             if (p && !p.classList.contains('d-none') && STATE.dashSeries) window.renderDashChart(STATE.dashSeries);
         }, 200);
     });
+
+    // ======================================================= //
+    // SCAN BARCODE (sakelar ON/OFF di Pengaturan)
+    // Cara kerja seperti aplikasi kasir profesional:
+    //  1. Scanner USB/Bluetooth (mode "keyboard wedge"): scanner "mengetik" kode sangat cepat lalu Enter.
+    //     Di halaman POS, ketikan super cepat yang diakhiri Enter dikenali sebagai scan -> produk langsung
+    //     masuk keranjang (tanpa perlu klik kolom pencarian), disertai bunyi bip & notifikasi.
+    //  2. Ketik/tempel kode di kolom pencarian POS lalu Enter -> kode yang cocok persis langsung masuk keranjang.
+    //  3. Kamera HP (tombol 📷): scan terus-menerus; tiap barcode yang terbaca langsung masuk keranjang,
+    //     dengan jeda anti-dobel untuk kode yang sama, daftar hasil scan, dan input manual cadangan.
+    // ======================================================= //
+    window.isBarcodeOn = () => Boolean(STATE.data.settings.barcodeEnabled);
+    const normBarcode = v => String(v || '').trim().replace(/\s+/g, '');
+    window.findProductByBarcode = (code) => {
+        const c = normBarcode(code);
+        if (!c) return null;
+        return STATE.data.products.find(p => normBarcode(p.barcode) === c) || null;
+    };
+
+    // Bunyi bip (berhasil) / dengung rendah (gagal) seperti scanner kasir.
+    const scanBeep = (ok) => {
+        try {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            STATE.scanAudioCtx = STATE.scanAudioCtx || new AC();
+            const ctx = STATE.scanAudioCtx;
+            if (ctx.state === 'suspended') ctx.resume();
+            const osc = ctx.createOscillator(), g = ctx.createGain();
+            osc.type = ok ? 'square' : 'sawtooth';
+            osc.frequency.value = ok ? 1800 : 220;
+            const t = ctx.currentTime, dur = ok ? 0.09 : 0.35;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            osc.connect(g); g.connect(ctx.destination);
+            osc.start(t); osc.stop(t + dur + 0.02);
+        } catch (e) {}
+        try { if (navigator.vibrate) navigator.vibrate(ok ? 40 : [80, 60, 80]); } catch (e) {}
+    };
+
+    const showScanToast = (msg, ok) => {
+        const el = document.getElementById('scanToast');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.remove('d-none', 'is-ok', 'is-err');
+        el.classList.add(ok ? 'is-ok' : 'is-err');
+        clearTimeout(STATE.scanToastTimer);
+        STATE.scanToastTimer = setTimeout(() => el.classList.add('d-none'), 1800);
+    };
+
+    // Proses satu kode hasil scan: tambah ke keranjang POS. Mengembalikan true jika berhasil.
+    window.handleScannedCode = async (code, source) => {
+        const c = normBarcode(code);
+        if (!c) return false;
+        const p = window.findProductByBarcode(c);
+        if (!p) {
+            scanBeep(false);
+            showScanToast(`Barcode ${c} tidak terdaftar`, false);
+            if (source === 'camera') document.getElementById('scanStatus').textContent = `❌ ${c} tidak ditemukan di daftar produk`;
+            return false;
+        }
+        if (!p.available) {
+            scanBeep(false);
+            showScanToast(`${p.name}: stok habis / tidak tersedia`, false);
+            if (source === 'camera') document.getElementById('scanStatus').textContent = `❌ ${p.name} tidak tersedia`;
+            return false;
+        }
+        const before = (STATE.cart.find(x => x.id === p.id) || {}).qty || 0;
+        await window.addToCart(p.id);
+        const after = (STATE.cart.find(x => x.id === p.id) || {}).qty || 0;
+        if (after <= before) { scanBeep(false); return false; }
+        scanBeep(true);
+        showScanToast(`✔ ${p.name} (${after}x)`, true);
+        if (source === 'camera') {
+            document.getElementById('scanStatus').textContent = `✔ ${p.name} ditambahkan (${after}x) — scan berikutnya…`;
+            const log = document.getElementById('scanLog');
+            document.getElementById('scanLogWrap').classList.remove('d-none');
+            log.insertAdjacentHTML('afterbegin', `<div class="flex justify-between gap-2 text-xs border-b border-black pb-1"><span class="font-bold truncate">${escapeHTML(p.name)}</span><span class="whitespace-nowrap">${formatWon(p.price)} · ${after}x</span></div>`);
+        }
+        return true;
+    };
+
+    // Kolom pencarian POS: Enter dengan kode yang cocok persis -> langsung masuk keranjang.
+    window.onPosSearchKeydown = async (e) => {
+        if (e.key !== 'Enter' || !window.isBarcodeOn()) return;
+        e.preventDefault();
+        const inp = e.target;
+        const code = inp.value;
+        if (window.findProductByBarcode(code)) {
+            inp.value = '';
+            await window.handleScannedCode(code, 'search');
+            window.doPosInlineSearch();
+        } else if (normBarcode(code)) {
+            await window.handleScannedCode(code, 'search');
+        }
+    };
+
+    // Deteksi scanner USB/Bluetooth (keyboard wedge) di halaman POS.
+    (() => {
+        let buf = '', lastT = 0, fastCount = 0;
+        document.addEventListener('keydown', (e) => {
+            if (!window.isBarcodeOn() || !STATE.user || !['admin', 'cashier'].includes(STATE.user.role)) return;
+            const pos = document.getElementById('pageAdminPOS');
+            if (!pos || pos.classList.contains('d-none')) return;
+            const ae = document.activeElement;
+            // Jangan ganggu saat sedang mengetik di kolom lain (catatan, nominal, dsb). Kolom pencarian POS ditangani sendiri.
+            if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT' || ae.isContentEditable)) return;
+            if (document.querySelector('.modal-backdrop:not(.d-none)')) return;
+            const now = performance.now();
+            const gap = now - lastT;
+            lastT = now;
+            if (e.key === 'Enter') {
+                // Scan sah: minimal 4 karakter dan hampir semua ketukan berjarak < 50ms (manusia jauh lebih lambat).
+                if (buf.length >= 4 && fastCount >= buf.length - 2) {
+                    e.preventDefault();
+                    const code = buf;
+                    buf = ''; fastCount = 0;
+                    window.handleScannedCode(code, 'wedge');
+                    return;
+                }
+                buf = ''; fastCount = 0;
+                return;
+            }
+            if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+            if (gap > 100) { buf = ''; fastCount = 0; }
+            if (buf.length && gap < 50) fastCount++;
+            buf += e.key;
+            if (buf.length > 64) { buf = ''; fastCount = 0; }
+        }, true);
+    })();
+
+    // ---------- Scan dengan kamera (pustaka html5-qrcode dimuat hanya saat dibutuhkan) ----------
+    const SCAN_LIB_URL = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+    const loadScanLib = () => new Promise((resolve, reject) => {
+        if (window.Html5Qrcode) return resolve();
+        const sc = document.createElement('script');
+        sc.src = SCAN_LIB_URL;
+        sc.onload = () => window.Html5Qrcode ? resolve() : reject(new Error('Pustaka scanner gagal dimuat.'));
+        sc.onerror = () => reject(new Error('Pustaka scanner gagal dimuat. Periksa koneksi internet.'));
+        document.head.appendChild(sc);
+    });
+
+    window.openBarcodeScanner = async (mode) => {
+        STATE.scanMode = mode === 'field' ? 'field' : 'pos';
+        STATE.scanLast = { code: '', t: 0 };
+        document.getElementById('scanTitle').textContent = STATE.scanMode === 'field' ? '📷 Scan Barcode Produk' : '📷 Scan ke Keranjang';
+        document.getElementById('scanStatus').textContent = 'Menyiapkan kamera…';
+        document.getElementById('scanLog').innerHTML = '';
+        document.getElementById('scanLogWrap').classList.add('d-none');
+        document.getElementById('scanManualInput').value = '';
+        window.openModal('modalBarcodeScan');
+        try {
+            await loadScanLib();
+            const H = window.Html5Qrcode;
+            const F = window.Html5QrcodeSupportedFormats || {};
+            const formats = ['EAN_13', 'EAN_8', 'UPC_A', 'UPC_E', 'CODE_128', 'CODE_39', 'CODE_93', 'ITF', 'CODABAR', 'QR_CODE'].map(k => F[k]).filter(v => v !== undefined);
+            STATE.scanner = new H('barcodeReader', { formatsToSupport: formats.length ? formats : undefined, experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false });
+            const box = Math.min(300, Math.floor((document.getElementById('barcodeReader').clientWidth || 320) * 0.85));
+            await STATE.scanner.start(
+                { facingMode: 'environment' },
+                { fps: 12, qrbox: { width: box, height: Math.floor(box * 0.5) }, aspectRatio: 1.6, disableFlip: false },
+                (text) => window.onCameraScan(text),
+                () => {}
+            );
+            document.getElementById('scanStatus').textContent = 'Arahkan kamera ke barcode produk…';
+        } catch (e) {
+            const msg = String(e && e.message ? e.message : e);
+            document.getElementById('scanStatus').textContent = /Permission|NotAllowed/i.test(msg)
+                ? '❌ Izin kamera ditolak. Izinkan kamera di pengaturan browser, atau ketik kode di bawah.'
+                : '❌ Kamera tidak dapat dibuka. Ketik kode barcode di bawah. (' + msg + ')';
+        }
+    };
+
+    window.onCameraScan = async (text) => {
+        const code = normBarcode(text);
+        const now = Date.now();
+        // Anti-dobel: kode yang sama diabaikan selama 1,5 detik (kamera membaca berkali-kali per detik).
+        if (code === STATE.scanLast.code && now - STATE.scanLast.t < 1500) return;
+        STATE.scanLast = { code, t: now };
+        if (STATE.scanMode === 'field') {
+            document.getElementById('prodBarcode').value = code;
+            scanBeep(true);
+            await window.closeBarcodeScanner();
+            return;
+        }
+        await window.handleScannedCode(code, 'camera');
+    };
+
+    window.submitManualBarcode = async () => {
+        const inp = document.getElementById('scanManualInput');
+        const code = normBarcode(inp.value);
+        if (!code) return;
+        inp.value = '';
+        STATE.scanLast = { code: '', t: 0 };
+        await window.onCameraScan(code);
+    };
+
+    window.closeBarcodeScanner = async () => {
+        const sc = STATE.scanner;
+        STATE.scanner = null;
+        if (sc) {
+            try { if (sc.isScanning) await sc.stop(); } catch (e) {}
+            try { sc.clear(); } catch (e) {}
+        }
+        window.closeModal('modalBarcodeScan');
+    };
+
+    // Tampilkan/sembunyikan elemen barcode sesuai sakelar.
+    window.syncBarcodeUI = () => {
+        const on = window.isBarcodeOn();
+        const scanBtn = document.getElementById('btnPosScan');
+        if (scanBtn) scanBtn.classList.toggle('d-none', !on);
+        const wrap = document.getElementById('prodBarcodeWrapper');
+        if (wrap) wrap.classList.toggle('d-none', !on);
+        const inp = document.getElementById('posInlineSearch');
+        if (inp) inp.placeholder = on ? 'Cari produk / scan barcode...' : 'Cari produk...';
+    };
 
     // ======================================================= //
     // MODUL AKSES & PROFIL KASIR (ROLE SEPARATION)
