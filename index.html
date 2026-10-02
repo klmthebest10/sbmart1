@@ -13,7 +13,7 @@
         })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Warung Mbak Wiwin</title>
+    <title>SBMART Changwon</title>
     
     <!-- PWA Settings & Standalone Mode -->
     <meta name="theme-color" content="#FFFFFF">
@@ -1808,12 +1808,12 @@
 
     const firebaseConfig = {
         apiKey: "AIzaSyD71HFH_NpePFnA0W-lHTRhlcBdochKV7U",
-  authDomain: "warungkelontong-34cd7.firebaseapp.com",
-  projectId: "warungkelontong-34cd7",
-  storageBucket: "warungkelontong-34cd7.firebasestorage.app",
-  messagingSenderId: "194641800347",
-  appId: "1:194641800347:web:40cdcf47bfb683f8ef2a3e",
-  measurementId: "G-ZVZ3QHEPKC"
+authDomain: "warungkelontong-34cd7.firebaseapp.com",
+projectId: "warungkelontong-34cd7",
+storageBucket: "warungkelontong-34cd7.firebasestorage.app",
+messagingSenderId: "194641800347",
+appId: "1:194641800347:web:40cdcf47bfb683f8ef2a3e",
+measurementId: "G-ZVZ3QHEPKC"
 };
     // ======================================================= //
 
@@ -1880,10 +1880,7 @@
             cashier: null,
             cashiers: [],
             categories: ["Makanan", "Minuman"], 
-            products: [
-                { id: "p1", name: "Nasi Goreng Spesial", cat: "Makanan", price: 15000, img: "", available: true },
-                { id: "p2", name: "Es Teh Manis", cat: "Minuman", price: 5000, img: "", available: true }
-            ], 
+            products: [], 
             customers: [], 
             promos: [],
             orders: [] 
@@ -1910,8 +1907,8 @@
             if(raw) {
                 const parsed = JSON.parse(raw);
                 if(parsed.settings) STATE.data.settings = { ...STATE.data.settings, ...parsed.settings };
-                if(Array.isArray(parsed.products) && parsed.products.length > 0) STATE.data.products = parsed.products;
-                if(Array.isArray(parsed.categories) && parsed.categories.length > 0) STATE.data.categories = parsed.categories;
+                if(Array.isArray(parsed.products)) STATE.data.products = parsed.products;
+                if(Array.isArray(parsed.categories)) STATE.data.categories = parsed.categories;
                 if(Array.isArray(parsed.promos)) STATE.data.promos = parsed.promos;
             }
         } catch(e) {}
@@ -2160,8 +2157,6 @@
                 });
                 batch.set(db.collection('categories').doc('Makanan'), { id: "Makanan", name: "Makanan" });
                 batch.set(db.collection('categories').doc('Minuman'), { id: "Minuman", name: "Minuman" });
-                batch.set(db.collection('products').doc('prod_1'), { id: "prod_1", name: "Nasi Goreng Spesial", cat: "Makanan", price: 15000, img: "", available: true });
-                batch.set(db.collection('products').doc('prod_2'), { id: "prod_2", name: "Es Teh Manis", cat: "Minuman", price: 5000, img: "", available: true });
                 await batch.commit();
             }
         } catch(e) { console.error("Auto setup error", e); }
@@ -2223,7 +2218,7 @@
             // proses login diperiksa, atau saat admin/kasir membuka halaman "Kelola Akun Kasir".
 
             const cSnap = await db.collection('categories').get();
-            if (!cSnap.empty) {
+            {
                 STATE.data.categories = cSnap.docs.map(doc => doc.id);
                 if (STATE.data.settings.categoryOrder && STATE.data.settings.categoryOrder.length > 0) {
                     STATE.data.categories.sort((a, b) => {
@@ -2235,7 +2230,7 @@
             }
 
             const pSnap = await db.collection('products').get();
-            if (!pSnap.empty) {
+            {
                 STATE.data.products = pSnap.docs.map(doc => {
                     const prod = doc.data();
                     return {
