@@ -1283,7 +1283,7 @@
                                 <h4 class="set-title">Identitas Toko &amp; Rekening</h4>
                                 <div class="mb-4">
                                     <label class="block font-bold mb-1">Nama Warung</label>
-                                    <input type="text" id="setStoreName" class="brutal-input bg-white" required>
+                                    <input type="text" id="setStoreName" maxlength="100" class="brutal-input bg-white" required>
                                 </div>
                                 <div class="mb-4">
                                     <label class="block font-bold mb-1">Upload Logo Baru</label>
@@ -1394,13 +1394,13 @@
                     <label class="block font-bold mb-2">Pilih Pelanggan Terdaftar:</label>
                     <select id="selectHutangCustomer" class="brutal-input text-black w-full bg-white" onchange="window.onHutangCustomerSelect()"></select>
                     <label class="block font-bold mt-3 mb-2">Atau Tulis Nama Pelanggan Baru:</label>
-                    <input type="text" id="inputHutangNewCustomer" autocomplete="off" class="brutal-input text-black w-full bg-white" placeholder="Nama pelanggan baru (otomatis disimpan)" oninput="window.onHutangNewNameInput()">
+                    <input type="text" id="inputHutangNewCustomer" maxlength="80" autocomplete="off" class="brutal-input text-black w-full bg-white" placeholder="Nama pelanggan baru (otomatis disimpan)" oninput="window.onHutangNewNameInput()">
                     <p class="text-[11px] italic mt-2 leading-tight">Nama baru otomatis ditambahkan ke daftar pelanggan saat transaksi diproses.</p>
                 </div>
 
                 <div class="mb-4">
                     <label class="block font-bold mb-1 text-sm uppercase">Catatan Transaksi (Opsional)</label>
-                    <textarea id="cartNote" class="brutal-input text-sm bg-white" rows="2" placeholder="Tulis catatan transaksi..."></textarea>
+                    <textarea id="cartNote" maxlength="1000" class="brutal-input text-sm bg-white" rows="2" placeholder="Tulis catatan transaksi..."></textarea>
                 </div>
             </div>
             
@@ -1424,7 +1424,7 @@
                 <input type="hidden" id="prodId">
                 <div class="mb-3">
                     <label class="block font-bold mb-1">Nama Produk</label>
-                    <input type="text" id="prodName" class="brutal-input bg-white" required>
+                    <input type="text" id="prodName" maxlength="150" class="brutal-input bg-white" required>
                 </div>
                 <div class="mb-3">
                     <label class="block font-bold mb-1">Kategori</label>
@@ -1475,7 +1475,7 @@
                 </div>
                 <div id="prodInfoWrapper" class="mb-4 d-none">
                     <label class="block font-bold mb-1">Informasi Produk <span class="font-normal text-[10px] text-gray-500">(opsional — tampil lewat ikon ⓘ di samping nama produk)</span></label>
-                    <textarea id="prodInfo" rows="3" class="brutal-input bg-white text-sm" placeholder="Contoh: Pedas level 3, mengandung kacang, dsb."></textarea>
+                    <textarea id="prodInfo" maxlength="2000" rows="3" class="brutal-input bg-white text-sm" placeholder="Contoh: Pedas level 3, mengandung kacang, dsb."></textarea>
                 </div>
                 <button type="submit" class="brutal-btn w-full bg-main py-3">Simpan</button>
             </form>
@@ -1641,7 +1641,7 @@
             <h2 id="modalCategoryTitle" class="text-xl font-bold mb-4 uppercase">Kategori Baru</h2>
             <form onsubmit="window.saveCategory(event)">
                 <input type="hidden" id="oldCatName">
-                <input type="text" id="newCatName" class="brutal-input bg-white mb-4" placeholder="Nama Kategori..." required>
+                <input type="text" id="newCatName" maxlength="60" class="brutal-input bg-white mb-4" placeholder="Nama Kategori..." required>
                 <button type="submit" class="brutal-btn w-full bg-accent py-3">Simpan</button>
             </form>
         </div>
