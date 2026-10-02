@@ -16,12 +16,12 @@
     <title>SBMART Changwon</title>
     
     <!-- PWA Settings & Standalone Mode -->
-    <meta name="theme-color" content="#FFFFFF">
+    <meta name="theme-color" content="#FFD500">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Warung Mbak Wiwin">
-    <meta name="application-name" content="Warung Mbak Wiwin">
+    <meta name="apple-mobile-web-app-title" content="SBMART Changwon">
+    <meta name="application-name" content="SBMART Changwon">
 
     <!-- PWA: manifest.json, sw.js dan semua ikon diletakkan satu folder dengan index.html -->
     <link rel="manifest" href="./manifest.json">
@@ -1540,9 +1540,15 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="block font-bold mb-1">Gambar Produk</label>
-                    <input type="file" id="prodImgFile" class="brutal-input bg-white text-xs" accept="image/*" onchange="window.handleProdImgSelect(event)">
-                    <div id="prodImgPreview" class="text-xs text-gray-500 mt-2 break-all">Gambar belum dipilih. (Otomatis Kompres)</div>
+                    <label class="block font-bold mb-1">Gambar Produk <span class="font-normal text-[10px] text-gray-500">(otomatis dikompres)</span></label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="document.getElementById('prodImgFile').click()" class="brutal-btn bg-white py-2 px-1 text-xs flex items-center justify-center gap-1.5">🖼️ Galeri / File</button>
+                        <button type="button" onclick="window.openProductCamera()" class="brutal-btn bg-accent py-2 px-1 text-xs flex items-center justify-center gap-1.5">📷 Kamera</button>
+                    </div>
+                    <!-- Input tersembunyi: galeri/file perangkat & kamera bawaan HP (cadangan jika kamera langsung tidak tersedia) -->
+                    <input type="file" id="prodImgFile" class="hidden" accept="image/*" onchange="window.handleProdImgSelect(event)">
+                    <input type="file" id="prodImgCapture" class="hidden" accept="image/*" capture="environment" onchange="window.handleProdImgSelect(event)">
+                    <div id="prodImgPreview" class="text-xs text-gray-500 mt-2 break-all">Gambar belum dipilih.</div>
                 </div>
                 <div class="mb-3 border-t-2 border-black pt-3">
                     <label class="block font-bold mb-1">Sistem Ketersediaan Produk <span class="text-danger">*</span></label>
@@ -1882,6 +1888,32 @@
         </div>
     </div>
 
+    <!-- Modal Kamera Foto Produk (kamera langsung, otomatis kompres) -->
+    <div id="modalProdCamera" class="fixed inset-0 modal-backdrop d-none z-[99990] flex items-center justify-center p-3">
+        <div class="brutal-box bg-white w-full max-w-md relative flex flex-col max-h-[95vh] overflow-hidden">
+            <div class="p-3 border-b-4 border-black font-bold uppercase bg-accent flex justify-between items-center shrink-0">
+                <span>📷 Foto Produk</span>
+                <button type="button" onclick="window.closeProductCamera()" class="bg-white text-black font-bold px-2 py-1 border-2 border-black text-sm inline-flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
+            </div>
+            <div class="bg-black relative shrink-0 flex items-center justify-center" style="aspect-ratio: 1 / 1;">
+                <video id="prodCamVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                <img id="prodCamShot" alt="" class="w-full h-full object-cover absolute inset-0 d-none">
+                <div id="prodCamStatus" class="absolute inset-x-0 bottom-2 text-center text-white text-xs font-bold px-2" style="text-shadow:0 1px 2px #000;">Menyiapkan kamera…</div>
+            </div>
+            <div class="p-3 bg-white shrink-0">
+                <div id="prodCamLiveBtns" class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="window.switchProductCamera()" id="btnProdCamSwitch" class="brutal-btn bg-white py-3 text-xs">🔄 Balik</button>
+                    <button type="button" onclick="window.captureProductPhoto()" id="btnProdCamShoot" class="brutal-btn bg-main py-3 text-sm col-span-2">📸 Ambil Foto</button>
+                </div>
+                <div id="prodCamShotBtns" class="grid grid-cols-2 gap-2 d-none">
+                    <button type="button" onclick="window.retakeProductPhoto()" class="brutal-btn bg-white py-3 text-xs">↺ Ulangi</button>
+                    <button type="button" onclick="window.useProductPhoto()" class="brutal-btn bg-success py-3 text-sm">✔ Pakai Foto</button>
+                </div>
+                <button type="button" onclick="window.closeProductCamera(); document.getElementById('prodImgCapture').click();" class="w-full text-[11px] underline mt-2 font-bold">Pakai aplikasi kamera bawaan HP</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Scan Barcode (kamera) -->
     <div id="modalBarcodeScan" class="fixed inset-0 modal-backdrop d-none z-[99990] flex items-center justify-center p-3">
         <div class="brutal-box bg-white w-full max-w-md relative flex flex-col max-h-[95vh] overflow-hidden">
@@ -2026,7 +2058,17 @@
                         if (nw.state === 'installed' && navigator.serviceWorker.controller) nw.postMessage({ type: 'SKIP_WAITING' });
                     });
                 });
+                // Cek pembaruan setiap kali aplikasi dibuka lagi dari latar belakang.
+                document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
             }).catch(err => console.warn('Service worker gagal didaftarkan:', err));
+            // Setelah versi baru aktif, muat ulang halaman satu kali (hanya jika sebelumnya sudah dikontrol SW lama).
+            let swReloaded = false;
+            const hadController = Boolean(navigator.serviceWorker.controller);
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!hadController || swReloaded) return;
+                swReloaded = true;
+                window.location.reload();
+            });
         });
     }
     window.addEventListener('load', () => window.syncPWAInstallButtons());
@@ -2335,23 +2377,43 @@ measurementId: "G-ZVZ3QHEPKC"
         return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; 
     };
     
+    // Kompres gambar otomatis: sisi terpanjang maks. 800px, JPEG kualitas 0.75, latar putih (untuk PNG transparan).
+    // Jika hasil masih > ~250KB, kualitas diturunkan bertahap supaya aman disimpan di dokumen Firestore.
+    const IMG_MAX_SIZE = 800, IMG_MAX_BYTES = 250 * 1024;
+    function compressDrawable(src, srcW, srcH) {
+        let width = srcW, height = srcH;
+        if (width > height && width > IMG_MAX_SIZE) { height = Math.round(height * IMG_MAX_SIZE / width); width = IMG_MAX_SIZE; }
+        else if (height >= width && height > IMG_MAX_SIZE) { width = Math.round(width * IMG_MAX_SIZE / height); height = IMG_MAX_SIZE; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height);
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(src, 0, 0, width, height);
+        let q = 0.75, out = canvas.toDataURL('image/jpeg', q);
+        while (out.length * 0.75 > IMG_MAX_BYTES && q > 0.4) { q -= 0.1; out = canvas.toDataURL('image/jpeg', q); }
+        return out;
+    }
+    window.compressDrawable = compressDrawable;
+
     function compressImage(file, callback) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas'); 
-                let width = img.width, height = img.height;
-                const MAX_SIZE = 800; 
-                if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } 
-                else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-                canvas.width = width; canvas.height = height; 
-                const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-                callback(canvas.toDataURL('image/jpeg', 0.75));
-            }; 
-            img.src = e.target.result;
-        }; 
-        reader.readAsDataURL(file);
+        if (!file) return;
+        if (file.type && !/^image\//.test(file.type)) { window.customAlert('File yang dipilih bukan gambar.', 'Format Salah'); return; }
+        // createImageBitmap otomatis memutar foto sesuai orientasi EXIF (foto HP tidak miring).
+        if (window.createImageBitmap) {
+            createImageBitmap(file, { imageOrientation: 'from-image' })
+                .then(bmp => { const d = compressDrawable(bmp, bmp.width, bmp.height); if (bmp.close) bmp.close(); callback(d); })
+                .catch(() => compressImageFallback(file, callback));
+            return;
+        }
+        compressImageFallback(file, callback);
+    }
+    function compressImageFallback(file, callback) {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); callback(compressDrawable(img, img.naturalWidth, img.naturalHeight)); };
+        img.onerror = () => { URL.revokeObjectURL(url); window.customAlert('Gambar tidak dapat dibaca. Gunakan format JPG/PNG/WEBP (format HEIC dari iPhone: ubah setelan kamera ke "Paling Kompatibel").', 'Gagal'); };
+        img.src = url;
     }
 
     // Auto-setup database awal Firestore (Nama: Warung Indonesia, Default Semua Fitur OFF)
@@ -4043,12 +4105,112 @@ measurementId: "G-ZVZ3QHEPKC"
         if(tabName === 'finance' && isFinanceOn) window.openFinanceTab();
     };
 
+    // Pratinjau foto produk + tombol hapus foto
+    window.setProdImgPreview = (d) => {
+        const box = document.getElementById('prodImgPreview');
+        if (!box) return;
+        if (!d) { box.innerHTML = 'Gambar belum dipilih.'; return; }
+        const kb = Math.round(d.length * 0.75 / 1024);
+        box.innerHTML = `<div class="flex items-center gap-3 mt-1"><img src="${d}" class="w-16 h-16 object-cover border-2 border-black"><div class="flex-1 min-w-0"><div class="font-bold text-black">Foto siap (±${kb} KB)</div><button type="button" onclick="window.clearProdImg()" class="brutal-btn bg-danger text-white px-2 py-0.5 text-[10px] mt-1">Hapus Foto</button></div></div>`;
+    };
+    window.clearProdImg = () => { STATE.tempProdImgBase64 = ''; window.setProdImgPreview(''); };
+
     window.handleProdImgSelect = e => { 
-        const file = e.target.files[0]; 
-        if(file) compressImage(file, d => { 
-            STATE.tempProdImgBase64 = d; 
-            document.getElementById('prodImgPreview').innerHTML = `<img src="${d}" class="h-12 mt-2 border border-black">`; 
-        }); 
+        const input = e.target;
+        const file = input.files[0]; 
+        if(file) {
+            document.getElementById('prodImgPreview').textContent = 'Mengompres gambar…';
+            compressImage(file, d => { 
+                STATE.tempProdImgBase64 = d; 
+                window.setProdImgPreview(d);
+            });
+        }
+        input.value = ''; // supaya file/foto yang sama bisa dipilih lagi
+    };
+
+    // ===== Kamera langsung untuk foto produk (getUserMedia), cadangan: kamera bawaan HP =====
+    STATE.prodCam = { stream: null, facing: 'environment', shot: '' };
+    const stopProdCamStream = () => {
+        const s = STATE.prodCam.stream;
+        if (s) s.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+        STATE.prodCam.stream = null;
+        const v = document.getElementById('prodCamVideo');
+        if (v) v.srcObject = null;
+    };
+    const startProdCamStream = async () => {
+        stopProdCamStream();
+        const status = document.getElementById('prodCamStatus');
+        status.textContent = 'Menyiapkan kamera…';
+        status.classList.remove('d-none');
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: STATE.prodCam.facing }, width: { ideal: 1280 }, height: { ideal: 1280 } },
+            audio: false
+        });
+        STATE.prodCam.stream = stream;
+        const v = document.getElementById('prodCamVideo');
+        v.srcObject = stream;
+        await v.play().catch(() => {});
+        status.classList.add('d-none');
+    };
+    const showProdCamMode = (shot) => {
+        document.getElementById('prodCamShot').classList.toggle('d-none', !shot);
+        document.getElementById('prodCamVideo').classList.toggle('d-none', Boolean(shot));
+        document.getElementById('prodCamLiveBtns').classList.toggle('d-none', Boolean(shot));
+        document.getElementById('prodCamShotBtns').classList.toggle('d-none', !shot);
+    };
+
+    window.openProductCamera = async () => {
+        // Kamera langsung butuh HTTPS (atau localhost). Jika tidak tersedia -> pakai kamera bawaan HP.
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !window.isSecureContext) {
+            document.getElementById('prodImgCapture').click();
+            return;
+        }
+        STATE.prodCam.shot = '';
+        showProdCamMode(false);
+        window.openModal('modalProdCamera');
+        try {
+            await startProdCamStream();
+        } catch (err) {
+            stopProdCamStream();
+            window.closeModal('modalProdCamera');
+            const msg = String(err && (err.name || err.message) || err);
+            if (/NotAllowed|Permission|Security/i.test(msg)) {
+                await window.customAlert('Izin kamera ditolak. Izinkan akses kamera untuk situs ini di pengaturan browser, atau pilih foto dari Galeri.', 'Kamera');
+            } else {
+                // Tidak ada kamera / sedang dipakai aplikasi lain -> coba kamera bawaan HP.
+                document.getElementById('prodImgCapture').click();
+            }
+        }
+    };
+    window.switchProductCamera = async () => {
+        STATE.prodCam.facing = STATE.prodCam.facing === 'environment' ? 'user' : 'environment';
+        try { await startProdCamStream(); }
+        catch (e) { await window.customAlert('Kamera lain tidak tersedia di perangkat ini.', 'Kamera'); STATE.prodCam.facing = 'environment'; try { await startProdCamStream(); } catch (e2) {} }
+    };
+    window.captureProductPhoto = () => {
+        const v = document.getElementById('prodCamVideo');
+        if (!v.videoWidth) return;
+        // Potong persegi di tengah (sesuai bentuk gambar produk di katalog), lalu kompres otomatis.
+        const side = Math.min(v.videoWidth, v.videoHeight);
+        const crop = document.createElement('canvas');
+        crop.width = side; crop.height = side;
+        crop.getContext('2d').drawImage(v, (v.videoWidth - side) / 2, (v.videoHeight - side) / 2, side, side, 0, 0, side, side);
+        STATE.prodCam.shot = compressDrawable(crop, side, side);
+        document.getElementById('prodCamShot').src = STATE.prodCam.shot;
+        showProdCamMode(true);
+        try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
+    };
+    window.retakeProductPhoto = () => { STATE.prodCam.shot = ''; showProdCamMode(false); };
+    window.useProductPhoto = () => {
+        if (!STATE.prodCam.shot) return;
+        STATE.tempProdImgBase64 = STATE.prodCam.shot;
+        window.setProdImgPreview(STATE.prodCam.shot);
+        window.closeProductCamera();
+    };
+    window.closeProductCamera = () => {
+        stopProdCamStream();
+        STATE.prodCam.shot = '';
+        window.closeModal('modalProdCamera');
     };
 
     window.handleLogoSelect = e => { 
@@ -4177,7 +4339,7 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('prodPrice').value = p.price;
         document.getElementById('prodAvail').checked = Boolean(p.availFlag);
         STATE.tempProdImgBase64 = p.img || '';
-        document.getElementById('prodImgPreview').innerHTML = p.img ? `<img src="${p.img}" class="h-12 mt-2 border border-black">` : '';
+        window.setProdImgPreview(p.img || '');
         document.getElementById('prodCat').innerHTML = STATE.data.categories.map(c => `<option value="${escapeHTML(c)}" ${c===p.cat?'selected':''}>${escapeHTML(c)}</option>`).join('');
         document.getElementById('prodInfoWrapper').classList.toggle('d-none', !Boolean(STATE.data.settings.productInfoEnabled));
         document.getElementById('prodInfo').value = p.info || '';
@@ -5232,7 +5394,7 @@ measurementId: "G-ZVZ3QHEPKC"
         if(id === 'modalAddProduct' && !document.getElementById('prodId').value) { 
             document.getElementById('formProduct').reset(); 
             STATE.tempProdImgBase64 = ''; 
-            document.getElementById('prodImgPreview').innerHTML = 'Gambar belum dipilih.'; 
+            window.setProdImgPreview(''); 
             document.getElementById('prodCat').innerHTML = STATE.data.categories.map(c => `<option value="${escapeHTML(c)}" ${c===STATE.activeCategoryPOS?'selected':''}>${escapeHTML(c)}</option>`).join(''); 
             window.prepareProductFormExtras(null);
         }
@@ -5242,6 +5404,7 @@ measurementId: "G-ZVZ3QHEPKC"
     window.closeModal = id => { 
         document.getElementById(id).classList.add('d-none'); 
         if(id === 'modalAddProduct') { 
+            if (STATE.prodCam && STATE.prodCam.stream) window.closeProductCamera();
             document.getElementById('prodId').value = ''; 
             document.getElementById('formProduct').reset(); 
             document.getElementById('modalProductTitle').textContent = 'Tambah Produk'; 
