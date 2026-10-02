@@ -2508,6 +2508,73 @@ measurementId: "G-ZVZ3QHEPKC"
         const d = new Date(); d.setMonth(d.getMonth() - CASHIER_HISTORY_MONTHS); return d;
     }
 
+    // ===== Arsip penjualan (koleksi sales_archive, 1 dokumen per tanggal "YYYY-MM-DD") =====
+    // Isi: { day, items: { <id produk / nama>: { n: nama, q: qty } } }.
+    // Hanya diisi dari transaksi yang dihapus OTOMATIS oleh sistem (retensi riwayat & batas 6 bulan kasir),
+    // sehingga Produk Terlaris tetap menghitungnya. Transaksi yang dihapus manual oleh admin tidak diarsipkan.
+    STATE.data.salesArchive = STATE.data.salesArchive || [];
+    const archiveDayKey = (dateStr) => {
+        const d = new Date(dateStr);
+        if (isNaN(d)) return null;
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    const archiveItemsOf = (o) => {
+        const items = {};
+        (o.items || []).forEach(i => {
+            const q = Number(i.qty) || 0;
+            const key = String(i.id || i.name || '').slice(0, 150);
+            if (!key || q <= 0) return;
+            items[key] = items[key] || { n: String(i.name || '').slice(0, 150), q: 0 };
+            items[key].q += q;
+        });
+        return items;
+    };
+    async function loadSalesArchive() {
+        if (IS_PREVIEW || !db) return;
+        try {
+            const snap = await db.collection('sales_archive').get();
+            STATE.data.salesArchive = snap.docs.map(d => ({ day: d.id, items: (d.data() || {}).items || {} }));
+        } catch (e) { console.warn('Gagal memuat arsip penjualan:', e); }
+    }
+    function addToLocalArchive(day, items) {
+        let rec = STATE.data.salesArchive.find(a => a.day === day);
+        if (!rec) { rec = { day, items: {} }; STATE.data.salesArchive.push(rec); }
+        Object.entries(items).forEach(([k, v]) => {
+            const cur = rec.items[k] || { n: v.n, q: 0 };
+            cur.q = (Number(cur.q) || 0) + v.q;
+            if (v.n) cur.n = v.n;
+            rec.items[k] = cur;
+        });
+    }
+    // Arsipkan lalu hapus dalam satu transaksi Firestore: aman dari hitungan ganda bila dua perangkat login bersamaan.
+    async function archiveAndDeleteExpiredOrders(list) {
+        let changed = false;
+        for (const o of list) {
+            const day = archiveDayKey(o.date);
+            const items = archiveItemsOf(o);
+            const ordRef = db.collection('orders').doc(o.id);
+            try {
+                if (!day || !Object.keys(items).length) { await ordRef.delete(); continue; }
+                const arcRef = db.collection('sales_archive').doc(day);
+                const done = await db.runTransaction(async (tx) => {
+                    const ordDoc = await tx.get(ordRef);
+                    if (!ordDoc.exists) return false;
+                    const inc = {};
+                    Object.entries(items).forEach(([k, v]) => { inc[k] = { n: v.n, q: firebase.firestore.FieldValue.increment(v.q) }; });
+                    tx.set(arcRef, { day, items: inc }, { merge: true });
+                    tx.delete(ordRef);
+                    return true;
+                });
+                if (done) { addToLocalArchive(day, items); changed = true; }
+            } catch (err) { console.warn('Gagal arsip/hapus pesanan kedaluwarsa:', o.id, err); }
+        }
+        if (changed) {
+            if (window.refreshBestSellers) window.refreshBestSellers();
+            const dp = document.getElementById('admin_dashboard');
+            if (dp && !dp.classList.contains('d-none') && window.renderDashboard) window.renderDashboard();
+        }
+    }
+
     // Listener realtime: transaksi baru/ubah/hapus dari perangkat kasir mana pun langsung memperbarui urutan terlaris
     let ordersUnsub = null;
     function startOrdersListener() {
@@ -2528,6 +2595,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     }
                     const o = mapOrderDoc(ch.doc);
                     if (new Date(o.date) < cutoff) return;
+                    if (o.cashierId && new Date(o.date) < getCashierHistoryCutoffDate()) return;
                     if (idx === -1) { STATE.data.orders.push(o); changed = true; }
                     else if (JSON.stringify(STATE.data.orders[idx]) !== JSON.stringify(o)) { STATE.data.orders[idx] = o; changed = true; }
                 });
@@ -2564,6 +2632,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 return;
             }
 
+            await loadSalesArchive();
             const ordSnap = await db.collection('orders').get();
 
             if (!ordSnap.empty) {
@@ -2574,16 +2643,20 @@ measurementId: "G-ZVZ3QHEPKC"
                     const cutoffDate = getOrderCutoffDate();
                     const cashierCutoff = getCashierHistoryCutoffDate();
                     const validOrders = [];
+                    const expiredOrders = [];
                     for (const o of mappedOrders) {
                         const expired = new Date(o.date) < cutoffDate;
                         const cashierExpired = o.cashierId && new Date(o.date) < cashierCutoff;
                         if (expired || cashierExpired) {
-                            db.collection('orders').doc(o.id).delete().catch(err => console.warn('Gagal hapus pesanan kedaluwarsa:', o.id, err));
+                            // Dihapus OTOMATIS (Manajemen Data Riwayat / batas 6 bulan kasir): jumlah terjual tetap diarsipkan
+                            // agar tetap terhitung di Produk Terlaris. Hapus manual admin TIDAK lewat jalur ini.
+                            expiredOrders.push(o);
                         } else {
                             validOrders.push(o);
                         }
                     }
                     STATE.data.orders = validOrders;
+                    if (expiredOrders.length) archiveAndDeleteExpiredOrders(expiredOrders);
                 } else {
                     STATE.data.orders = mappedOrders;
                 }
@@ -3034,6 +3107,14 @@ measurementId: "G-ZVZ3QHEPKC"
             const q = Number(i.qty) || 0;
             if (i.id) byId[i.id] = (byId[i.id] || 0) + q;
             if (i.name) byName[i.name] = (byName[i.name] || 0) + q;
+        }));
+        // Transaksi yang dihapus otomatis oleh sistem tetap terhitung lewat arsip penjualan.
+        (STATE.data.salesArchive || []).forEach(a => Object.entries(a.items || {}).forEach(([k, v]) => {
+            const q = Number(v && v.q) || 0;
+            if (!q) return;
+            const prod = STATE.data.products.find(p => p.id === k);
+            if (prod) byId[k] = (byId[k] || 0) + q;
+            else if (v.n) byName[v.n] = (byName[v.n] || 0) + q;
         }));
         return p => (byId[p.id] !== undefined ? byId[p.id] : (byName[p.name] || 0));
     };
@@ -5884,6 +5965,8 @@ measurementId: "G-ZVZ3QHEPKC"
         const range = dashRange(STATE.dashPeriod);
         const orders = STATE.data.orders.filter(o => { const d = new Date(o.date); return d >= range.start && d < range.end; });
         STATE.dashOrders = orders;
+        const sKey = archiveDayKey(range.start), eKey = archiveDayKey(range.end);
+        STATE.dashArchive = (STATE.data.salesArchive || []).filter(a => a.day >= sKey && a.day < eKey);
         const revenue = orders.reduce((s, o) => dashPaid(o) ? s + Number(o.total || 0) : s, 0);
         document.getElementById('dashRevenue').textContent = formatWon(revenue);
         document.getElementById('dashTrxCount').textContent = orders.length.toLocaleString('id-ID');
@@ -5975,6 +6058,14 @@ measurementId: "G-ZVZ3QHEPKC"
             const cur = agg.get(key) || { name: (STATE.data.products.find(p => p.id === i.id) || {}).name || i.name, qty: 0 };
             cur.qty += Number(i.qty) || 0;
             agg.set(key, cur);
+        }));
+        // Ditambah arsip transaksi yang dihapus otomatis oleh sistem (bukan hapus manual admin).
+        (STATE.dashArchive || []).forEach(a => Object.entries(a.items || {}).forEach(([k, v]) => {
+            const q = Number(v && v.q) || 0;
+            if (!q) return;
+            const cur = agg.get(k) || { name: (STATE.data.products.find(p => p.id === k) || {}).name || v.n || k, qty: 0 };
+            cur.qty += q;
+            agg.set(k, cur);
         }));
         const rows = [...agg.values()].filter(r => r.qty > 0).sort((a, b) => b.qty - a.qty || a.name.localeCompare(b.name));
         const per = 10;
