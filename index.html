@@ -24,7 +24,46 @@
     <meta name="application-name" content="SBMART Changwon">
 
     <!-- PWA: manifest.json, sw.js dan semua ikon diletakkan satu folder dengan index.html -->
-    <link rel="manifest" href="./manifest.json">
+    <link rel="manifest" href="./manifest.json" id="pwaManifestLink">
+    <script>
+        // PWA: tangkap event install SEDINI MUNGKIN. Chrome/Edge/Samsung Internet bisa mengirim
+        // "beforeinstallprompt" sebelum script di bawah (Tailwind, Firebase, dll) selesai dimuat.
+        // Kalau listener baru dipasang belakangan, event-nya hilang dan tombol Install tidak pernah muncul.
+        window.__pwaPrompt = null;
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            window.__pwaPrompt = e;
+            if (window.syncPWAInstallButtons) window.syncPWAInstallButtons();
+        });
+        window.addEventListener('appinstalled', function () {
+            window.__pwaPrompt = null;
+            try { localStorage.setItem('wi_pwa_installed', '1'); } catch (e) {}
+            if (window.syncPWAInstallButtons) window.syncPWAInstallButtons();
+        });
+        // Cadangan: kalau manifest.json tidak ada / gagal dimuat di hosting, buat manifest otomatis
+        // supaya aplikasi tetap bisa di-install (ikon pakai file icon-192/512 jika ada).
+        (function () {
+            if (!window.fetch || location.protocol === 'file:') return;
+            fetch('./manifest.json', { cache: 'no-cache' }).then(function (r) {
+                if (r.ok) return;
+                throw new Error('manifest ' + r.status);
+            }).catch(function () {
+                var base = location.href.split('#')[0].split('?')[0].replace(/[^/]*$/, '');
+                var m = {
+                    id: base, name: 'SBMART Changwon', short_name: 'SBMART',
+                    start_url: base, scope: base, display: 'standalone',
+                    background_color: '#f4f4f0', theme_color: '#FFD500',
+                    icons: [
+                        { src: base + 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+                        { src: base + 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+                        { src: base + 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+                    ]
+                };
+                var link = document.getElementById('pwaManifestLink');
+                if (link) link.href = URL.createObjectURL(new Blob([JSON.stringify(m)], { type: 'application/manifest+json' }));
+            });
+        })();
+    </script>
     <link rel="icon" type="image/x-icon" href="./favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png">
@@ -1995,39 +2034,40 @@
     // favicon-16.png, favicon-32.png, apple-touch-icon.png, icon-192.png, icon-512.png,
     // icon-maskable-192.png, icon-maskable-512.png.
     // ======================================================= //
-    let pwaDeferredPrompt = null;
+    // Event "beforeinstallprompt" & "appinstalled" sudah ditangkap di <head> (window.__pwaPrompt).
     const isPWAStandalone = () =>
-        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+        (window.matchMedia && (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: window-controls-overlay)').matches || window.matchMedia('(display-mode: minimal-ui)').matches)) || window.navigator.standalone === true;
     const isIOSDevice = () =>
         /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const pwaSecure = () => window.isSecureContext || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    const pwaBrowserName = () => {
+        const ua = navigator.userAgent;
+        if (/SamsungBrowser/i.test(ua)) return 'samsung';
+        if (/Edg\//i.test(ua)) return 'edge';
+        if (/Firefox|FxiOS/i.test(ua)) return 'firefox';
+        if (/OPR\/|Opera/i.test(ua)) return 'opera';
+        if (/Chrome|CriOS/i.test(ua)) return 'chrome';
+        if (/Safari/i.test(ua)) return 'safari';
+        return 'other';
+    };
 
-    // Tombol Install tampil hanya jika aplikasi belum terpasang dan browser bisa memasangnya
-    // (Chrome/Edge/Samsung Internet lewat beforeinstallprompt, iPhone/iPad lewat Safari "Tambah ke Layar Utama").
+    // Tombol Install tampil di semua browser selama aplikasi belum dibuka sebagai aplikasi terpasang.
+    // Jika browser mendukung install langsung -> muncul jendela install; jika tidak -> tampil panduan manual.
     window.syncPWAInstallButtons = () => {
-        const show = !isPWAStandalone() && (Boolean(pwaDeferredPrompt) || isIOSDevice());
+        const show = !isPWAStandalone() && pwaSecure();
         document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.classList.toggle('d-none', !show));
     };
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();               // tahan banner bawaan browser, pakai tombol Install milik aplikasi
-        pwaDeferredPrompt = e;
-        window.syncPWAInstallButtons();
-    });
-
-    window.addEventListener('appinstalled', () => {
-        pwaDeferredPrompt = null;
-        window.syncPWAInstallButtons();
-    });
-
     window.installPWA = async () => {
         if (isPWAStandalone()) {
-            await window.customAlert('Aplikasi sudah terpasang di perangkat ini.', 'Install Aplikasi');
+            await window.customAlert('Aplikasi sudah terpasang dan sedang dibuka sebagai aplikasi.', 'Install Aplikasi');
             return;
         }
-        if (pwaDeferredPrompt) {
-            if (!(await window.customConfirm('Pasang aplikasi ini di perangkat Anda? Aplikasi akan muncul di layar utama / desktop dan bisa dibuka seperti aplikasi biasa.', 'Install Aplikasi'))) return;
-            const promptEvent = pwaDeferredPrompt;
-            pwaDeferredPrompt = null;
+        const promptEvent = window.__pwaPrompt;
+        if (promptEvent) {
+            // prompt() dipanggil LANGSUNG di klik tombol (tanpa popup konfirmasi dulu) karena browser
+            // mewajibkan jendela install dibuka dari aksi pengguna; jendela install bawaan browser sudah berisi konfirmasi.
+            window.__pwaPrompt = null;
             try {
                 await promptEvent.prompt();
                 const choice = await promptEvent.userChoice;
@@ -2040,38 +2080,52 @@
             window.syncPWAInstallButtons();
             return;
         }
+        const b = pwaBrowserName();
+        let msg;
         if (isIOSDevice()) {
-            await window.customAlert('Cara memasang di iPhone/iPad:\n1. Buka halaman ini di Safari.\n2. Ketuk tombol Bagikan (kotak dengan panah ke atas).\n3. Pilih "Tambah ke Layar Utama".\n4. Ketuk "Tambah".', 'Install Aplikasi');
-            return;
+            msg = b === 'safari'
+                ? 'Cara memasang di iPhone/iPad:\n1. Ketuk tombol Bagikan (kotak dengan panah ke atas) di bawah layar.\n2. Pilih "Tambah ke Layar Utama".\n3. Ketuk "Tambah".'
+                : 'Cara memasang di iPhone/iPad:\n1. Ketuk tombol Bagikan / menu (⋯) browser.\n2. Pilih "Tambah ke Layar Utama".\nJika pilihan itu tidak ada, buka halaman ini di Safari.';
+        } else if (b === 'safari') {
+            msg = 'Cara memasang di Mac (Safari):\nMenu File → "Add to Dock" / "Tambahkan ke Dock".';
+        } else if (b === 'firefox') {
+            msg = 'Firefox di komputer belum mendukung install aplikasi web.\nDi HP Android: ketuk menu (⋮) → "Install" / "Tambahkan ke layar utama".\nAtau buka halaman ini di Chrome / Edge.';
+        } else if (b === 'samsung') {
+            msg = 'Ketuk menu (≡) di bawah → "Tambahkan halaman ke" → "Layar Utama".';
+        } else {
+            msg = 'Jendela install belum siap. Coba:\n1. Ketuk menu browser (⋮) → "Install aplikasi" / "Tambahkan ke layar utama".\n2. Di komputer: klik ikon install (⊕) di ujung kanan kolom alamat.\n\nJika pilihan itu tidak muncul, muat ulang halaman sekali lalu tunggu beberapa detik. Kemungkinan aplikasi sudah terpasang — cek di daftar aplikasi Anda.';
         }
-        await window.customAlert('Browser ini belum mendukung install langsung. Gunakan menu browser lalu pilih "Install aplikasi" / "Tambahkan ke layar utama".', 'Install Aplikasi');
+        await window.customAlert(msg, 'Install Aplikasi');
     };
 
-    if ('serviceWorker' in navigator && /^(https:|http:\/\/localhost|http:\/\/127\.0\.0\.1)/.test(location.href)) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js', { scope: './' }).then(reg => {
-                // Versi baru sw.js terpasang -> langsung aktifkan agar perangkat memakai versi aplikasi terbaru.
-                reg.addEventListener('updatefound', () => {
-                    const nw = reg.installing;
-                    if (!nw) return;
-                    nw.addEventListener('statechange', () => {
-                        if (nw.state === 'installed' && navigator.serviceWorker.controller) nw.postMessage({ type: 'SKIP_WAITING' });
-                    });
-                });
-                // Cek pembaruan setiap kali aplikasi dibuka lagi dari latar belakang.
-                document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
-            }).catch(err => console.warn('Service worker gagal didaftarkan:', err));
-            // Setelah versi baru aktif, muat ulang halaman satu kali (hanya jika sebelumnya sudah dikontrol SW lama).
-            let swReloaded = false;
-            const hadController = Boolean(navigator.serviceWorker.controller);
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!hadController || swReloaded) return;
-                swReloaded = true;
-                window.location.reload();
-            });
+    if ('serviceWorker' in navigator && pwaSecure()) {
+        // Didaftarkan secepatnya (tidak menunggu semua gambar selesai dimuat) agar syarat install cepat terpenuhi.
+        let swReloaded = false;
+        const hadController = Boolean(navigator.serviceWorker.controller);
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            // Muat ulang satu kali saat versi baru aktif (hanya jika sebelumnya sudah dikontrol SW lama).
+            if (!hadController || swReloaded || window.__receiptOnly) return;
+            swReloaded = true;
+            window.location.reload();
         });
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).then(reg => {
+            if (reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            reg.addEventListener('updatefound', () => {
+                const nw = reg.installing;
+                if (!nw) return;
+                nw.addEventListener('statechange', () => {
+                    if (nw.state === 'installed' && navigator.serviceWorker.controller) nw.postMessage({ type: 'SKIP_WAITING' });
+                });
+            });
+            document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+        }).catch(err => console.warn('Service worker gagal didaftarkan (pastikan file sw.js ada satu folder dengan index.html):', err));
     }
+    window.syncPWAInstallButtons();
     window.addEventListener('load', () => window.syncPWAInstallButtons());
+    if (window.matchMedia) {
+        const mq = window.matchMedia('(display-mode: standalone)');
+        if (mq.addEventListener) mq.addEventListener('change', () => window.syncPWAInstallButtons());
+    }
 
     // ======================================================= //
     // KONFIGURASI FIREBASE MASTER BUILDER
