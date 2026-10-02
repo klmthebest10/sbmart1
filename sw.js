@@ -1,14 +1,15 @@
-// =====================================================================
-// Service Worker — Aplikasi POS Warung Kelontong
-// Letakkan file ini SATU FOLDER dengan index.html dan manifest.json.
-// Setiap kali index.html diperbarui, naikkan CACHE_VERSION agar semua
-// perangkat mengambil versi terbaru.
-// =====================================================================
-const CACHE_VERSION = 'warung-pos-v1';
-const STATIC_CACHE = CACHE_VERSION + '-static';
-const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
+/* =========================================================
+   Service Worker – Warung (POS)
+   Letakkan satu folder dengan index.html & manifest.json.
+   Setiap kali index.html diperbarui, NAIKKAN angka VERSION
+   agar semua perangkat otomatis memakai versi terbaru.
+   ========================================================= */
+const VERSION = 'v1.0.0';
+const APP_CACHE = 'warung-app-' + VERSION;      // file aplikasi sendiri
+const CDN_CACHE = 'warung-cdn-' + VERSION;      // Tailwind, font, Firebase SDK, dll.
+const CDN_MAX_ITEMS = 60;
 
-// File inti aplikasi (app shell) yang disimpan saat install.
+// File inti aplikasi (dipasang saat install -> aplikasi bisa dibuka offline)
 const APP_SHELL = [
   './',
   './index.html',
@@ -23,108 +24,105 @@ const APP_SHELL = [
   './icon-maskable-512.png'
 ];
 
-// Library dari CDN (Tailwind, font, Firebase SDK, html2canvas, jsPDF, scanner barcode)
-// disimpan agar aplikasi tetap terbuka saat sinyal lemah.
+// Pustaka dari CDN yang dipakai index.html (disimpan agar tampilan tetap jalan saat offline)
 const CDN_HOSTS = [
   'cdn.tailwindcss.com',
   'fonts.googleapis.com',
   'fonts.gstatic.com',
   'cdnjs.cloudflare.com',
-  'www.gstatic.com',
-  'unpkg.com'
+  'www.gstatic.com',   // Firebase SDK (file .js saja)
+  'unpkg.com'          // pustaka scan barcode
 ];
 
-// Data toko (Firestore, login Firebase) TIDAK pernah di-cache oleh service worker:
-// selalu langsung ke server supaya stok, transaksi, dan hutang selalu akurat.
-const NEVER_CACHE_HOSTS = [
-  'firestore.googleapis.com',
-  'firebase.googleapis.com',
-  'firebaseinstallations.googleapis.com',
-  'identitytoolkit.googleapis.com',
-  'securetoken.googleapis.com',
-  'www.googleapis.com'
-];
+// Layanan data/login Firebase: JANGAN pernah di-cache (data harus selalu asli dari server;
+// mode offline data sudah ditangani Firestore persistence di index.html).
+const NEVER_CACHE = /(firestore|identitytoolkit|securetoken|firebaseinstallations|firebaselogging|googleapis\.com\/(v1|google\.firestore)|google-analytics|googletagmanager|wa\.me|api\.whatsapp)/i;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) =>
-      // Satu file gagal (mis. ikon belum diunggah) tidak menggagalkan seluruh install.
-      Promise.all(APP_SHELL.map((url) => cache.add(url).catch(() => null)))
-    )
+    caches.open(APP_CACHE)
+      // Satu file gagal tidak boleh menggagalkan seluruh instalasi
+      .then((cache) => Promise.all(APP_SHELL.map((url) =>
+        cache.add(new Request(url, { cache: 'reload' })).catch((err) => console.warn('[SW] Lewati', url, err))
+      )))
   );
-  self.skipWaiting();
+  // Tidak langsung skipWaiting: halaman yang mengirim pesan SKIP_WAITING (lihat index.html)
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(
-        keys.filter((k) => !k.startsWith(CACHE_VERSION)).map((k) => caches.delete(k))
-      ))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys
+      .filter((k) => k.startsWith('warung-') && k !== APP_CACHE && k !== CDN_CACHE)
+      .map((k) => caches.delete(k)));
+    if (self.registration.navigationPreload) {
+      try { await self.registration.navigationPreload.enable(); } catch (e) {}
+    }
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
-// Network-first: coba server dulu (selalu versi terbaru), kalau offline pakai cache.
-async function networkFirst(request, fallbackUrl) {
-  const cache = await caches.open(STATIC_CACHE);
+async function trimCache(name, max) {
+  const cache = await caches.open(name);
+  const keys = await cache.keys();
+  for (let i = 0; i < keys.length - max; i++) await cache.delete(keys[i]);
+}
+
+// Halaman (navigasi): ambil dari internet dulu (selalu versi terbaru), kalau offline pakai salinan.
+async function handleNavigation(event) {
+  const cache = await caches.open(APP_CACHE);
   try {
-    const res = await fetch(request);
-    if (res && res.ok) cache.put(request, res.clone());
+    const preload = await event.preloadResponse;
+    const res = preload || await fetch(event.request);
+    // Hanya simpan halaman utama tanpa parameter (link nota ?receipt=... tidak disimpan)
+    const url = new URL(event.request.url);
+    if (res && res.ok && !url.search) cache.put('./index.html', res.clone());
     return res;
   } catch (err) {
-    const cached = await cache.match(request, { ignoreSearch: true });
-    if (cached) return cached;
-    if (fallbackUrl) {
-      const fb = await cache.match(fallbackUrl);
-      if (fb) return fb;
-    }
-    throw err;
+    return (await cache.match('./index.html')) ||
+           (await cache.match('./')) ||
+           new Response('<h1 style="font-family:sans-serif">Sedang offline</h1><p>Periksa koneksi internet lalu muat ulang.</p>',
+             { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
   }
 }
 
-// Stale-while-revalidate: tampilkan dari cache secepatnya, perbarui cache di belakang layar.
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(RUNTIME_CACHE);
+// File statis milik aplikasi: pakai cache, sambil perbarui di belakang layar.
+async function staleWhileRevalidate(request, cacheName, maxItems) {
+  const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
-  const network = fetch(request)
-    .then((res) => {
-      if (res && (res.ok || res.type === 'opaque')) cache.put(request, res.clone());
-      return res;
-    })
-    .catch(() => cached);
-  return cached || network;
+  const network = fetch(request).then((res) => {
+    // Respons "opaque" (status 0) dari CDN tanpa CORS tetap boleh disimpan
+    if (res && (res.ok || res.type === 'opaque')) {
+      cache.put(request, res.clone()).then(() => maxItems && trimCache(cacheName, maxItems));
+    }
+    return res;
+  }).catch(() => null);
+  return cached || (await network) || new Response('', { status: 504 });
 }
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
-
   const url = new URL(req.url);
-  if (!url.protocol.startsWith('http')) return;
-  if (NEVER_CACHE_HOSTS.includes(url.hostname)) return;
+  if (!/^https?:$/.test(url.protocol)) return;
+  if (NEVER_CACHE.test(url.href)) return;
 
-  // Halaman aplikasi (buka/refresh): network-first, cadangan index.html saat offline.
   if (req.mode === 'navigate') {
-    event.respondWith(networkFirst(req, './index.html'));
+    event.respondWith(handleNavigation(event));
     return;
   }
-
-  // File di domain sendiri (manifest, ikon, dll).
   if (url.origin === self.location.origin) {
-    event.respondWith(networkFirst(req));
+    event.respondWith(staleWhileRevalidate(req, APP_CACHE));
     return;
   }
-
-  // Library CDN.
   if (CDN_HOSTS.includes(url.hostname)) {
-    // Firebase SDK di www.gstatic.com saja; path lain di gstatic dibiarkan.
-    if (url.hostname === 'www.gstatic.com' && !url.pathname.startsWith('/firebasejs/')) return;
-    event.respondWith(staleWhileRevalidate(req));
+    // Dari www.gstatic.com hanya file SDK Firebase (.js) yang di-cache
+    if (url.hostname === 'www.gstatic.com' && !/\/firebasejs\/.+\.js$/.test(url.pathname)) return;
+    event.respondWith(staleWhileRevalidate(req, CDN_CACHE, CDN_MAX_ITEMS));
   }
-  // Selain itu (gambar logo/produk dari luar, dll) dibiarkan langsung ke jaringan.
+  // Selain itu (gambar luar, dll.) dibiarkan lewat jaringan biasa.
 });
