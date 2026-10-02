@@ -566,6 +566,29 @@
         [data-theme="dark"] #storeCloseStatusBadge { text-shadow: none !important; }
 
 [data-theme="dark"] .instant-on { outline-color: var(--dk-border); }
+/* Keranjang: baris produk terpilih (warna kalem, menyesuaikan mode terang/gelap) */
+.cart-item-row { background-color: #F6F1E7; border-left: 6px solid #B89B5E !important; }
+[data-theme="dark"] .cart-item-row { background-color: #1D5559 !important; border-left-color: #C9B27C !important; }
+/* Dashboard: grafik & daftar terlaris */
+.dash-chart { overflow: visible; }
+.dash-bar { fill: #1F2937; }
+.dash-grid { stroke: #E5E7EB; stroke-width: 1; }
+.dash-baseline { stroke: #111111; stroke-width: 1.5; }
+.dash-axis { fill: #6B7280; font-size: 10px; font-family: 'Space Grotesk', sans-serif; }
+.dash-hit { cursor: pointer; }
+.dash-hit.is-active { fill: rgba(0,0,0,0.06); }
+.dash-tip { position: absolute; z-index: 5; pointer-events: none; background: #111111; color: #FFFFFF; border: 2px solid #000; padding: 4px 8px; font-size: 11px; line-height: 1.3; white-space: nowrap; box-shadow: 2px 2px 0 0 rgba(0,0,0,0.3); }
+.dash-top-track { height: 6px; background: #ECE7DC; margin-top: 3px; }
+.dash-top-fill { height: 100%; background: #B89B5E; }
+[data-theme="dark"] .dash-bar { fill: #F2EFE6; }
+[data-theme="dark"] .dash-grid { stroke: rgba(242,239,230,0.14); }
+[data-theme="dark"] .dash-baseline { stroke: var(--dk-border); }
+[data-theme="dark"] .dash-axis { fill: var(--dk-text-muted); }
+[data-theme="dark"] .dash-hit.is-active { fill: rgba(242,239,230,0.08); }
+[data-theme="dark"] .dash-tip { background: #06181A; border-color: var(--dk-border); }
+[data-theme="dark"] .dash-tip div { color: var(--dk-text); }
+[data-theme="dark"] .dash-top-track { background: rgba(242,239,230,0.12); }
+[data-theme="dark"] .dash-top-fill { background: #C9B27C; }
 /* Riwayat transaksi (tampilan HP): kartu dropdown detail */
 .hist-card > summary { list-style: none; cursor: pointer; }
 .hist-card > summary::-webkit-details-marker { display: none; }
@@ -785,15 +808,54 @@
                     <button onclick="window.showPage('pageAdminPOS')" class="brutal-btn bg-white px-3 sm:px-4 py-2 text-sm text-black border-2 border-black whitespace-nowrap">← POS<span class="hidden sm:inline"> Kasir</span></button>
                 </div>
                 <div id="adminTabBar" class="flex overflow-x-auto lg:overflow-visible gap-2 md:gap-3 mb-6 border-b-4 border-black pb-3 no-scrollbar flex-nowrap lg:flex-wrap">
+                    <button onclick="window.switchAdminTab('dashboard')" id="tab_dashboard" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap d-none">Dashboard</button>
                     <button onclick="window.switchAdminTab('products')" id="tab_products" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap">Produk</button>
                     <button onclick="window.switchAdminTab('categories')" id="tab_categories" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap">Kategori</button>
-                    <button onclick="window.switchAdminTab('customers')" id="tab_customers" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap d-none">Pelanggan</button>
-                    <button onclick="window.switchAdminTab('cashier')" id="tab_cashier" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap d-none">Kasir</button>
-                    <button onclick="window.switchAdminTab('history')" id="tab_history" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap">Riwayat</button>
                     <button onclick="window.switchAdminTab('promo')" id="tab_promo" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap d-none">Promo</button>
                     <button onclick="window.switchAdminTab('pricetag')" id="tab_pricetag" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap">Cetak Harga</button>
                     <button onclick="window.switchAdminTab('finance')" id="tab_finance" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap d-none">Catatan Keuangan</button>
+                    <button onclick="window.switchAdminTab('history')" id="tab_history" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap">Riwayat</button>
+                    <button onclick="window.switchAdminTab('customers')" id="tab_customers" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap d-none">Pelanggan</button>
+                    <button onclick="window.switchAdminTab('cashier')" id="tab_cashier" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap d-none">Kasir</button>
                     <button onclick="window.switchAdminTab('settings')" id="tab_settings" class="admin-tab brutal-btn bg-white px-4 py-2 whitespace-nowrap">Pengaturan</button>
+                </div>
+
+                <!-- Admin: Dashboard -->
+                <div id="admin_dashboard" class="admin-content d-none w-full">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-3 gap-2">
+                        <h3 class="text-xl font-bold uppercase">Dashboard</h3>
+                        <div id="dashFilterBar" class="flex gap-1.5 md:gap-2 w-full sm:w-auto"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 md:gap-4 mb-3">
+                        <div class="brutal-box bg-success p-2.5 md:p-4 min-w-0">
+                            <div class="text-[10px] md:text-xs font-bold uppercase">Jumlah Pendapatan</div>
+                            <div id="dashRevenue" class="text-base md:text-3xl font-bold break-all">₩0</div>
+                            <div class="text-[9px] md:text-[11px] italic leading-tight">hutang belum lunas tidak dihitung</div>
+                        </div>
+                        <div class="brutal-box bg-accent p-2.5 md:p-4 min-w-0">
+                            <div class="text-[10px] md:text-xs font-bold uppercase">Jumlah Transaksi</div>
+                            <div id="dashTrxCount" class="text-base md:text-3xl font-bold">0</div>
+                            <div id="dashPeriodLabel" class="text-[9px] md:text-[11px] italic leading-tight"></div>
+                        </div>
+                    </div>
+                    <div class="brutal-box bg-white p-3 md:p-4 mb-4">
+                        <div class="flex justify-between items-baseline gap-2 mb-2">
+                            <h4 class="font-bold uppercase text-sm">Grafik Pendapatan</h4>
+                            <span id="dashChartUnit" class="text-[10px] md:text-xs text-gray-600 italic"></span>
+                        </div>
+                        <div id="dashChartWrap" class="relative w-full"></div>
+                    </div>
+                    <div class="brutal-box bg-white p-3 md:p-4">
+                        <div class="flex justify-between items-center gap-2 mb-3 border-b-2 border-black pb-2">
+                            <h4 class="font-bold uppercase text-sm">Produk Terlaris</h4>
+                            <div class="flex items-center gap-1.5">
+                                <span id="dashTopRange" class="text-[11px] font-bold"></span>
+                                <button type="button" id="dashTopPrev" onclick="window.shiftDashTop(-1)" class="brutal-btn bg-white w-7 h-7 text-xs inline-flex items-center justify-center p-0" aria-label="Sebelumnya">◀</button>
+                                <button type="button" id="dashTopNext" onclick="window.shiftDashTop(1)" class="brutal-btn bg-white w-7 h-7 text-xs inline-flex items-center justify-center p-0" aria-label="Berikutnya">▶</button>
+                            </div>
+                        </div>
+                        <div id="dashTopList" class="space-y-1.5"></div>
+                    </div>
                 </div>
 
                 <!-- Admin: Products -->
@@ -1513,15 +1575,8 @@
                     <label class="block font-bold mb-1 text-xs">Tgl / Waktu</label>
                     <input type="datetime-local" id="editTrxDate" class="brutal-input bg-white py-1 text-xs" required>
                 </div>
-                <div class="mb-3 flex gap-2">
-                    <div class="w-1/2">
-                        <label class="block font-bold mb-1 text-xs">Tipe Pesanan</label>
-                        <select id="editTrxOrderType" class="brutal-input bg-white py-1 text-xs">
-                            <option value="DineInTakeaway">Dine In / Takeaway</option>
-                            <option value="Delivery">Delivery</option>
-                        </select>
-                    </div>
-                    <div class="w-1/2">
+                <div class="mb-4">
+                    <div>
                         <label class="block font-bold mb-1 text-xs">Metode Bayar</label>
                         <select id="editTrxType" class="brutal-input bg-white py-1 text-xs">
                             <option value="Cash">Cash</option>
@@ -1530,13 +1585,6 @@
                             <option value="Hutang">Hutang</option>
                         </select>
                     </div>
-                </div>
-                <div class="mb-4">
-                    <label class="block font-bold mb-1 text-xs">Status Lunas</label>
-                    <select id="editTrxStatus" class="brutal-input bg-white py-1 text-xs font-bold">
-                        <option value="Paid">Lunas (Paid)</option>
-                        <option value="Unpaid">Belum Lunas (Unpaid)</option>
-                    </select>
                 </div>
                 
                 <button type="submit" class="brutal-btn w-full bg-main py-3">Simpan Perubahan</button>
@@ -2662,7 +2710,7 @@ measurementId: "G-ZVZ3QHEPKC"
 
             nav.innerHTML = `${posMenu}${histBtnHtml}${loginBtnHtml}`; 
         } else if (STATE.user.role === 'admin') { 
-            nav.innerHTML = `<button onclick="window.showPage('pageAdminPOS')" class="${iconClasses} !bg-main hidden sm:block">POS Kasir</button><button onclick="window.showPage('pageAdminMgmt'); window.renderAdminProducts();" class="${iconClasses}">Kelola Admin</button><button onclick="window.logout()" class="${iconClasses} !bg-danger !text-white">Keluar</button>`; 
+            nav.innerHTML = `<button onclick="window.showPage('pageAdminPOS')" class="${iconClasses} !bg-main hidden sm:block">POS Kasir</button><button onclick="window.showPage('pageAdminMgmt'); window.switchAdminTab('dashboard');" class="${iconClasses}">Kelola Admin</button><button onclick="window.logout()" class="${iconClasses} !bg-danger !text-white">Keluar</button>`; 
         } else if (STATE.user.role === 'cashier') { 
             nav.innerHTML = `<span class="font-bold text-xs md:text-sm mr-2 hidden sm:inline-block">Hi, ${escapeHTML(STATE.user.name)}</span><button onclick="window.showPage('pageAdminPOS')" class="${iconClasses} !bg-main hidden sm:block">POS Kasir</button><button onclick="window.openCashierManage()" id="navBtnManage" class="${iconClasses}">Kelola Aplikasi</button><button onclick="window.logout()" id="navBtnLogout" class="${iconClasses} !bg-danger !text-white">Keluar</button>`; 
         }
@@ -2865,6 +2913,8 @@ measurementId: "G-ZVZ3QHEPKC"
 
     // Dipanggil setiap data transaksi berubah (checkout, edit/hapus, sinkron dari server)
     window.refreshBestSellers = () => {
+        const dashPanel = document.getElementById('admin_dashboard');
+        if (dashPanel && !dashPanel.classList.contains('d-none') && window.renderDashboard) window.renderDashboard();
         if (!STATE.user || STATE.user.role !== 'admin') return;
         const page = document.getElementById('pageAdminPOS');
         if (!page || page.classList.contains('d-none')) return; // otomatis di-render saat halaman POS dibuka lagi
@@ -3061,7 +3111,7 @@ measurementId: "G-ZVZ3QHEPKC"
             list.innerHTML = STATE.cart.map((item, index) => {
                 const prod = STATE.data.products.find(p => p.id === item.id);
                 const stockInfo = (prod && prod.stockMode === 'stock') ? `<div class="text-[10px] ${item.qty > Number(prod.stock || 0) ? 'text-danger font-bold' : 'text-gray-500'}">Sisa stok: ${Number(prod.stock || 0)}</div>` : '';
-                return `<div class="flex justify-between items-center mb-2 bg-gray-50 p-2 border-2 border-black"><div class="flex-1"><h4 class="font-bold text-xs md:text-sm leading-tight">${escapeHTML(item.name)}</h4><div class="text-xs md:text-sm">${formatWon(item.price)}</div>${stockInfo}</div><div class="flex items-center gap-1 md:gap-2"><button onclick="window.changeQty(${index}, -1)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-white border-2 border-black">-</button><input type="number" min="1" inputmode="numeric" value="${item.qty}" onchange="window.setCartQty(${index}, this.value)" onclick="this.select()" class="w-11 md:w-12 text-center font-bold text-sm md:text-base border-2 border-black bg-white py-0.5"><button onclick="window.changeQty(${index}, 1)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-main border-2 border-black">+</button><button onclick="window.changeQty(${index}, -999)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-danger text-white border-2 border-black ml-1 md:ml-2 inline-flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button></div></div>`;
+                return `<div class="cart-item-row flex justify-between items-center mb-2 p-2 border-2 border-black"><div class="flex-1"><h4 class="font-bold text-xs md:text-sm leading-tight">${escapeHTML(item.name)}</h4><div class="text-xs md:text-sm">${formatWon(item.price)}</div>${stockInfo}</div><div class="flex items-center gap-1 md:gap-2"><button onclick="window.changeQty(${index}, -1)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-white border-2 border-black">-</button><input type="number" min="1" inputmode="numeric" value="${item.qty}" onchange="window.setCartQty(${index}, this.value)" onclick="this.select()" class="w-11 md:w-12 text-center font-bold text-sm md:text-base border-2 border-black bg-white py-0.5"><button onclick="window.changeQty(${index}, 1)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-main border-2 border-black">+</button><button onclick="window.changeQty(${index}, -999)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-danger text-white border-2 border-black ml-1 md:ml-2 inline-flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button></div></div>`;
             }).join('');
         }
 
@@ -3610,7 +3660,7 @@ measurementId: "G-ZVZ3QHEPKC"
         if (!isCustOn && tabName === 'customers') tabName = 'products';
         if (!isPromoOn && tabName === 'promo') tabName = 'products';
         if (!isFinanceOn && tabName === 'finance') tabName = 'products';
-        if (STATE.user && STATE.user.role === 'cashier' && ['categories', 'customers', 'cashier', 'finance', 'promo'].includes(tabName)) tabName = 'products';
+        if (STATE.user && STATE.user.role === 'cashier' && ['dashboard', 'categories', 'customers', 'cashier', 'finance', 'promo'].includes(tabName)) tabName = 'products';
 
         document.querySelectorAll('.admin-content').forEach(el => el.classList.add('d-none'));
         document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('bg-main', 'translate-x-[2px]', 'translate-y-[2px]', 'shadow-none') || el.classList.add('bg-white'));
@@ -3624,6 +3674,7 @@ measurementId: "G-ZVZ3QHEPKC"
             btn.classList.add('bg-main', 'translate-x-[2px]', 'translate-y-[2px]', 'shadow-none');
         }
         
+        if(tabName === 'dashboard') window.renderDashboard();
         if(tabName === 'products') window.renderAdminProducts();
         if(tabName === 'categories') window.renderAdminCategories();
         if(tabName === 'customers' && isCustOn) window.renderAdminCustomers();
@@ -4384,9 +4435,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const o = STATE.data.orders.find(x => x.id === id); if(!o) return;
         document.getElementById('editTrxId').value = o.id; 
         document.getElementById('editTrxDate').value = o.date.slice(0, 16);
-        document.getElementById('editTrxOrderType').value = o.orderType; 
         document.getElementById('editTrxType').value = o.type;
-        document.getElementById('editTrxStatus').value = o.paymentStatus; 
         document.getElementById('editTrxTotal').value = o.total;
         document.getElementById('editTrxOngkir').value = o.ongkir || 0;
         STATE.editTrxDiscount = Number(o.discount || 0);
@@ -4435,11 +4484,14 @@ measurementId: "G-ZVZ3QHEPKC"
         e.preventDefault(); 
         showLoad(); 
         const id = document.getElementById('editTrxId').value;
+        const o0 = STATE.data.orders.find(x => x.id === id) || {};
+        const newType = document.getElementById('editTrxType').value;
         const payload = { 
             date: new Date(document.getElementById('editTrxDate').value).toISOString(), 
-            order_type: document.getElementById('editTrxOrderType').value, 
+            order_type: o0.orderType || 'DineInTakeaway', 
             type: document.getElementById('editTrxType').value, 
-            payment_status: document.getElementById('editTrxStatus').value, 
+            // Status lunas tidak diedit manual: mengikuti metode bayar (Hutang = status lama / Belum Lunas, selain itu Lunas).
+            payment_status: newType === 'Hutang' ? (o0.type === 'Hutang' ? (o0.paymentStatus || 'Unpaid') : 'Unpaid') : 'Paid', 
             subtotal: parseInt(document.getElementById('editTrxSubtotal').value) || 0, 
             total: parseInt(document.getElementById('editTrxTotal').value) || 0, 
             ongkir: parseInt(document.getElementById('editTrxOngkir').value) || 0, 
@@ -5455,6 +5507,200 @@ measurementId: "G-ZVZ3QHEPKC"
     };
 
     // ======================================================= //
+    // DASHBOARD (Kelola Admin): pendapatan, jumlah transaksi, grafik & produk terlaris
+    // Pilihan periode mengikuti logika "Manajemen Data Riwayat" (sama seperti filter Riwayat).
+    // ======================================================= //
+    STATE.dashPeriod = 'week';
+    STATE.dashTopPage = 0;
+    const DASH_PERIODS = [['week', 'Minggu'], ['month', 'Sebulan'], ['3month', '3 Bulan'], ['6month', '6 Bulan'], ['1year', '1 Tahun']];
+    const DASH_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const dashPad = n => String(n).padStart(2, '0');
+    const dashDayKey = d => `${d.getFullYear()}-${dashPad(d.getMonth() + 1)}-${dashPad(d.getDate())}`;
+
+    // Periode yang boleh dipilih menyesuaikan batas penyimpanan riwayat (aturan sama dengan menu Riwayat).
+    const dashAllowedPeriods = () => {
+        const limit = STATE.data.settings.autoReset ? parseInt(STATE.data.settings.resetPeriod || 12) : 24;
+        return DASH_PERIODS.filter(([k]) => !((k === '3month' && limit <= 3) || (k === '6month' && limit <= 6) || (k === '1year' && limit <= 12)));
+    };
+
+    // Rentang waktu + pembagian grafik: harian (Minggu, Sebulan), mingguan (3 Bulan), bulanan (6 Bulan, 1 Tahun).
+    const dashRange = (period) => {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const buckets = [];
+        let start;
+        if (period === 'week' || period === 'month') {
+            start = period === 'week' ? new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6) : new Date(today.getFullYear(), today.getMonth(), 1);
+            for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
+                const s0 = new Date(d), e0 = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+                buckets.push({ start: s0, end: e0, label: `${dashPad(s0.getDate())}/${dashPad(s0.getMonth() + 1)}`, full: finDateLabel(dashDayKey(s0)) });
+            }
+        } else if (period === '3month') {
+            start = new Date(now); start.setMonth(now.getMonth() - 3);
+            // Minggu dihitung mundur dari hari ini (7 hari per batang).
+            let e0 = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+            while (e0 > start) {
+                const s0 = new Date(e0); s0.setDate(s0.getDate() - 7);
+                const sClamp = s0 < start ? new Date(start) : s0;
+                const last = new Date(e0); last.setDate(last.getDate() - 1);
+                buckets.unshift({ start: sClamp, end: new Date(e0), label: `${dashPad(sClamp.getDate())}/${dashPad(sClamp.getMonth() + 1)}`, full: `${finDateLabel(dashDayKey(sClamp), false)} – ${finDateLabel(dashDayKey(last), false)}` });
+                e0 = s0;
+            }
+        } else {
+            start = new Date(now);
+            if (period === '6month') start.setMonth(now.getMonth() - 6); else start.setFullYear(now.getFullYear() - 1);
+            for (let m = new Date(start.getFullYear(), start.getMonth(), 1); m <= today; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) {
+                const s0 = m < start ? new Date(start) : new Date(m);
+                buckets.push({ start: s0, end: new Date(m.getFullYear(), m.getMonth() + 1, 1), label: DASH_MONTHS[m.getMonth()], full: `${FIN_MONTHS[m.getMonth()]} ${m.getFullYear()}` });
+            }
+        }
+        return { start, end: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1), buckets };
+    };
+
+    const dashPaid = o => !(o.type === 'Hutang' && o.paymentStatus === 'Unpaid');
+    const dashCompactWon = v => {
+        if (v >= 1000000) return '₩' + (Math.round(v / 100000) / 10).toLocaleString('id-ID') + 'jt';
+        if (v >= 1000) return '₩' + Math.round(v / 1000).toLocaleString('id-ID') + 'rb';
+        return '₩' + Math.round(v);
+    };
+
+    window.setDashPeriod = (p) => { STATE.dashPeriod = p; STATE.dashTopPage = 0; window.renderDashboard(); };
+    window.shiftDashTop = (dir) => { STATE.dashTopPage = Math.max(0, STATE.dashTopPage + dir); window.renderDashboardTop(); };
+
+    window.renderDashboard = () => {
+        const panel = document.getElementById('admin_dashboard');
+        if (!panel) return;
+        const allowed = dashAllowedPeriods();
+        if (!allowed.some(([k]) => k === STATE.dashPeriod)) STATE.dashPeriod = 'week';
+        document.getElementById('dashFilterBar').innerHTML = allowed.map(([k, label]) =>
+            `<button onclick="window.setDashPeriod('${k}')" class="brutal-btn ${k === STATE.dashPeriod ? 'bg-black text-white' : 'bg-white'} px-1.5 md:px-3 py-1 text-[10px] md:text-sm whitespace-nowrap flex-1 sm:flex-none">${label}</button>`).join('');
+
+        const range = dashRange(STATE.dashPeriod);
+        const orders = STATE.data.orders.filter(o => { const d = new Date(o.date); return d >= range.start && d < range.end; });
+        STATE.dashOrders = orders;
+        const revenue = orders.reduce((s, o) => dashPaid(o) ? s + Number(o.total || 0) : s, 0);
+        document.getElementById('dashRevenue').textContent = formatWon(revenue);
+        document.getElementById('dashTrxCount').textContent = orders.length.toLocaleString('id-ID');
+        document.getElementById('dashPeriodLabel').textContent = `${finDateLabel(dashDayKey(range.start), false)} – hari ini`;
+
+        // Data grafik per batang
+        const series = range.buckets.map(b => {
+            const inB = orders.filter(o => { const d = new Date(o.date); return d >= b.start && d < b.end; });
+            return { ...b, value: inB.reduce((s, o) => dashPaid(o) ? s + Number(o.total || 0) : s, 0), count: inB.length };
+        });
+        document.getElementById('dashChartUnit').textContent = STATE.dashPeriod === '3month' ? 'per minggu' : (['6month', '1year'].includes(STATE.dashPeriod) ? 'per bulan' : 'per hari');
+        window.renderDashChart(series);
+        window.renderDashboardTop();
+    };
+
+    // Grafik batang SVG (satu seri, tanpa legenda). Sentuh/arahkan kursor ke batang untuk melihat detail.
+    window.renderDashChart = (series) => {
+        const wrap = document.getElementById('dashChartWrap');
+        if (!wrap) return;
+        STATE.dashSeries = series;
+        const W = Math.max(280, Math.floor(wrap.clientWidth || 320));
+        const H = W < 500 ? 190 : 240;
+        const padL = 44, padR = 8, padT = 12, padB = 24;
+        const plotW = W - padL - padR, plotH = H - padT - padB;
+        const maxV = Math.max(...series.map(s => s.value), 0);
+        // Skala sumbu Y dibulatkan ke angka "rapi"
+        const niceMax = (() => {
+            if (maxV <= 0) return 1000;
+            const p = Math.pow(10, Math.floor(Math.log10(maxV)));
+            const f = maxV / p;
+            return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p;
+        })();
+        const n = series.length;
+        const slot = plotW / n;
+        const gap = Math.max(2, Math.min(8, slot * 0.25));
+        const barW = Math.max(2, slot - gap);
+        const y = v => padT + plotH - (v / niceMax) * plotH;
+        const ticks = [0, niceMax / 2, niceMax];
+        const labelEvery = Math.max(1, Math.ceil(n / Math.floor(plotW / 42)));
+
+        let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" class="dash-chart block" role="img" aria-label="Grafik pendapatan">`;
+        ticks.forEach(t => {
+            svg += `<line x1="${padL}" x2="${W - padR}" y1="${y(t)}" y2="${y(t)}" class="dash-grid"/>`;
+            svg += `<text x="${padL - 6}" y="${y(t) + 3.5}" text-anchor="end" class="dash-axis">${dashCompactWon(t)}</text>`;
+        });
+        series.forEach((s, i) => {
+            const x = padL + i * slot + gap / 2;
+            const h = Math.max(0, padT + plotH - y(s.value));
+            if (h > 0) {
+                const r = Math.min(4, barW / 2, h);
+                // Batang dengan sudut atas membulat, menempel ke garis dasar
+                svg += `<path class="dash-bar" d="M${x},${padT + plotH} V${y(s.value) + r} Q${x},${y(s.value)} ${x + r},${y(s.value)} H${x + barW - r} Q${x + barW},${y(s.value)} ${x + barW},${y(s.value) + r} V${padT + plotH} Z"/>`;
+            }
+            if (i % labelEvery === 0) svg += `<text x="${x + barW / 2}" y="${H - 7}" text-anchor="middle" class="dash-axis">${s.label}</text>`;
+            svg += `<rect x="${padL + i * slot}" y="${padT}" width="${slot}" height="${plotH}" fill="transparent" data-i="${i}" class="dash-hit"/>`;
+        });
+        svg += `<line x1="${padL}" x2="${W - padR}" y1="${padT + plotH}" y2="${padT + plotH}" class="dash-baseline"/></svg>`;
+        wrap.innerHTML = svg + `<div id="dashTip" class="dash-tip d-none"></div>`;
+
+        const tip = document.getElementById('dashTip');
+        const show = (el) => {
+            const s = STATE.dashSeries[Number(el.dataset.i)];
+            if (!s) return;
+            wrap.querySelectorAll('.dash-hit').forEach(h => h.classList.toggle('is-active', h === el));
+            tip.innerHTML = `<div class="font-bold">${escapeHTML(s.full)}</div><div>${formatWon(s.value)}</div><div class="opacity-75">${s.count} transaksi</div>`;
+            tip.classList.remove('d-none');
+            const bx = Number(el.getAttribute('x')) + Number(el.getAttribute('width')) / 2;
+            const tw = tip.offsetWidth;
+            tip.style.left = Math.min(Math.max(0, bx - tw / 2), W - tw) + 'px';
+            tip.style.top = '0px';
+        };
+        wrap.querySelectorAll('.dash-hit').forEach(h => {
+            h.addEventListener('mouseenter', () => show(h));
+            h.addEventListener('click', () => show(h));
+        });
+        wrap.querySelector('svg').addEventListener('mouseleave', () => {
+            tip.classList.add('d-none');
+            wrap.querySelectorAll('.dash-hit').forEach(h => h.classList.remove('is-active'));
+        });
+    };
+
+    // Produk terlaris pada periode terpilih: 10 per halaman, tombol ◀ ▶ untuk 11-20 dst.
+    window.renderDashboardTop = () => {
+        const list = document.getElementById('dashTopList');
+        if (!list) return;
+        const agg = new Map();
+        (STATE.dashOrders || []).forEach(o => (o.items || []).forEach(i => {
+            const key = i.id || i.name;
+            const cur = agg.get(key) || { name: (STATE.data.products.find(p => p.id === i.id) || {}).name || i.name, qty: 0 };
+            cur.qty += Number(i.qty) || 0;
+            agg.set(key, cur);
+        }));
+        const rows = [...agg.values()].filter(r => r.qty > 0).sort((a, b) => b.qty - a.qty || a.name.localeCompare(b.name));
+        const per = 10;
+        const pages = Math.max(1, Math.ceil(rows.length / per));
+        if (STATE.dashTopPage > pages - 1) STATE.dashTopPage = pages - 1;
+        const startIdx = STATE.dashTopPage * per;
+        const page = rows.slice(startIdx, startIdx + per);
+        const maxQty = rows.length ? rows[0].qty : 1;
+        document.getElementById('dashTopPrev').classList.toggle('d-none', STATE.dashTopPage === 0);
+        document.getElementById('dashTopNext').classList.toggle('d-none', startIdx + per >= rows.length);
+        document.getElementById('dashTopRange').textContent = rows.length ? `${startIdx + 1}–${Math.min(startIdx + per, rows.length)} dari ${rows.length}` : '';
+        list.innerHTML = page.length ? page.map((r, i) => `
+            <div class="flex items-center gap-2 text-xs md:text-sm">
+                <span class="w-6 shrink-0 text-right font-bold">${startIdx + i + 1}.</span>
+                <div class="flex-1 min-w-0">
+                    <div class="font-bold truncate">${escapeHTML(r.name)}</div>
+                    <div class="dash-top-track"><div class="dash-top-fill" style="width:${Math.max(3, Math.round(r.qty / maxQty * 100))}%"></div></div>
+                </div>
+                <span class="shrink-0 font-bold whitespace-nowrap">${r.qty.toLocaleString('id-ID')} terjual</span>
+            </div>`).join('') : '<p class="text-center font-bold text-gray-500 py-4">Belum ada penjualan pada periode ini.</p>';
+    };
+
+    let dashResizeTimer = null;
+    window.addEventListener('resize', () => {
+        clearTimeout(dashResizeTimer);
+        dashResizeTimer = setTimeout(() => {
+            const p = document.getElementById('admin_dashboard');
+            if (p && !p.classList.contains('d-none') && STATE.dashSeries) window.renderDashChart(STATE.dashSeries);
+        }, 200);
+    });
+
+    // ======================================================= //
     // MODUL AKSES & PROFIL KASIR (ROLE SEPARATION)
     // ======================================================= //
     STATE.tempCashierPhotoBase64 = '';
@@ -5983,6 +6229,7 @@ measurementId: "G-ZVZ3QHEPKC"
     window.syncAdminTabs = () => {
         const st = STATE.data.settings, isCashier = Boolean(STATE.user) && STATE.user.role === 'cashier';
         const set = (id, show) => { const el = document.getElementById(id); if (el) el.classList.toggle('d-none', !show); };
+        set('tab_dashboard', !isCashier);
         set('tab_categories', !isCashier);
         set('tab_customers', Boolean(st.customerEnabled) && !isCashier);
         set('tab_cashier', Boolean(st.cashierEnabled) && !isCashier);
