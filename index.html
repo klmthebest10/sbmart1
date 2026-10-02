@@ -1524,7 +1524,13 @@
                 </div>
                 <div id="payDetailTransfer" class="mb-4 text-center d-none">
                     <p class="text-xs italic opacity-80 mb-1">Transfer Ke Bank:</p>
-                    <p id="infoBankTransferPOS" class="text-xs italic opacity-80 font-bold break-all"></p>
+                    <div class="flex items-center justify-center gap-1.5">
+                        <p id="infoBankTransferPOS" class="text-xs italic opacity-80 font-bold break-all"></p>
+                        <button type="button" id="btnCopyBankAcc" onclick="window.copyBankAccNumber()" class="d-none shrink-0 inline-flex items-center justify-center w-6 h-6 border-2 border-black bg-white hover:bg-yellow-100" title="Salin no. rekening" aria-label="Salin no. rekening">
+                            <svg id="iconCopyBankAcc" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        </button>
+                    </div>
+                    <p id="copyBankAccMsg" class="text-[10px] font-bold text-success mt-1 d-none">No. rekening disalin</p>
                 </div>
                 <div id="payDetailHutang" class="p-4 bg-danger text-white border-2 border-black mb-4 d-none">
                     <label class="block font-bold mb-2">Pilih Pelanggan Terdaftar:</label>
@@ -3059,7 +3065,38 @@ measurementId: "G-ZVZ3QHEPKC"
         const bankInfo = `${STATE.data.settings.bankName || ''} - ${STATE.data.settings.bankAcc || ''}`;
         if(document.getElementById('publicBankInfo')) document.getElementById('publicBankInfo').textContent = bankInfo;
         if(document.getElementById('infoBankTransferPOS')) document.getElementById('infoBankTransferPOS').textContent = bankInfo;
+        const copyAccBtn = document.getElementById('btnCopyBankAcc');
+        if (copyAccBtn) copyAccBtn.classList.toggle('d-none', !window.getBankAccNumber());
     }
+
+
+    // ===== Salin no. rekening (hanya angkanya, tanpa nama bank / atas nama) =====
+    window.getBankAccNumber = () => {
+        const m = String(STATE.data.settings.bankAcc || '').match(/\d[\d\s.-]*\d|\d/);
+        return m ? m[0].replace(/\D/g, '') : '';
+    };
+    window.copyBankAccNumber = async () => {
+        const num = window.getBankAccNumber();
+        if (!num) return;
+        let ok = false;
+        try { await navigator.clipboard.writeText(num); ok = true; } catch (e) {
+            const t = document.createElement('textarea');
+            t.value = num; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;opacity:0;left:-9999px';
+            document.body.appendChild(t); t.select();
+            try { ok = document.execCommand('copy'); } catch (e2) {}
+            t.remove();
+        }
+        if (!ok) return await window.customAlert('Gagal menyalin. No. rekening: ' + num, 'Info');
+        if (window.playSfx) window.playSfx('select');
+        const icon = document.getElementById('iconCopyBankAcc');
+        const msg = document.getElementById('copyBankAccMsg');
+        if (!window.__copyAccIcon) window.__copyAccIcon = icon.innerHTML;
+        const copyIcon = window.__copyAccIcon;
+        icon.innerHTML = '<polyline points="4 12 10 18 20 6"></polyline>';
+        msg.classList.remove('d-none');
+        clearTimeout(window.__copyAccTimer);
+        window.__copyAccTimer = setTimeout(() => { icon.innerHTML = copyIcon; msg.classList.add('d-none'); }, 1600);
+    };
 
     window.syncPublicCartVisibility = (pageId) => {
         if (!pageId) {
