@@ -20,13 +20,16 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Warung Indonesia">
-    
-    <!-- Inline Dynamic PWA Manifest (100% Bebas Error 404 di Blogger) -->
+    <meta name="apple-mobile-web-app-title" content="Warung Mbak Wiwin">
+    <meta name="application-name" content="Warung Mbak Wiwin">
+
+    <!-- PWA: manifest.json, sw.js dan semua ikon diletakkan satu folder dengan index.html -->
     <link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-<link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 
     <!-- Tailwind CSS & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -704,7 +707,10 @@
             <section id="pagePublic" class="app-page d-none">
                 <div class="flex justify-between items-center gap-2 mb-1">
                     <div id="publicBankInfo" class="text-xs italic opacity-80"></div>
-                    <button onclick="window.toggleTheme()" class="theme-toggle-btn brutal-btn bg-white w-8 h-8 md:w-9 md:h-9 flex-shrink-0 flex items-center justify-center p-0" title="Ganti Mode Terang/Gelap" aria-label="Ganti Mode Terang/Gelap">🌙</button>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button onclick="window.installPWA()" class="pwa-install-btn d-none brutal-btn bg-main h-8 md:h-9 px-2 md:px-3 flex-shrink-0 flex items-center justify-center gap-1 text-xs md:text-sm font-bold whitespace-nowrap" title="Install Aplikasi" aria-label="Install Aplikasi">📲 Install</button>
+                        <button onclick="window.toggleTheme()" class="theme-toggle-btn brutal-btn bg-white w-8 h-8 md:w-9 md:h-9 flex-shrink-0 flex items-center justify-center p-0" title="Ganti Mode Terang/Gelap" aria-label="Ganti Mode Terang/Gelap">🌙</button>
+                    </div>
                 </div>
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl md:text-3xl font-bold uppercase border-l-8 border-main pl-3">Menu Tersedia</h2>
@@ -789,7 +795,8 @@
             <section id="pageAdminPOS" class="app-page d-none">
               <div id="posLayout">
                 <div id="posProductsCol">
-                <div class="flex justify-end mb-1">
+                <div class="flex justify-end items-center gap-2 mb-1">
+                    <button onclick="window.installPWA()" class="pwa-install-btn d-none brutal-btn bg-main h-8 md:h-9 px-2 md:px-3 flex-shrink-0 flex items-center justify-center gap-1 text-xs md:text-sm font-bold whitespace-nowrap" title="Install Aplikasi" aria-label="Install Aplikasi">📲 Install</button>
                     <button onclick="window.toggleTheme()" class="theme-toggle-btn brutal-btn bg-white w-8 h-8 md:w-9 md:h-9 flex-shrink-0 flex items-center justify-center p-0" title="Ganti Mode Terang/Gelap" aria-label="Ganti Mode Terang/Gelap">🌙</button>
                 </div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
@@ -1951,45 +1958,78 @@
 
 <script>
     // ======================================================= //
-    // SETUP INLINE PWA MANIFEST & SVG ICONS
-    // Solusi 100% mandiri untuk Blogger tanpa perlu upload manifest.json
-    (function initPWAManifest() {
-        try {
-            const svgIcon = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23FFD500'/><rect x='32' y='32' width='448' height='448' fill='none' stroke='black' stroke-width='24'/><text x='50%' y='58%' font-size='180' font-weight='900' text-anchor='middle' fill='black' font-family='sans-serif'>WI</text></svg>`;
-            const svgDataUri = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgIcon);
+    // PWA: SERVICE WORKER + TOMBOL INSTALL APLIKASI
+    // File pendukung (satu folder dengan index.html): manifest.json, sw.js, favicon.ico,
+    // favicon-16.png, favicon-32.png, apple-touch-icon.png, icon-192.png, icon-512.png,
+    // icon-maskable-192.png, icon-maskable-512.png.
+    // ======================================================= //
+    let pwaDeferredPrompt = null;
+    const isPWAStandalone = () =>
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+    const isIOSDevice = () =>
+        /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-            const manifestContent = {
-                name: "Warung Indonesia",
-                short_name: "WarungID",
-                description: "Aplikasi Kasir POS & Menu Warung Indonesia",
-                start_url: window.location.href,
-                display: "standalone",
-                background_color: "#f4f4f0",
-                theme_color: "#FFD500",
-                icons: [
-                    { src: svgDataUri, sizes: "192x192 512x512", type: "image/svg+xml" }
-                ]
-            };
-            const manifestBlob = new Blob([JSON.stringify(manifestContent)], { type: 'application/manifest+json' });
-            const manifestURL = URL.createObjectURL(manifestBlob);
+    // Tombol Install tampil hanya jika aplikasi belum terpasang dan browser bisa memasangnya
+    // (Chrome/Edge/Samsung Internet lewat beforeinstallprompt, iPhone/iPad lewat Safari "Tambah ke Layar Utama").
+    window.syncPWAInstallButtons = () => {
+        const show = !isPWAStandalone() && (Boolean(pwaDeferredPrompt) || isIOSDevice());
+        document.querySelectorAll('.pwa-install-btn').forEach(btn => btn.classList.toggle('d-none', !show));
+    };
 
-            const linkManifest = document.getElementById('dynamicManifestLink');
-            if (linkManifest) linkManifest.setAttribute('href', manifestURL);
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();               // tahan banner bawaan browser, pakai tombol Install milik aplikasi
+        pwaDeferredPrompt = e;
+        window.syncPWAInstallButtons();
+    });
 
-            const appleIcon = document.getElementById('dynamicAppleIcon');
-            if (appleIcon) appleIcon.setAttribute('href', svgDataUri);
+    window.addEventListener('appinstalled', () => {
+        pwaDeferredPrompt = null;
+        window.syncPWAInstallButtons();
+    });
 
-            const favicon = document.getElementById('dynamicFavicon');
-            if (favicon) favicon.setAttribute('href', svgDataUri);
-        } catch(e) { console.warn("PWA manifest init notice:", e); }
-    })();
+    window.installPWA = async () => {
+        if (isPWAStandalone()) {
+            await window.customAlert('Aplikasi sudah terpasang di perangkat ini.', 'Install Aplikasi');
+            return;
+        }
+        if (pwaDeferredPrompt) {
+            if (!(await window.customConfirm('Pasang aplikasi ini di perangkat Anda? Aplikasi akan muncul di layar utama / desktop dan bisa dibuka seperti aplikasi biasa.', 'Install Aplikasi'))) return;
+            const promptEvent = pwaDeferredPrompt;
+            pwaDeferredPrompt = null;
+            try {
+                await promptEvent.prompt();
+                const choice = await promptEvent.userChoice;
+                if (choice && choice.outcome === 'accepted') {
+                    await window.customAlert('Aplikasi berhasil dipasang. Buka dari layar utama / desktop Anda.', 'Berhasil');
+                }
+            } catch (err) {
+                await window.customAlert('Gagal membuka jendela install: ' + (err && err.message ? err.message : err), 'Gagal');
+            }
+            window.syncPWAInstallButtons();
+            return;
+        }
+        if (isIOSDevice()) {
+            await window.customAlert('Cara memasang di iPhone/iPad:\n1. Buka halaman ini di Safari.\n2. Ketuk tombol Bagikan (kotak dengan panah ke atas).\n3. Pilih "Tambah ke Layar Utama".\n4. Ketuk "Tambah".', 'Install Aplikasi');
+            return;
+        }
+        await window.customAlert('Browser ini belum mendukung install langsung. Gunakan menu browser lalu pilih "Install aplikasi" / "Tambahkan ke layar utama".', 'Install Aplikasi');
+    };
 
-    // PWA Service Worker via Blob (Bebas 404 pada Blogger)
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && /^(https:|http:\/\/localhost|http:\/\/127\.0\.0\.1)/.test(location.href)) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').catch(() => {});
+            navigator.serviceWorker.register('./sw.js', { scope: './' }).then(reg => {
+                // Versi baru sw.js terpasang -> langsung aktifkan agar perangkat memakai versi aplikasi terbaru.
+                reg.addEventListener('updatefound', () => {
+                    const nw = reg.installing;
+                    if (!nw) return;
+                    nw.addEventListener('statechange', () => {
+                        if (nw.state === 'installed' && navigator.serviceWorker.controller) nw.postMessage({ type: 'SKIP_WAITING' });
+                    });
+                });
+            }).catch(err => console.warn('Service worker gagal didaftarkan:', err));
         });
     }
+    window.addEventListener('load', () => window.syncPWAInstallButtons());
 
     // ======================================================= //
     // KONFIGURASI FIREBASE MASTER BUILDER
