@@ -670,6 +670,21 @@
 .tag-color-swatch.is-active { outline: 3px solid #000; outline-offset: 2px; }
 [data-theme="dark"] .tag-color-swatch { border-color: var(--dk-border); }
 [data-theme="dark"] .tag-color-swatch.is-active { outline-color: var(--dk-border); }
+
+/* Dropdown & kalender bawaan browser dimatikan: ketukan ditangkap lalu dibuka lewat popup aplikasi (await). */
+select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
+.cs-field-hit { cursor: pointer; }
+.cs-opt.is-active { background-color: #FFD500; }
+[data-theme="dark"] .cs-opt.is-active { background-color: var(--dk-main) !important; }
+.cd-day { height: 2.25rem; border: 2px solid transparent; font-weight: 700; font-size: 13px; background: transparent; }
+.cd-day:hover { border-color: #000; }
+.cd-day.is-other { opacity: .35; }
+.cd-day.is-today { border-color: #000; border-style: dashed; }
+.cd-day.is-sel { background: #000; color: #fff; border-color: #000; }
+.cd-day.is-sun { color: #FF003C; }
+.cd-day.is-sel.is-sun { color: #fff; }
+[data-theme="dark"] .cd-day:hover, [data-theme="dark"] .cd-day.is-today { border-color: var(--dk-border); }
+[data-theme="dark"] .cd-day.is-sel { background: var(--dk-text); color: var(--dk-bg); }
     </style>
 </head>
 <body>
@@ -1987,6 +2002,62 @@
     <!-- Notifikasi singkat (hasil scan) -->
     <div id="scanToast" class="scan-toast d-none"></div>
 
+    <!-- Popup Pilihan (pengganti dropdown bawaan browser): const v = await window.customSelect(...) -->
+    <div id="modalCustomSelect" class="fixed inset-0 modal-backdrop d-none z-[999990] flex items-center justify-center p-4">
+        <div class="brutal-box bg-white w-full max-w-sm relative flex flex-col max-h-[80vh] overflow-hidden">
+            <div id="csTitle" class="p-3 border-b-4 border-black font-bold uppercase bg-main shrink-0">Pilih</div>
+            <div id="csSearchWrap" class="p-3 border-b-2 border-black bg-white shrink-0 d-none">
+                <input type="text" id="csSearch" autocomplete="off" placeholder="Cari..." class="brutal-input bg-white text-sm">
+            </div>
+            <div id="csList" class="p-3 overflow-y-auto flex-1 bg-gray-50 space-y-1.5"></div>
+            <div class="p-0 flex border-t-4 border-black shrink-0">
+                <button type="button" id="btnCsCancel" class="brutal-btn flex-1 bg-white hover:bg-gray-200 py-3 font-bold border-none shadow-none">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup Tanggal / Tanggal+Jam (pengganti kalender bawaan browser): const v = await window.customDatePicker(...) -->
+    <div id="modalCustomDate" class="fixed inset-0 modal-backdrop d-none z-[999990] flex items-center justify-center p-4">
+        <div class="brutal-box bg-white w-full max-w-xs relative flex flex-col max-h-[95vh] overflow-hidden">
+            <div id="cdTitle" class="p-3 border-b-4 border-black font-bold uppercase bg-main shrink-0">Pilih Tanggal</div>
+            <div class="p-3 bg-white overflow-y-auto">
+                <div class="flex items-center gap-2 mb-2">
+                    <button type="button" onclick="window.cdShiftMonth(-1)" class="brutal-btn bg-white w-9 h-9 inline-flex items-center justify-center">◀</button>
+                    <div id="cdMonthLabel" class="flex-1 text-center font-bold text-sm"></div>
+                    <button type="button" onclick="window.cdShiftMonth(1)" class="brutal-btn bg-white w-9 h-9 inline-flex items-center justify-center">▶</button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase mb-1">
+                    <div class="text-danger">Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+                </div>
+                <div id="cdGrid" class="grid grid-cols-7 gap-1"></div>
+                <div id="cdTimeWrap" class="d-none mt-3 pt-3 border-t-2 border-black">
+                    <div class="text-xs font-bold uppercase mb-1 text-center">Jam</div>
+                    <div class="flex items-center justify-center gap-2">
+                        <div class="flex flex-col items-center gap-1">
+                            <button type="button" onclick="window.cdShiftTime('h',1)" class="brutal-btn bg-white w-12 h-7 text-xs">▲</button>
+                            <div id="cdHour" class="w-12 text-center font-bold text-xl border-2 border-black py-1 bg-gray-50">00</div>
+                            <button type="button" onclick="window.cdShiftTime('h',-1)" class="brutal-btn bg-white w-12 h-7 text-xs">▼</button>
+                        </div>
+                        <div class="font-bold text-xl">:</div>
+                        <div class="flex flex-col items-center gap-1">
+                            <button type="button" onclick="window.cdShiftTime('m',5)" class="brutal-btn bg-white w-12 h-7 text-xs">▲</button>
+                            <div id="cdMinute" class="w-12 text-center font-bold text-xl border-2 border-black py-1 bg-gray-50">00</div>
+                            <button type="button" onclick="window.cdShiftTime('m',-5)" class="brutal-btn bg-white w-12 h-7 text-xs">▼</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-3">
+                    <button type="button" onclick="window.cdToday()" class="brutal-btn bg-white py-2 text-xs">⟲ Hari Ini</button>
+                    <button type="button" id="btnCdClear" class="brutal-btn bg-white py-2 text-xs">✕ Kosongkan</button>
+                </div>
+            </div>
+            <div class="p-0 flex border-t-4 border-black shrink-0">
+                <button type="button" id="btnCdCancel" class="brutal-btn flex-1 bg-white hover:bg-gray-200 py-3 font-bold border-none border-r-4 border-black shadow-none">Batal</button>
+                <button type="button" id="btnCdOk" class="brutal-btn flex-1 bg-main hover:bg-yellow-400 py-3 font-bold border-none shadow-none">Pakai</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom Dialog: Non-native dialogs -->
     <div id="modalCustomDialog" class="fixed inset-0 modal-backdrop d-none z-[999999] flex items-center justify-center p-4">
         <div class="brutal-box bg-white w-full max-w-sm relative flex flex-col overflow-hidden">
@@ -2229,7 +2300,8 @@ measurementId: "G-ZVZ3QHEPKC"
                 settings: safeSettings,
                 products: STATE.data.products,
                 categories: STATE.data.categories,
-                promos: STATE.data.promos
+                promos: STATE.data.promos,
+                bestSellerCounts: STATE.data.bestSellerCounts || {}
             }));
         } catch(e) {}
     }
@@ -2243,6 +2315,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 if(Array.isArray(parsed.products)) STATE.data.products = parsed.products;
                 if(Array.isArray(parsed.categories)) STATE.data.categories = parsed.categories;
                 if(Array.isArray(parsed.promos)) STATE.data.promos = parsed.promos;
+                if(parsed.bestSellerCounts && typeof parsed.bestSellerCounts === 'object') STATE.data.bestSellerCounts = parsed.bestSellerCounts;
             }
         } catch(e) {}
     }
@@ -2613,6 +2686,11 @@ measurementId: "G-ZVZ3QHEPKC"
                     STATE.data.customers = pcSnap.docs.map(doc => { const c = doc.data(); return { id: doc.id, name: c.name, wa: c.wa || '', address: c.address || '', debt: Number(c.debt || 0), payments: Array.isArray(c.payments) ? c.payments : [] }; });
                 } catch(pcErr) { console.warn('Gagal memuat pelanggan:', pcErr); }
             }
+
+            try {
+                const bsDoc = await db.collection('settings').doc('best_sellers').get();
+                STATE.data.bestSellerCounts = bsDoc.exists ? ((bsDoc.data() || {}).counts || {}) : {};
+            } catch (bsErr) { console.warn('Gagal memuat ringkasan produk terlaris:', bsErr); }
 
             if (STATE.data.settings.promoEnabled) {
                 try {
@@ -3289,12 +3367,19 @@ measurementId: "G-ZVZ3QHEPKC"
     window.renderPublicCatalog = () => { 
         window.applyProductGridMobile(); 
         buildCategoryFilter('publicCategoryFilter', 'activeCategoryPub', 'selectCatPublic'); 
-        document.getElementById('publicProductGrid').innerHTML = STATE.data.products.filter(p => p.cat === STATE.activeCategoryPub && p.available).map(p => buildProductCard(p, 'public')).join('') || '<p class="col-span-2 font-bold">Tidak ada produk.</p>'; 
+        document.getElementById('publicProductGrid').innerHTML = sortByBestSeller(STATE.data.products.filter(p => p.cat === STATE.activeCategoryPub && p.available)).map(p => buildProductCard(p, 'public')).join('') || '<p class="col-span-2 font-bold">Tidak ada produk.</p>'; 
     };
     window.selectCatPublic = cat => { STATE.activeCategoryPub = cat; window.renderPublicCatalog(); };
 
     // ===== Produk terlaris: hitung total qty terjual dari seluruh riwayat transaksi =====
+    const isStaffUser = () => Boolean(STATE.user) && ['admin', 'cashier'].includes(STATE.user.role);
     window.getProductSalesGetter = () => {
+        // Pengunjung publik tidak memuat riwayat transaksi -> pakai ringkasan jumlah terjual yang
+        // disimpan admin/kasir di settings/best_sellers (hanya angka per produk, tanpa data transaksi).
+        if (!isStaffUser()) {
+            const counts = STATE.data.bestSellerCounts || {};
+            return p => Number(counts[p.id] || 0);
+        }
         const byId = {}, byName = {};
         (STATE.data.orders || []).forEach(o => (o.items || []).forEach(i => {
             const q = Number(i.qty) || 0;
@@ -3312,14 +3397,38 @@ measurementId: "G-ZVZ3QHEPKC"
         return p => (byId[p.id] !== undefined ? byId[p.id] : (byName[p.name] || 0));
     };
 
-    // Terlaris di atas; produk kosong (tidak tersedia) di bawah; sisanya urutan asli
+    // Terlaris di atas; jumlah terjual sama (atau belum pernah terjual) diurutkan nama A-Z;
+    // produk kosong (tidak tersedia) selalu di paling bawah.
+    const nameCollator = new Intl.Collator('id', { sensitivity: 'base', numeric: true });
     function sortByBestSeller(list) {
         const sold = window.getProductSalesGetter();
         return list
-            .map((p, idx) => ({ p, idx, n: sold(p) }))
-            .sort((a, b) => ((b.p.available ? 1 : 0) - (a.p.available ? 1 : 0)) || (b.n - a.n) || (a.idx - b.idx))
+            .map(p => ({ p, n: sold(p) }))
+            .sort((a, b) => ((b.p.available ? 1 : 0) - (a.p.available ? 1 : 0)) || (b.n - a.n) || nameCollator.compare(a.p.name || '', b.p.name || ''))
             .map(x => x.p);
     }
+    window.sortByBestSeller = sortByBestSeller;
+
+    // Simpan ringkasan jumlah terjual per produk agar katalog publik bisa ikut mengurutkan terlaris.
+    // Hanya ditulis oleh admin/kasir, dan hanya jika angkanya berubah (ditunda 4 detik agar tidak boros tulis).
+    let bestPubTimer = null, bestPubLast = null;
+    window.publishBestSellerCounts = () => {
+        if (!isStaffUser() || IS_PREVIEW || !db) return;
+        clearTimeout(bestPubTimer);
+        bestPubTimer = setTimeout(async () => {
+            const sold = window.getProductSalesGetter();
+            const counts = {};
+            STATE.data.products.forEach(p => { const n = sold(p); if (n > 0) counts[p.id] = n; });
+            const key = JSON.stringify(counts);
+            if (key === bestPubLast || key === JSON.stringify(STATE.data.bestSellerCounts || {})) { bestPubLast = key; return; }
+            try {
+                await db.collection('settings').doc('best_sellers').set({ counts, updated_at: new Date().toISOString() });
+                bestPubLast = key;
+                STATE.data.bestSellerCounts = counts;
+                saveLocalDataCache();
+            } catch (e) { console.warn('Gagal menyimpan ringkasan produk terlaris:', e); }
+        }, 4000);
+    };
 
     function renderPosGrid() {
         const grid = document.getElementById('adminPosProductGrid');
@@ -3340,7 +3449,8 @@ measurementId: "G-ZVZ3QHEPKC"
     window.refreshBestSellers = () => {
         const dashPanel = document.getElementById('admin_dashboard');
         if (dashPanel && !dashPanel.classList.contains('d-none') && window.renderDashboard) window.renderDashboard();
-        if (!STATE.user || STATE.user.role !== 'admin') return;
+        if (!isStaffUser()) return;
+        window.publishBestSellerCounts();
         const page = document.getElementById('pageAdminPOS');
         if (!page || page.classList.contains('d-none')) return; // otomatis di-render saat halaman POS dibuka lagi
         renderPosGrid();
@@ -5561,7 +5671,7 @@ measurementId: "G-ZVZ3QHEPKC"
     window.doPublicInlineSearch = () => {
         const q = document.getElementById('publicInlineSearch').value.toLowerCase();
         if(!q) return window.renderPublicCatalog();
-        const filtered = [...STATE.data.products].filter(p => p.available && p.name.toLowerCase().includes(q)).sort((a,b) => a.name.localeCompare(b.name));
+        const filtered = window.sortByBestSeller(STATE.data.products.filter(p => p.available && p.name.toLowerCase().includes(q)));
         document.getElementById('publicProductGrid').innerHTML = filtered.map(p => buildProductCard(p, 'public')).join('') || '<p class="col-span-full font-bold text-center mt-4">Produk tidak ditemukan.</p>';
     };
 
@@ -7663,6 +7773,206 @@ measurementId: "G-ZVZ3QHEPKC"
         // Proses / Nota: bunyi sukses dipanggil di dalam processCheckout; peringatan & gagal -> bunyi error.
         window.processCheckout = withErrorSound(window.processCheckout);
     })();
+
+    // ======================================================= //
+    // POPUP PILIHAN & KALENDER APLIKASI (pengganti popup bawaan browser)
+    //   const v = await window.customSelect([{value,label}], 'Judul', nilaiSekarang)
+    //   const v = await window.customDatePicker('2026-10-03', { title, withTime, allowClear })
+    // Semua <select> dan input tanggal di aplikasi otomatis memakai popup ini (termasuk yang dibuat dinamis),
+    // nilainya tetap tersimpan di elemen aslinya sehingga kode lain tidak perlu diubah.
+    // ======================================================= //
+    window.customSelect = (options, title = 'Pilih', current = '') => new Promise(resolve => {
+        const list = document.getElementById('csList');
+        const search = document.getElementById('csSearch');
+        document.getElementById('csTitle').textContent = title;
+        const many = options.length > 7;
+        document.getElementById('csSearchWrap').classList.toggle('d-none', !many);
+        search.value = '';
+        const render = () => {
+            const q = search.value.toLowerCase().trim();
+            const shown = options.filter(o => !q || String(o.label).toLowerCase().includes(q));
+            list.innerHTML = shown.length ? shown.map(o => `<button type="button" data-v="${escapeHTML(o.value)}" class="cs-opt brutal-btn ${String(o.value) === String(current) ? 'is-active' : 'bg-white'} w-full text-left px-3 py-2.5 text-sm normal-case flex justify-between items-center gap-2"><span class="font-bold break-words">${escapeHTML(o.label)}</span>${String(o.value) === String(current) ? '<span class="shrink-0">✓</span>' : ''}</button>`).join('')
+                : '<p class="text-center text-sm font-bold text-gray-500 py-4">Tidak ditemukan.</p>';
+        };
+        render();
+        search.oninput = render;
+        let done = false;
+        const finish = (v) => { if (done) return; done = true; window.closeModal('modalCustomSelect'); resolve(v); };
+        list.onclick = (e) => { const b = e.target.closest('.cs-opt'); if (b) finish(b.dataset.v); };
+        document.getElementById('btnCsCancel').onclick = () => finish(null);
+        document.getElementById('modalCustomSelect').onclick = (e) => { if (e.target.id === 'modalCustomSelect') finish(null); };
+        window.openModal('modalCustomSelect');
+        if (many) setTimeout(() => search.focus(), 80);
+        const act = list.querySelector('.cs-opt.is-active');
+        if (act) setTimeout(() => act.scrollIntoView({ block: 'center' }), 30);
+    });
+
+    // ----- Kalender -----
+    const CD_MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const cdPad = n => String(n).padStart(2, '0');
+    const cdKey = d => `${d.getFullYear()}-${cdPad(d.getMonth() + 1)}-${cdPad(d.getDate())}`;
+    STATE.cd = { view: new Date(), sel: null, h: 0, m: 0, withTime: false };
+    window.cdRender = () => {
+        const st = STATE.cd, v = st.view;
+        document.getElementById('cdMonthLabel').textContent = `${CD_MONTHS[v.getMonth()]} ${v.getFullYear()}`;
+        const first = new Date(v.getFullYear(), v.getMonth(), 1);
+        const start = new Date(first); start.setDate(1 - first.getDay());
+        const today = cdKey(new Date()), sel = st.sel ? cdKey(st.sel) : '';
+        let html = '';
+        for (let i = 0; i < 42; i++) {
+            const d = new Date(start); d.setDate(start.getDate() + i);
+            const k = cdKey(d);
+            const cls = ['cd-day', d.getMonth() !== v.getMonth() ? 'is-other' : '', k === today ? 'is-today' : '', k === sel ? 'is-sel' : '', d.getDay() === 0 ? 'is-sun' : ''].join(' ');
+            html += `<button type="button" class="${cls}" data-k="${k}">${d.getDate()}</button>`;
+        }
+        document.getElementById('cdGrid').innerHTML = html;
+        document.getElementById('cdHour').textContent = cdPad(st.h);
+        document.getElementById('cdMinute').textContent = cdPad(st.m);
+    };
+    window.cdShiftMonth = (n) => { const v = STATE.cd.view; STATE.cd.view = new Date(v.getFullYear(), v.getMonth() + n, 1); window.cdRender(); };
+    window.cdShiftTime = (u, n) => {
+        const st = STATE.cd;
+        if (u === 'h') st.h = (st.h + n + 24) % 24;
+        else { const base = n > 0 ? Math.floor(st.m / 5) * 5 : Math.ceil(st.m / 5) * 5; st.m = (base + n + 60) % 60; }
+        window.cdRender();
+    };
+    window.cdToday = () => {
+        const n = new Date(); STATE.cd.sel = n; STATE.cd.view = new Date(n.getFullYear(), n.getMonth(), 1);
+        if (STATE.cd.withTime && !STATE.cd.touchedTime) { STATE.cd.h = n.getHours(); STATE.cd.m = n.getMinutes(); }
+        window.cdRender();
+    };
+    window.customDatePicker = (value, opts = {}) => new Promise(resolve => {
+        const withTime = Boolean(opts.withTime);
+        const m = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+        const sel = m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+        const now = new Date();
+        STATE.cd = {
+            withTime, sel,
+            view: new Date((sel || now).getFullYear(), (sel || now).getMonth(), 1),
+            h: m && m[4] ? +m[4] : (withTime ? now.getHours() : 0),
+            m: m && m[5] ? +m[5] : (withTime ? Math.floor(now.getMinutes() / 5) * 5 : 0)
+        };
+        document.getElementById('cdTitle').textContent = opts.title || (withTime ? 'Pilih Tanggal & Jam' : 'Pilih Tanggal');
+        document.getElementById('cdTimeWrap').classList.toggle('d-none', !withTime);
+        document.getElementById('btnCdClear').classList.toggle('d-none', !opts.allowClear);
+        window.cdRender();
+        let done = false;
+        const finish = (v) => { if (done) return; done = true; window.closeModal('modalCustomDate'); resolve(v); };
+        document.getElementById('cdGrid').onclick = (e) => {
+            const b = e.target.closest('.cd-day'); if (!b) return;
+            const [y, mo, d] = b.dataset.k.split('-').map(Number);
+            STATE.cd.sel = new Date(y, mo - 1, d);
+            if (STATE.cd.sel.getMonth() !== STATE.cd.view.getMonth()) STATE.cd.view = new Date(y, mo - 1, 1);
+            window.cdRender();
+            if (!withTime) finish(cdKey(STATE.cd.sel)); // tanggal saja: langsung terpilih
+        };
+        document.getElementById('btnCdOk').onclick = async () => {
+            if (!STATE.cd.sel) { await window.customAlert('Pilih tanggal terlebih dahulu.', 'Peringatan'); return; }
+            finish(cdKey(STATE.cd.sel) + (withTime ? `T${cdPad(STATE.cd.h)}:${cdPad(STATE.cd.m)}` : ''));
+        };
+        document.getElementById('btnCdClear').onclick = () => finish('');
+        document.getElementById('btnCdCancel').onclick = () => finish(null);
+        document.getElementById('modalCustomDate').onclick = (e) => { if (e.target.id === 'modalCustomDate') finish(null); };
+        window.openModal('modalCustomDate');
+    });
+
+    // ----- Sambungkan ke semua <select> & input tanggal -----
+    const fieldTitle = (el) => {
+        if (el.dataset.title) return el.dataset.title;
+        if (el.id === 'prodCat') return 'Pilih Kategori';
+        const wrap = el.closest('div');
+        const lbl = wrap && (wrap.querySelector('label') || (wrap.parentElement && wrap.parentElement.querySelector(':scope > label')));
+        const t = lbl ? lbl.textContent.replace(/\*/g, '').replace(/\(.*?\)/g, '').trim() : '';
+        return t ? (el.tagName === 'SELECT' ? 'Pilih ' + t : t) : (el.tagName === 'SELECT' ? 'Pilih' : 'Pilih Tanggal');
+    };
+    const markNative = (root) => {
+        (root.querySelectorAll ? root : document).querySelectorAll('select:not(.cs-native)').forEach(el => { el.classList.add('cs-native'); el.tabIndex = -1; });
+        (root.querySelectorAll ? root : document).querySelectorAll('input[type="date"]:not(.cd-native), input[type="datetime-local"]:not(.cd-native)').forEach(el => { el.classList.add('cd-native'); el.tabIndex = -1; });
+    };
+    markNative(document);
+    new MutationObserver(muts => muts.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) { if (n.matches && n.matches('select, input[type="date"], input[type="datetime-local"]')) markNative(n.parentElement || document); else markNative(n); } })))
+        .observe(document.getElementById('gasapp-root') || document.body, { childList: true, subtree: true });
+
+    const setFieldValue = (el, v) => {
+        if (el.value === v) return;
+        el.value = v;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const openField = async (el) => {
+        if (el.disabled || el.__csBusy) return;
+        el.__csBusy = true;
+        try {
+            if (el.tagName === 'SELECT') {
+                const opts = Array.from(el.options).filter(o => !o.disabled && o.value !== '' && !o.hidden).map(o => ({ value: o.value, label: o.textContent.trim() }));
+                if (!opts.length) {
+                    await window.customAlert(el.id === 'prodCat' ? 'Belum ada kategori. Buat kategori dulu di menu Kategori.' : 'Belum ada pilihan yang tersedia.', 'Info');
+                    return;
+                }
+                const v = await window.customSelect(opts, fieldTitle(el), el.value);
+                if (v !== null) { setFieldValue(el, v); if (window.playSfx) window.playSfx('select'); }
+            } else {
+                const withTime = el.type === 'datetime-local';
+                const v = await window.customDatePicker(el.value, { title: fieldTitle(el), withTime, allowClear: !el.required });
+                if (v !== null) { setFieldValue(el, v); if (window.playSfx) window.playSfx('select'); }
+            }
+        } finally { el.__csBusy = false; }
+    };
+    // Karena elemen aslinya tidak menerima ketukan (pointer-events: none), ketukan ditangkap dari posisi jarinya.
+    const fieldAtPoint = (x, y) => {
+        const cands = document.querySelectorAll('select.cs-native, input.cd-native');
+        let hit = null;
+        cands.forEach(el => {
+            if (el.disabled || !el.offsetParent) return;
+            const r = el.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) hit = el;
+        });
+        return hit;
+    };
+    document.addEventListener('click', (e) => {
+        if (e.target.closest && e.target.closest('button, a, input:not(.cd-native), textarea, label')) return;
+        const el = fieldAtPoint(e.clientX, e.clientY);
+        if (!el) return;
+        // Jangan buka field yang tertutup popup lain di atasnya.
+        const top = document.elementFromPoint(e.clientX, e.clientY);
+        if (top && !(top === el.parentElement || (el.parentElement && el.parentElement.contains(top)) || top.contains(el))) return;
+        e.preventDefault();
+        openField(el);
+    }, true);
+    // Kursor tangan saat diarahkan ke field.
+    document.addEventListener('mousemove', (e) => {
+        const el = fieldAtPoint(e.clientX, e.clientY);
+        document.body.classList.toggle('cs-field-hit', Boolean(el));
+    }, { passive: true });
+
+    // Peringatan "wajib diisi" bawaan browser (gelembung validasi form) diganti popup aplikasi.
+    let invalidShown = false;
+    const fieldLabel = (el) => {
+        const wrap = el.closest('div');
+        const lbl = (el.id && document.querySelector(`label[for="${el.id}"]`)) || (wrap && (wrap.querySelector('label') || (wrap.parentElement && wrap.parentElement.querySelector(':scope > label'))));
+        const t = lbl ? lbl.textContent.replace(/\*/g, '').replace(/\(.*?\)/g, '').trim() : '';
+        return t || el.placeholder || 'Kolom ini';
+    };
+    document.addEventListener('invalid', (e) => {
+        e.preventDefault();
+        if (invalidShown) return;
+        invalidShown = true;
+        const el = e.target;
+        const name = fieldLabel(el);
+        const isPick = el.tagName === 'SELECT' || el.classList.contains('cd-native');
+        let msg;
+        if (el.validity.valueMissing) msg = isPick ? `${name} wajib dipilih.` : `${name} wajib diisi.`;
+        else if (el.validity.rangeUnderflow) msg = `${name} minimal ${el.min}.`;
+        else if (el.validity.rangeOverflow) msg = `${name} maksimal ${el.max}.`;
+        else if (el.validity.badInput || el.validity.stepMismatch) msg = `${name} harus berupa angka yang valid.`;
+        else if (el.validity.typeMismatch) msg = `Format ${name} tidak valid.`;
+        else msg = `${name} belum benar.`;
+        setTimeout(async () => {
+            await window.customAlert(msg, 'Peringatan');
+            invalidShown = false;
+            if (isPick) openField(el); else { try { el.focus(); } catch (err) {} }
+        }, 0);
+    }, true);
 
     setInterval(window.updateStoreStatusDisplay, 30000);
 </script>
