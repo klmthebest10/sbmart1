@@ -3384,7 +3384,7 @@ measurementId: "G-ZVZ3QHEPKC"
         (STATE.data.orders || []).forEach(o => (o.items || []).forEach(i => {
             const q = Number(i.qty) || 0;
             if (i.id) byId[i.id] = (byId[i.id] || 0) + q;
-            if (i.name) byName[i.name] = (byName[i.name] || 0) + q;
+            else if (i.name) byName[i.name] = (byName[i.name] || 0) + q;
         }));
         // Transaksi yang dihapus otomatis oleh sistem tetap terhitung lewat arsip penjualan.
         (STATE.data.salesArchive || []).forEach(a => Object.entries(a.items || {}).forEach(([k, v]) => {
@@ -3392,9 +3392,9 @@ measurementId: "G-ZVZ3QHEPKC"
             if (!q) return;
             const prod = STATE.data.products.find(p => p.id === k);
             if (prod) byId[k] = (byId[k] || 0) + q;
-            else if (v.n) byName[v.n] = (byName[v.n] || 0) + q;
+            else if (v.n && k === String(v.n).slice(0, 150)) byName[v.n] = (byName[v.n] || 0) + q; // item lama tanpa id
         }));
-        return p => (byId[p.id] !== undefined ? byId[p.id] : (byName[p.name] || 0));
+        return p => (byId[p.id] || 0) + (byName[p.name] || 0);
     };
 
     // Terlaris di atas; jumlah terjual sama (atau belum pernah terjual) diurutkan nama A-Z;
@@ -4711,6 +4711,9 @@ measurementId: "G-ZVZ3QHEPKC"
             } else { 
                 STATE.data.products = STATE.data.products.filter(p=>p.id!==id); 
             } 
+            STATE.cart = STATE.cart.filter(i => i.id !== id);
+            window.updateCartUI();
+            window.refreshBestSellers();
             window.renderAdminProducts(); 
             hideLoad();
             await window.customAlert('Dihapus!', 'Sukses'); 
@@ -6462,19 +6465,23 @@ measurementId: "G-ZVZ3QHEPKC"
         const list = document.getElementById('dashTopList');
         if (!list) return;
         const agg = new Map();
-        (STATE.dashOrders || []).forEach(o => (o.items || []).forEach(i => {
-            const key = i.id || i.name;
-            const cur = agg.get(key) || { name: (STATE.data.products.find(p => p.id === i.id) || {}).name || i.name, qty: 0 };
-            cur.qty += Number(i.qty) || 0;
-            agg.set(key, cur);
-        }));
+        // Hanya produk yang MASIH ADA di daftar produk yang ditampilkan; produk yang sudah dihapus dilewati.
+        const byId = new Map(STATE.data.products.map(p => [p.id, p]));
+        const byName = new Map(STATE.data.products.map(p => [String(p.name || '').toLowerCase(), p]));
+        // Item ber-id hanya dihitung jika id-nya masih ada; item lama tanpa id dicocokkan lewat nama.
+        const resolve = (id, name) => id ? byId.get(id) : byName.get(String(name || '').toLowerCase());
+        const addQty = (prod, q) => {
+            if (!prod || !q) return;
+            const cur = agg.get(prod.id) || { name: prod.name, qty: 0 };
+            cur.qty += q;
+            agg.set(prod.id, cur);
+        };
+        (STATE.dashOrders || []).forEach(o => (o.items || []).forEach(i => addQty(resolve(i.id, i.name), Number(i.qty) || 0)));
         // Ditambah arsip transaksi yang dihapus otomatis oleh sistem (bukan hapus manual admin).
         (STATE.dashArchive || []).forEach(a => Object.entries(a.items || {}).forEach(([k, v]) => {
-            const q = Number(v && v.q) || 0;
-            if (!q) return;
-            const cur = agg.get(k) || { name: (STATE.data.products.find(p => p.id === k) || {}).name || v.n || k, qty: 0 };
-            cur.qty += q;
-            agg.set(k, cur);
+            // Kunci arsip = id produk (atau nama, hanya untuk item lama tanpa id).
+            const keyIsName = v && v.n && k === String(v.n).slice(0, 150);
+            addQty(byId.get(k) || (keyIsName ? byName.get(k.toLowerCase()) : null), Number(v && v.q) || 0);
         }));
         const rows = [...agg.values()].filter(r => r.qty > 0).sort((a, b) => b.qty - a.qty || a.name.localeCompare(b.name));
         const per = 10;
