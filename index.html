@@ -7458,7 +7458,10 @@ measurementId: "G-ZVZ3QHEPKC"
 
     const finInPeriod = () => {
         const { start, end } = finRange();
-        return STATE.data.financeNotes.filter(n => { const ym = String(n.date).slice(0, 7); return ym >= start && ym <= end; });
+        return STATE.data.financeNotes
+            .filter(n => !String(n.id).startsWith('fn_sales_'))
+            .filter(n => { const ym = String(n.date).slice(0, 7); return ym >= start && ym <= end; })
+            .concat(window.buildRecapNotes ? window.buildRecapNotes(start, end) : []);
     };
     const finSort = (arr, dir) => [...arr].sort((a, b) => (a.date === b.date ? (a.ts - b.ts) : (a.date < b.date ? -1 : 1)) * dir);
     const finTotals = arr => {
@@ -7528,16 +7531,17 @@ measurementId: "G-ZVZ3QHEPKC"
                 <div class="flex items-center gap-2 flex-wrap mb-1">
                     <span class="px-2 py-0.5 text-[10px] font-bold border-2 border-black uppercase" style="${t.badge}">${t.icon} ${t.label}</span>
                     ${isNote ? '<span class="text-[10px] font-bold italic text-violet-700">tidak dihitung dalam total</span>' : ''}
+                    ${n.recap ? '<span class="px-2 py-0.5 text-[10px] font-bold border-2 border-black bg-white text-black">📊 REKAP OTOMATIS</span>' : ''}
                 </div>
                 <div class="font-bold text-sm md:text-base break-words">${escapeHTML(n.name)}</div>
                 ${n.desc ? `<div class="text-xs text-gray-700 break-words whitespace-pre-wrap mt-0.5">${escapeHTML(n.desc)}</div>` : ''}
             </div>
             <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
                 <div class="font-bold text-lg md:text-xl whitespace-nowrap" style="color:${t.amt}">${t.sign}${formatWon(n.amount)}</div>
-                <div class="flex gap-1">
+                ${n.recap ? '<div class="text-[10px] italic text-gray-600 text-right leading-tight">dari Riwayat Transaksi</div>' : `<div class="flex gap-1">
                     <button onclick="window.openFinanceModal('${n.id}')" class="brutal-btn bg-main border-2 border-black px-3 py-1 text-[10px]">Edit</button>
                     <button onclick="window.deleteFinanceNote('${n.id}')" class="brutal-btn bg-danger text-white border-2 border-black px-3 py-1 text-[10px]">Hapus</button>
-                </div>
+                </div>`}
             </div>
         </div>`;
     };
@@ -8224,75 +8228,96 @@ measurementId: "G-ZVZ3QHEPKC"
     });
 
     // ======================================================= //
-    // CATATAN KEUANGAN: PENJUALAN BULANAN OTOMATIS
-    // Setiap awal bulan (saat admin membuka aplikasi), total penjualan bulan sebelumnya otomatis dicatat
-    // sebagai Pemasukan "Penjualan Bulan <Bulan> <Tahun>" bertanggal 1 bulan berjalan.
-    // Dihitung seperti Dashboard: transaksi hutang yang belum lunas tidak dihitung.
-    // Penanda bulan yang sudah dicatat disimpan di settings/finance_auto, jadi kalau catatannya dihapus
-    // manual tidak akan dibuat ulang. Mulai berlaku dari bulan sebelum fitur ini pertama kali berjalan.
+    // CATATAN KEUANGAN: REKAP PENJUALAN BULANAN OTOMATIS
+    // Mulai tanggal 1 setiap bulan, total penjualan bulan kemarin otomatis tampil sebagai Pemasukan
+    // "Penjualan Bulan <Bulan> <Tahun>" bertanggal 1 bulan ini, lengkap dengan rinciannya.
+    // Nilainya dihitung langsung dari Riwayat Transaksi (selalu sama dengan data terbaru: transaksi yang
+    // diedit/dihapus/hutang yang dilunasi ikut terhitung). Seperti Dashboard, hutang belum lunas tidak dihitung.
+    // Salinan rekap disimpan di settings/finance_auto supaya angkanya tetap ada walau riwayat lama
+    // sudah terhapus otomatis oleh Manajemen Data Riwayat.
     // ======================================================= //
+    STATE.finRecapStore = {};
+    const RECAP_MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const recapYmOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const recapShift = (ym, n) => { const [y, m] = ym.split('-').map(Number); return recapYmOf(new Date(y, m - 1 + n, 1)); };
+    // Bulan sebelum batas ini mungkin sudah sebagian terhapus otomatis -> pakai salinan tersimpan.
+    const recapSafeCut = () => {
+        const a = getOrderCutoffDate(), b = getCashierHistoryCutoffDate();
+        const d = a > b ? a : b;
+        return new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    };
+
+    window.computeSalesRecap = (ym) => {
+        const r = { amount: 0, count: 0, unpaid: 0, by: {} };
+        (STATE.data.orders || []).forEach(o => {
+            if (!o.date || recapYmOf(new Date(o.date)) !== ym) return; // bulan menurut waktu lokal perangkat
+            r.count++;
+            const total = Number(o.total || 0);
+            if (o.type === 'Hutang' && o.paymentStatus === 'Unpaid') { r.unpaid += Math.max(0, total - Number(o.debtPaid || 0)); return; }
+            const key = o.type === 'Hutang' ? 'Hutang (lunas)' : (o.type || 'Lainnya');
+            r.by[key] = (r.by[key] || 0) + total;
+            r.amount += total;
+        });
+        return r;
+    };
+    window.getSalesRecap = (ym) => {
+        const [y, m] = ym.split('-').map(Number);
+        const stored = STATE.finRecapStore[ym];
+        if (stored && new Date(y, m - 1, 1) < recapSafeCut()) return stored;
+        return window.computeSalesRecap(ym);
+    };
+    // Baris rekap (virtual, tidak bisa diedit/dihapus) untuk bulan-bulan di periode yang sedang dilihat.
+    window.buildRecapNotes = (startYM, endYM) => {
+        const out = [];
+        const today = finTodayDate();
+        for (let M = startYM, guard = 0; M <= endYM && guard < 36; M = recapShift(M, 1), guard++) {
+            const date = M + '-01';
+            if (date > today) continue; // baru muncul tanggal 1
+            const salesYM = recapShift(M, -1);
+            const r = window.getSalesRecap(salesYM);
+            if (!r || (!r.count && !r.amount)) continue;
+            const [y, m] = salesYM.split('-').map(Number);
+            const parts = ['Cash', 'Transfer', 'Kartu', 'Hutang (lunas)'].filter(k => r.by && r.by[k]).map(k => `${k} ${formatWon(r.by[k])}`);
+            Object.keys(r.by || {}).filter(k => !['Cash', 'Transfer', 'Kartu', 'Hutang (lunas)'].includes(k)).forEach(k => parts.push(`${k} ${formatWon(r.by[k])}`));
+            out.push({
+                id: 'recap_' + salesYM,
+                type: 'pemasukan',
+                name: `Penjualan Bulan ${RECAP_MONTHS[m - 1]} ${y}`,
+                amount: Math.round(r.amount || 0),
+                desc: `Rekap ${r.count} transaksi${parts.length ? ': ' + parts.join(' • ') : ''}.` + (r.unpaid > 0 ? `\nHutang belum lunas ${formatWon(r.unpaid)} tidak dihitung.` : ''),
+                date, ts: -1, recap: true
+            });
+        }
+        return out;
+    };
+
+    // Dipanggil saat admin memuat data: muat & perbarui salinan rekap bulan-bulan yang sudah selesai.
     window.autoMonthlySalesIncome = async () => {
         if (!STATE.data.settings.financeEnabled || !STATE.user || STATE.user.role !== 'admin') return;
-        const now = new Date();
-        const ymOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        const shift = (ym, n) => { const [y, m] = ym.split('-').map(Number); return ymOf(new Date(y, m - 1 + n, 1)); };
-        const curYM = ymOf(now), prevYM = shift(curYM, -1);
-        if (STATE.finAutoChecked === curYM) return;
-        STATE.finAutoChecked = curYM;
         try {
-            let meta = { start: '', done: {} };
+            let meta = {};
             if (!IS_PREVIEW && db) {
                 const md = await db.collection('settings').doc('finance_auto').get();
-                if (md.exists) meta = { start: md.data().start || '', done: md.data().done || {} };
+                meta = md.exists ? (md.data() || {}) : {};
             } else {
-                try { meta = JSON.parse(localStorage.getItem('wi_fin_auto') || 'null') || meta; } catch (e) {}
+                try { meta = JSON.parse(localStorage.getItem('wi_fin_auto') || '{}') || {}; } catch (e) {}
             }
-            if (!meta.start) meta.start = prevYM;
-            const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-            let changed = false, guard = 0;
-            for (let ym = meta.start; ym <= prevYM && guard < 24; ym = shift(ym, 1), guard++) {
-                if (meta.done[ym]) continue;
-                const total = (STATE.data.orders || []).reduce((sum, o) => {
-                    if (!o.date || ymOf(new Date(o.date)) !== ym) return sum; // bulan menurut waktu lokal perangkat
-                    if (o.type === 'Hutang' && o.paymentStatus === 'Unpaid') return sum;
-                    return sum + Number(o.total || 0);
-                }, 0);
-                if (total > 0) {
-                    const [y, m] = ym.split('-').map(Number);
-                    const note = {
-                        id: 'fn_sales_' + ym,
-                        type: 'pemasukan',
-                        name: `Penjualan Bulan ${monthNames[m - 1]} ${y}`,
-                        amount: Math.round(total),
-                        desc: 'Otomatis dari total penjualan bulan tersebut (hutang belum lunas tidak dihitung).',
-                        date: shift(ym, 1) + '-01',
-                        ts: Date.now(),
-                        auto: true
-                    };
-                    if (!IS_PREVIEW && db) {
-                        const ref = db.collection('finance_notes').doc(note.id);
-                        const ex = await ref.get();
-                        if (!ex.exists) await ref.set(note);
-                    } else {
-                        let list = [];
-                        try { list = JSON.parse(localStorage.getItem('wi_finance_notes') || '[]'); } catch (e) {}
-                        if (!list.some(n => n.id === note.id)) { list.push(note); localStorage.setItem('wi_finance_notes', JSON.stringify(list)); }
-                    }
-                    if (!STATE.data.financeNotes.some(n => n.id === note.id)) STATE.data.financeNotes.push(note);
-                }
-                meta.done[ym] = true;
-                changed = true;
-            }
+            STATE.finRecapStore = meta.recaps || {};
+            const curYM = recapYmOf(new Date()), safe = recapYmOf(recapSafeCut());
+            const months = new Set((STATE.data.orders || []).filter(o => o.date).map(o => recapYmOf(new Date(o.date))));
+            let changed = false;
+            months.forEach(ym => {
+                if (ym >= curYM || ym < safe) return; // hanya bulan yang sudah selesai & datanya masih lengkap
+                const r = window.computeSalesRecap(ym);
+                if (JSON.stringify(r) !== JSON.stringify(STATE.finRecapStore[ym])) { STATE.finRecapStore[ym] = r; changed = true; }
+            });
             if (changed) {
-                if (!IS_PREVIEW && db) await db.collection('settings').doc('finance_auto').set(meta);
-                else localStorage.setItem('wi_fin_auto', JSON.stringify(meta));
-                const fp = document.getElementById('admin_finance');
-                if (fp && !fp.classList.contains('d-none') && window.renderFinance) window.renderFinance();
+                if (!IS_PREVIEW && db) await db.collection('settings').doc('finance_auto').set({ recaps: STATE.finRecapStore }, { merge: true });
+                else localStorage.setItem('wi_fin_auto', JSON.stringify({ recaps: STATE.finRecapStore }));
             }
-        } catch (e) {
-            STATE.finAutoChecked = null; // coba lagi saat data dimuat ulang
-            console.warn('Pencatatan otomatis penjualan bulanan gagal:', e);
-        }
+        } catch (e) { console.warn('Gagal memuat/menyimpan rekap penjualan bulanan:', e); }
+        const fp = document.getElementById('admin_finance');
+        if (fp && !fp.classList.contains('d-none') && window.renderFinance) window.renderFinance();
     };
 
     setInterval(window.updateStoreStatusDisplay, 30000);
