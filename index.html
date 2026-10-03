@@ -1570,7 +1570,7 @@
                     <input type="text" id="prodName" maxlength="150" class="brutal-input bg-white" required>
                 </div>
                 <div class="mb-3">
-                    <label class="block font-bold mb-1">Kategori</label>
+                    <label class="block font-bold mb-1">Kategori <span class="text-danger">*</span></label>
                     <select id="prodCat" class="brutal-input bg-white" required></select>
                 </div>
                 <div class="mb-3">
@@ -4441,6 +4441,10 @@ measurementId: "G-ZVZ3QHEPKC"
 
     window.saveProduct = async e => {
         e.preventDefault();
+        const prodCatVal = document.getElementById('prodCat').value;
+        if (!prodCatVal || !STATE.data.categories.includes(prodCatVal)) {
+            return await window.customAlert(STATE.data.categories.length ? 'Pilih kategori produk terlebih dahulu.' : 'Belum ada kategori. Buat kategori dulu di menu Kategori, lalu tambahkan produk.', 'Peringatan');
+        }
         const prodSystem = document.querySelector('input[name="prodSystem"]:checked')?.value || '';
         if (!prodSystem) return await window.customAlert('Pilih salah satu Sistem Ketersediaan Produk: ON/OFF Tersedia atau Stok Produk.', 'Peringatan');
         const isStockMode = prodSystem === 'stock';
@@ -5487,7 +5491,7 @@ measurementId: "G-ZVZ3QHEPKC"
             document.getElementById('formProduct').reset(); 
             STATE.tempProdImgBase64 = ''; 
             window.setProdImgPreview(''); 
-            document.getElementById('prodCat').innerHTML = STATE.data.categories.map(c => `<option value="${escapeHTML(c)}" ${c===STATE.activeCategoryPOS?'selected':''}>${escapeHTML(c)}</option>`).join(''); 
+            document.getElementById('prodCat').innerHTML = '<option value="" selected disabled>-- Pilih Kategori --</option>' + STATE.data.categories.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join(''); 
             window.prepareProductFormExtras(null);
         }
         document.getElementById(id).classList.remove('d-none'); 
