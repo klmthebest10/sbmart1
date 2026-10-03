@@ -660,6 +660,9 @@
 .price-tag .pt-price { font-size: 18pt; font-weight: 700; line-height: 1.05; margin-top: 0.5mm; padding-top: 0.5mm; border-top: 0.5mm solid var(--tag-color, #FFD500); color: #111; }
 .price-tag .pt-promo { font-size: 5.6pt; font-style: italic; line-height: 1.1; color: #b91c1c; margin-top: 0.3mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .price-tag .pt-promo:empty { display: none; }
+.price-tag .pt-price.is-range { font-size: 12pt; }
+/* Ada keterangan promo: nama produk cukup 1 baris supaya promo tetap muat di tag. */
+.price-tag .pt-body:has(.pt-promo:not(:empty)) .pt-name { -webkit-line-clamp: 1; }
 /* Tag harga & pratinjaunya SELALU putih-hitam seperti kertas, tidak terpengaruh dark mode. */
 [data-theme="dark"] .price-tag, [data-theme="dark"] .tag-sheet { background: #fff !important; }
 [data-theme="dark"] .price-tag .pt-name, [data-theme="dark"] .price-tag .pt-price, [data-theme="dark"] .price-tag div { color: #111 !important; }
@@ -1351,6 +1354,15 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                                 <p class="set-hint">Jika ON, muncul menu "Promo" di Kelola Admin.</p>
                             </div>
 
+                            <!-- Multi Level Harga -->
+                            <div class="set-card">
+                                <h4 class="set-title">Multi Level Harga</h4>
+                                <label class="flex items-center gap-2 font-bold cursor-pointer bg-yellow-50 p-3 border-2 border-black w-full">
+                                    <input type="checkbox" id="setMultiPriceEnabled" class="w-5 h-5 accent-black"> Aktifkan Multi Level Harga
+                                </label>
+                                <p class="set-hint">Jika ON: di form produk bisa diisi sub nama produk &amp; harganya (lebih dari 1, misal Gula: 1/2kg, 1kg). Di POS, produk tersebut memunculkan pilihan sub produk saat dipilih.</p>
+                            </div>
+
                             <!-- Riwayat Transaksi Publik -->
                             <div class="set-card">
                                 <h4 class="set-title">Riwayat Transaksi Publik</h4>
@@ -1582,7 +1594,7 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                 <input type="hidden" id="prodId">
                 <div class="mb-3">
                     <label class="block font-bold mb-1">Nama Produk</label>
-                    <input type="text" id="prodName" maxlength="150" class="brutal-input bg-white" required>
+                    <input type="text" id="prodName" maxlength="150" autocapitalize="words" class="brutal-input bg-white" required>
                 </div>
                 <div class="mb-3">
                     <label class="block font-bold mb-1">Kategori <span class="text-danger">*</span></label>
@@ -1590,7 +1602,14 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                 </div>
                 <div class="mb-3">
                     <label class="block font-bold mb-1">Harga (Won)</label>
-                    <input type="number" id="prodPrice" class="brutal-input bg-white" required>
+                    <input type="number" id="prodPrice" min="0" inputmode="numeric" class="brutal-input bg-white">
+                    <p id="prodPriceHint" class="text-[10px] text-gray-500 mt-1 d-none">Boleh dikosongkan jika sub produk diisi (otomatis memakai harga termurah).</p>
+                </div>
+                <div id="prodVariantWrapper" class="mb-3 d-none border-2 border-black p-2 bg-yellow-50">
+                    <label class="block font-bold mb-1 text-sm">Multi Level Harga <span class="font-normal text-[10px] text-gray-500">(opsional — sub nama produk &amp; harganya)</span></label>
+                    <div id="prodVariantList" class="space-y-2"></div>
+                    <button type="button" onclick="window.addProdVariantRow()" class="brutal-btn bg-white px-3 py-1 text-xs mt-2">+ Tambah Sub Produk</button>
+                    <p class="text-[10px] text-gray-500 mt-1 leading-tight">Contoh Gula: "1/2kg" ₩8.000, "1kg" ₩15.000. Harga boleh sama (untuk varian rasa/warna). Stok tetap dihitung per produk.</p>
                 </div>
                 <div id="prodBarcodeWrapper" class="mb-3 d-none">
                     <label class="block font-bold mb-1">Barcode <span class="font-normal text-[10px] text-gray-500">(opsional — ketik, tembak dengan scanner, atau scan kamera)</span></label>
@@ -1798,7 +1817,7 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
             <h2 id="modalCategoryTitle" class="text-xl font-bold mb-4 uppercase">Kategori Baru</h2>
             <form onsubmit="window.saveCategory(event)">
                 <input type="hidden" id="oldCatName">
-                <input type="text" id="newCatName" maxlength="60" class="brutal-input bg-white mb-4" placeholder="Nama Kategori..." required>
+                <input type="text" id="newCatName" maxlength="60" autocapitalize="words" class="brutal-input bg-white mb-4" placeholder="Nama Kategori..." required>
                 <button type="submit" class="brutal-btn w-full bg-accent py-3">Simpan</button>
             </form>
         </div>
@@ -1860,7 +1879,7 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
             <div class="p-3 border-b-4 border-black font-bold uppercase bg-accent">Import CSV Produk</div>
             <div class="p-4 bg-gray-50 text-sm">
                 <p class="font-bold mb-2">Pilih file .csv hasil "Export CSV" (atau dengan kolom yang sama):</p>
-                <p class="text-[11px] italic mb-3 leading-tight">Kolom wajib: <b>name</b>, <b>cat</b>, <b>price</b>. Kolom opsional: id, system (STOK / ONOFF), available, stock, min_stock (wajib untuk STOK), exp_dates (pisahkan dengan |), info. Baris dengan id yang sudah ada akan di-update, selain itu ditambahkan sebagai produk baru.</p>
+                <p class="text-[11px] italic mb-3 leading-tight">Kolom wajib: <b>name</b>, <b>cat</b>, <b>price</b>. Kolom opsional: id, system (STOK / ONOFF), available, stock, min_stock (wajib untuk STOK), exp_dates (pisahkan dengan |), variants (sub produk, contoh: 1/2kg:8000|1kg:15000), info. Baris dengan id yang sudah ada akan di-update, selain itu ditambahkan sebagai produk baru.</p>
                 <input type="file" id="csvImportFile" accept=".csv,text/csv" class="brutal-input bg-white text-xs">
             </div>
             <div class="p-0 flex border-t-4 border-black">
@@ -2003,7 +2022,7 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
     <div id="scanToast" class="scan-toast d-none"></div>
 
     <!-- Popup Pilihan (pengganti dropdown bawaan browser): const v = await window.customSelect(...) -->
-    <div id="modalCustomSelect" class="fixed inset-0 modal-backdrop d-none z-[999990] flex items-center justify-center p-4">
+    <div id="modalCustomSelect" class="fixed inset-0 modal-backdrop d-none z-[999992] flex items-center justify-center p-4">
         <div class="brutal-box bg-white w-full max-w-sm relative flex flex-col max-h-[80vh] overflow-hidden">
             <div id="csTitle" class="p-3 border-b-4 border-black font-bold uppercase bg-main shrink-0">Pilih</div>
             <div id="csSearchWrap" class="p-3 border-b-2 border-black bg-white shrink-0 d-none">
@@ -2023,7 +2042,10 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
             <div class="p-3 bg-white overflow-y-auto">
                 <div class="flex items-center gap-2 mb-2">
                     <button type="button" onclick="window.cdShiftMonth(-1)" class="brutal-btn bg-white w-9 h-9 inline-flex items-center justify-center">◀</button>
-                    <div id="cdMonthLabel" class="flex-1 text-center font-bold text-sm"></div>
+                    <div class="flex-1 flex justify-center gap-1.5 min-w-0">
+                        <button type="button" id="cdMonthBtn" onclick="window.cdPickMonth()" class="brutal-btn bg-white px-2 py-1 text-xs normal-case whitespace-nowrap" title="Pilih bulan"></button>
+                        <button type="button" id="cdYearBtn" onclick="window.cdPickYear()" class="brutal-btn bg-white px-2 py-1 text-xs whitespace-nowrap" title="Pilih tahun"></button>
+                    </div>
                     <button type="button" onclick="window.cdShiftMonth(1)" class="brutal-btn bg-white w-9 h-9 inline-flex items-center justify-center">▶</button>
                 </div>
                 <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase mb-1">
@@ -2056,6 +2078,15 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                 <button type="button" id="btnCdOk" class="brutal-btn flex-1 bg-main hover:bg-yellow-400 py-3 font-bold border-none shadow-none">Pakai</button>
             </div>
         </div>
+    </div>
+
+    <!-- Popup kecil pilih sub produk (multi level harga) — tanpa menggelapkan halaman -->
+    <div id="variantPopover" class="d-none fixed z-[999985] brutal-box bg-white p-2" style="width: 250px; max-width: calc(100vw - 16px);" role="dialog" aria-label="Pilih sub produk">
+        <div class="flex items-start justify-between gap-2 mb-1.5">
+            <div id="variantPopTitle" class="font-bold text-xs uppercase leading-tight pt-0.5"></div>
+            <button type="button" onclick="window.closeVariantPicker()" class="shrink-0 w-6 h-6 border-2 border-black bg-white inline-flex items-center justify-center" aria-label="Tutup"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
+        </div>
+        <div id="variantPopList" class="grid gap-1.5 max-h-[50vh] overflow-y-auto"></div>
     </div>
 
     <!-- Custom Dialog: Non-native dialogs -->
@@ -2268,6 +2299,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 financeEnabled: false,
                 expWarnMonths: 1,
                 promoEnabled: false,
+                multiPriceEnabled: false,
                 publicHistoryEnabled: false,
                 barcodeEnabled: false,
                 priceTagColor: "#FFD500",
@@ -2289,6 +2321,23 @@ measurementId: "G-ZVZ3QHEPKC"
             promos: [],
             orders: [] 
         }
+    };
+
+    // ===== Helper: huruf kapital tiap kata & multi level harga (varian) =====
+    // "gula pasir" -> "Gula Pasir"; huruf yang sudah besar dibiarkan (mis. "ABC"), angka tidak diubah ("1/2kg").
+    window.toTitleCase = (str) => String(str || '').replace(/(^|[\s\-\/(.,&+])(\p{L})/gu, (m, a, b) => a + b.toLocaleUpperCase('id'));
+    window.normVariants = (arr) => Array.isArray(arr)
+        ? arr.map(v => ({ name: String((v && v.name) || '').trim().slice(0, 40), price: Math.max(0, Math.round(Number(v && v.price) || 0)) })).filter(v => v.name)
+        : [];
+    window.isMultiPriceOn = () => Boolean(STATE.data.settings.multiPriceEnabled);
+    window.getActiveVariants = (p) => (window.isMultiPriceOn() && p && Array.isArray(p.variants)) ? p.variants : [];
+    // Label harga: produk bervarian menampilkan harga termurah ("Mulai ₩x" jika harganya berbeda-beda).
+    window.productPriceLabel = (p, short) => {
+        const vars = window.getActiveVariants(p);
+        if (!vars.length) return formatWon(p.price);
+        const prices = vars.map(v => v.price), min = Math.min(...prices), max = Math.max(...prices);
+        if (min === max) return formatWon(min);
+        return short ? `${formatWon(min)} – ${formatWon(max)}` : 'Mulai ' + formatWon(min);
     };
 
     function saveLocalDataCache() {
@@ -2622,6 +2671,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     financeEnabled: Boolean(s.finance_enabled),
                     expWarnMonths: Math.max(1, parseInt(s.exp_warn_months) || 1),
                     promoEnabled: Boolean(s.promo_enabled),
+                    multiPriceEnabled: Boolean(s.multi_price_enabled),
                     publicHistoryEnabled: Boolean(s.public_history_enabled),
                     barcodeEnabled: Boolean(s.barcode_enabled),
                     priceTagColor: /^#[0-9a-fA-F]{6}$/.test(s.price_tag_color || '') ? s.price_tag_color : '#FFD500',
@@ -2672,7 +2722,8 @@ measurementId: "G-ZVZ3QHEPKC"
                         stock: Math.max(0, parseInt(prod.stock) || 0),
                         minStock: Math.max(0, parseInt(prod.min_stock) || 0),
                         expDates: Array.isArray(prod.exp_dates) ? prod.exp_dates.filter(Boolean) : [],
-                        barcode: prod.barcode || ''
+                        barcode: prod.barcode || '',
+                        variants: window.normVariants(prod.variants)
                     };
                 });
             }
@@ -2904,6 +2955,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 STATE.data.orders = [];
             }
             if (window.refreshBestSellers) window.refreshBestSellers();
+            if (role === 'admin' && window.autoMonthlySalesIncome) window.autoMonthlySalesIncome();
         } catch(e) { console.error(e); } finally { hideLoad(); }
     }
 
@@ -3219,7 +3271,7 @@ measurementId: "G-ZVZ3QHEPKC"
 
     function buildProductCard(p, mode) {
         const imgFillHtml = p.img ? `<img src="${p.img}" class="absolute inset-0 w-full h-full object-cover pointer-events-none">` : `<div class="absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold pointer-events-none text-xs">NO IMAGE</div>`;
-        const imgBlock = `<div class="product-card-img relative w-full h-32 md:h-40 border-b-2 border-black overflow-hidden pointer-events-none">${imgFillHtml}<div class="absolute bottom-0 left-0 right-0 flex justify-end items-end p-1.5"><span class="product-card-price text-[10px] md:text-sm font-bold bg-main border-2 border-black px-1.5 py-0.5 whitespace-nowrap">${formatWon(p.price)}</span></div></div>`;
+        const imgBlock = `<div class="product-card-img relative w-full h-32 md:h-40 border-b-2 border-black overflow-hidden pointer-events-none">${imgFillHtml}<div class="absolute bottom-0 left-0 right-0 flex justify-end items-end p-1.5"><span class="product-card-price text-[10px] md:text-sm font-bold bg-main border-2 border-black px-1.5 py-0.5 whitespace-nowrap">${window.productPriceLabel(p)}</span></div></div>`;
         let opacity = p.available ? 'opacity-100' : 'opacity-50';
         const isPosOn = Boolean(STATE.data.settings.posEnabled);
         // Sistem Stok: tampilkan baris sisa stok di kartu produk katalog.
@@ -3259,8 +3311,10 @@ measurementId: "G-ZVZ3QHEPKC"
         if (p.img) { img.src = p.img; img.classList.remove('d-none'); fallback.classList.add('d-none'); }
         else { img.classList.add('d-none'); fallback.classList.remove('d-none'); }
         document.getElementById('productInfoName').textContent = p.name || '';
-        document.getElementById('productInfoPrice').textContent = formatWon(p.price);
-        document.getElementById('productInfoDesc').textContent = p.info || '';
+        document.getElementById('productInfoPrice').textContent = window.productPriceLabel(p);
+        const infoVars = window.getActiveVariants(p);
+        document.getElementById('productInfoDesc').textContent = (p.info || '') + (infoVars.length ? `${p.info ? '\n\n' : ''}Harga: ${infoVars.map(v => `${v.name} ${formatWon(v.price)}`).join(' • ')}` : '');
+        document.getElementById('productInfoDesc').style.whiteSpace = 'pre-line';
         window.openModal('modalProductInfo');
     };
 
@@ -3465,15 +3519,28 @@ measurementId: "G-ZVZ3QHEPKC"
     };
     window.selectCatPOS = cat => { STATE.activeCategoryPOS = cat; window.renderAdminPOS(); };
     
-    window.addToCart = async productId => { 
+    window.addToCart = async (productId, variantIdx) => { 
         const p = STATE.data.products.find(x => x.id === productId); 
         if(!p || !p.available) return; 
-        const exist = STATE.cart.find(x => x.id === productId); 
-        if (p.stockMode === 'stock' && exist && exist.qty >= Number(p.stock || 0)) {
+        // Multi level harga: produk bervarian -> munculkan popup kecil pemilihan sub produk dulu.
+        const vars = window.getActiveVariants(p);
+        if (vars.length && (variantIdx === undefined || variantIdx === null)) { window.openVariantPicker(p); return; }
+        const v = vars.length ? vars[Number(variantIdx)] : null;
+        if (vars.length && !v) return;
+        const vname = v ? v.name : '';
+        // Stok dihitung per produk (semua sub produk memakai stok yang sama).
+        const totalQty = STATE.cart.filter(x => x.id === productId).reduce((s, x) => s + x.qty, 0);
+        if (p.stockMode === 'stock' && totalQty >= Number(p.stock || 0)) {
             await window.customAlert(`Stok "${p.name}" tinggal ${Number(p.stock || 0)}.`, 'Stok Terbatas');
             return;
         }
-        if(exist) exist.qty++; else STATE.cart.push({ id: p.id, name: p.name, price: p.price, qty: 1 }); 
+        const exist = STATE.cart.find(x => x.id === productId && (x.variant || '') === vname); 
+        if (exist) exist.qty++;
+        else {
+            const item = { id: p.id, name: v ? `${p.name} (${v.name})` : p.name, price: v ? v.price : p.price, qty: 1 };
+            if (v) item.variant = v.name;
+            STATE.cart.push(item);
+        }
         window.updateCartUI(); 
         const cartBtn = document.querySelector('button[onclick="window.openCart()"]'); 
         if (cartBtn) {
@@ -3758,9 +3825,9 @@ measurementId: "G-ZVZ3QHEPKC"
     };
     window.pickOrderDateTime = async () => {
         const cur = document.getElementById('customOrderDate').value;
-        const d = await window.customDateTimePicker(cur || null);
-        if (!d) return;
-        document.getElementById('customOrderDate').value = dtToLocalValue(d);
+        const v = await window.customDatePicker(cur || dtToLocalValue(new Date()), { withTime: true, title: 'Waktu Transaksi' });
+        if (!v) return;
+        document.getElementById('customOrderDate').value = v;
         window.syncOrderDateLabel();
     };
     window.clearOrderDateTime = () => {
@@ -4452,7 +4519,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 <td class="p-2 border-r-2 border-black"><img src="${p.img || 'https://placehold.co/40x40/e2e8f0/000000?text=No+Img'}" class="w-10 h-10 object-cover border border-black"></td>
                 <td class="p-2 border-r-2 border-black font-bold text-xs md:text-sm whitespace-nowrap">
                     <div class="flex items-center justify-between gap-2">
-                        <span class="min-w-0"><span class="block whitespace-nowrap">${escapeHTML(p.name)}</span><span class="md:hidden flex items-center gap-1.5 mt-1 text-[10px] font-normal whitespace-nowrap"><span class="font-bold">${formatWon(p.price)}</span><span class="px-1.5 py-0.5 border border-black bg-gray-100">${escapeHTML(p.cat)}</span></span></span>
+                        <span class="min-w-0"><span class="block whitespace-nowrap">${escapeHTML(p.name)}</span><span class="md:hidden flex items-center gap-1.5 mt-1 text-[10px] font-normal whitespace-nowrap"><span class="font-bold">${window.productPriceLabel(p)}</span><span class="px-1.5 py-0.5 border border-black bg-gray-100">${escapeHTML(p.cat)}</span></span></span>
                         <div class="flex items-center shrink-0 md:hidden">
                             ${statusBtn(p, true)}
                             ${!isCashier ? `<button onclick="window.editProduct('${p.id}')" class="bg-main border-2 border-black px-2 py-1 text-[10px] font-bold mr-1">Edit</button><button onclick="window.deleteProduct('${p.id}')" class="bg-danger text-white border-2 border-black px-2 py-1 text-[10px] font-bold inline-flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>` : ''}
@@ -4460,7 +4527,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     </div>
                 </td>
                 <td class="p-2 border-r-2 border-black text-xs hidden md:table-cell">${escapeHTML(p.cat)}</td>
-                <td class="p-2 border-r-2 border-black text-sm hidden md:table-cell">${formatWon(p.price)}</td>
+                <td class="p-2 border-r-2 border-black text-sm hidden md:table-cell">${window.productPriceLabel(p)}${window.getActiveVariants(p).length ? `<div class="text-[10px] text-gray-500">${window.getActiveVariants(p).length} sub produk</div>` : ''}</td>
                 <td class="p-2 border-r-2 border-black text-center hidden md:table-cell">
                     ${statusBtn(p, false)}
                 </td>
@@ -4520,8 +4587,27 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('prodStock').required = isStockMode;
         document.getElementById('prodMinStock').required = isStockMode;
     };
+    window.addProdVariantRow = (name = '', price = '') => {
+        const wrap = document.getElementById('prodVariantList');
+        if (!wrap) return;
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 prod-var-row';
+        row.innerHTML = `<input type="text" maxlength="40" autocomplete="off" class="prod-var-name brutal-input bg-white text-sm flex-1 min-w-0" placeholder="Sub nama (cth: 1kg)" value="${escapeHTML(name)}"><input type="number" min="0" step="1" inputmode="numeric" class="prod-var-price brutal-input bg-white text-sm text-right !w-28 shrink-0" placeholder="₩ Harga" value="${price === '' ? '' : Number(price)}"><button type="button" onclick="this.parentElement.remove(); window.syncProdPriceHint()" class="brutal-btn bg-danger text-white px-2 py-1 text-xs inline-flex items-center justify-center shrink-0" title="Hapus sub produk"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>`;
+        wrap.appendChild(row);
+        window.syncProdPriceHint();
+    };
+    window.syncProdPriceHint = () => {
+        const has = window.isMultiPriceOn() && document.querySelectorAll('#prodVariantList .prod-var-row').length > 0;
+        const h = document.getElementById('prodPriceHint');
+        if (h) h.classList.toggle('d-none', !has);
+    };
     window.prepareProductFormExtras = (p) => {
         window.syncBarcodeUI();
+        const mp = window.isMultiPriceOn();
+        document.getElementById('prodVariantWrapper').classList.toggle('d-none', !mp);
+        document.getElementById('prodVariantList').innerHTML = '';
+        if (mp) ((p && p.variants) || []).forEach(v => window.addProdVariantRow(v.name, v.price));
+        window.syncProdPriceHint();
         document.getElementById('prodBarcode').value = p ? (p.barcode || '') : '';
         document.querySelectorAll('input[name="prodSystem"]').forEach(r => { r.checked = Boolean(p) && r.value === (p.stockMode === 'stock' ? 'stock' : 'toggle'); });
         document.getElementById('prodStock').value = p ? Number(p.stock || 0) : '';
@@ -4551,6 +4637,23 @@ measurementId: "G-ZVZ3QHEPKC"
 
     window.saveProduct = async e => {
         e.preventDefault();
+        document.getElementById('prodName').value = window.toTitleCase(document.getElementById('prodName').value.trim());
+        const variantRows = window.isMultiPriceOn() ? Array.from(document.querySelectorAll('#prodVariantList .prod-var-row')) : [];
+        const variantList = [];
+        for (const row of variantRows) {
+            const vn = row.querySelector('.prod-var-name').value.trim();
+            const vpRaw = row.querySelector('.prod-var-price').value;
+            if (!vn && vpRaw === '') continue;
+            if (!vn) return await window.customAlert('Sub nama produk wajib diisi untuk setiap harga.', 'Peringatan');
+            if (vpRaw === '' || isNaN(Number(vpRaw)) || Number(vpRaw) < 0) return await window.customAlert(`Harga sub produk "${vn}" wajib diisi (angka 0 atau lebih).`, 'Peringatan');
+            if (variantList.some(v => v.name.toLowerCase() === vn.toLowerCase())) return await window.customAlert(`Sub nama produk "${vn}" dobel. Gunakan nama yang berbeda.`, 'Peringatan');
+            variantList.push({ name: vn.slice(0, 40), price: Math.round(Number(vpRaw)) });
+        }
+        const priceRawVal = document.getElementById('prodPrice').value;
+        if (!variantList.length && (priceRawVal === '' || isNaN(Number(priceRawVal)) || Number(priceRawVal) < 0)) {
+            return await window.customAlert('Harga wajib diisi.', 'Peringatan');
+        }
+        if (variantList.length && priceRawVal === '') document.getElementById('prodPrice').value = Math.min(...variantList.map(v => v.price));
         const prodCatVal = document.getElementById('prodCat').value;
         if (!prodCatVal || !STATE.data.categories.includes(prodCatVal)) {
             return await window.customAlert(STATE.data.categories.length ? 'Pilih kategori produk terlebih dahulu.' : 'Belum ada kategori. Buat kategori dulu di menu Kategori, lalu tambahkan produk.', 'Peringatan');
@@ -4592,12 +4695,14 @@ measurementId: "G-ZVZ3QHEPKC"
             min_stock: minStock,
             availability_system: prodSystem,
             exp_dates: uniqExp,
-            barcode: barcodeVal !== null ? barcodeVal : (oldProduct ? (oldProduct.barcode || '') : '')
+            barcode: barcodeVal !== null ? barcodeVal : (oldProduct ? (oldProduct.barcode || '') : ''),
+            // Saat fitur OFF, sub produk yang sudah tersimpan tidak dihapus.
+            variants: window.isMultiPriceOn() ? variantList : (oldProduct ? (oldProduct.variants || []) : [])
         };
         const localProduct = {
             id: payload.id, name: payload.name, cat: payload.cat, price: payload.price, img: payload.img,
             info: payload.info, availFlag: availFlag, available: availFlag, stockMode: prodSystem, barcode: payload.barcode,
-            stock: stock, minStock: minStock, expDates: uniqExp
+            stock: stock, minStock: minStock, expDates: uniqExp, variants: payload.variants
         };
         try {
             if(!IS_PREVIEW && db) {
@@ -4649,7 +4754,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     if (!Array.isArray(o.items)) return;
                     let changed = false;
                     const newItems = o.items.map(it => {
-                        if (it.id === productId && Number(it.price) !== Number(newPrice)) {
+                        if (it.id === productId && !it.variant && Number(it.price) !== Number(newPrice)) {
                             changed = true;
                             return { ...it, price: newPrice };
                         }
@@ -4675,7 +4780,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     if (o.type !== 'Hutang' || o.paymentStatus !== 'Unpaid' || !Array.isArray(o.items)) return;
                     let changed = false;
                     o.items.forEach(it => {
-                        if (it.id === productId && Number(it.price) !== Number(newPrice)) {
+                        if (it.id === productId && !it.variant && Number(it.price) !== Number(newPrice)) {
                             it.price = newPrice;
                             changed = true;
                         }
@@ -4779,7 +4884,8 @@ measurementId: "G-ZVZ3QHEPKC"
     window.saveCategory = async e => {
         e.preventDefault(); 
         showLoad(); 
-        const name = document.getElementById('newCatName').value.trim();
+        const name = window.toTitleCase(document.getElementById('newCatName').value.trim());
+        document.getElementById('newCatName').value = name;
         const oldName = document.getElementById('oldCatName').value;
         if(name) { 
             try { 
@@ -5236,7 +5342,12 @@ measurementId: "G-ZVZ3QHEPKC"
         STATE.editTrxExtra = (o.extras || []).reduce((s, x) => s + Number(x.amount || 0), 0);
         
         STATE.editCart = JSON.parse(JSON.stringify(o.items));
-        document.getElementById('editTrxAddProduct').innerHTML = '<option value="">- Pilih Produk -</option>' + STATE.data.products.map(p => `<option value="${p.id}">${escapeHTML(p.name)} (${formatWon(p.price)})</option>`).join('');
+        document.getElementById('editTrxAddProduct').innerHTML = '<option value="">- Pilih Produk -</option>' + STATE.data.products.map(p => {
+            const vars = window.getActiveVariants(p);
+            return vars.length
+                ? vars.map((v, i) => `<option value="${p.id}|${i}">${escapeHTML(p.name)} (${escapeHTML(v.name)}) — ${formatWon(v.price)}</option>`).join('')
+                : `<option value="${p.id}">${escapeHTML(p.name)} (${formatWon(p.price)})</option>`;
+        }).join('');
         window.renderEditTrxCart(); 
         window.openModal('modalEditTransaction');
     };
@@ -5264,12 +5375,20 @@ measurementId: "G-ZVZ3QHEPKC"
     };
     
     window.addEditTrxItem = () => { 
-        const prodId = document.getElementById('editTrxAddProduct').value; 
-        if(!prodId) return; 
+        const raw = document.getElementById('editTrxAddProduct').value; 
+        if(!raw) return; 
+        const [prodId, vIdx] = raw.split('|');
         const p = STATE.data.products.find(x => x.id === prodId); 
         if(!p) return; 
-        const exist = STATE.editCart.find(x => x.id === prodId); 
-        if(exist) exist.qty++; else STATE.editCart.push({ id: p.id, name: p.name, price: p.price, qty: 1 }); 
+        const v = vIdx !== undefined ? window.getActiveVariants(p)[Number(vIdx)] : null;
+        const vname = v ? v.name : '';
+        const exist = STATE.editCart.find(x => x.id === prodId && (x.variant || '') === vname); 
+        if (exist) exist.qty++;
+        else {
+            const item = { id: p.id, name: v ? `${p.name} (${v.name})` : p.name, price: v ? v.price : p.price, qty: 1 };
+            if (v) item.variant = v.name;
+            STATE.editCart.push(item);
+        }
         document.getElementById('editTrxAddProduct').value = ''; 
         window.renderEditTrxCart(); 
     };
@@ -5430,6 +5549,7 @@ measurementId: "G-ZVZ3QHEPKC"
 
         document.getElementById('setExpWarnMonths').value = Math.max(1, parseInt(STATE.data.settings.expWarnMonths) || 1);
         document.getElementById('setPromoEnabled').checked = Boolean(STATE.data.settings.promoEnabled);
+        document.getElementById('setMultiPriceEnabled').checked = Boolean(STATE.data.settings.multiPriceEnabled);
         document.getElementById('setPublicHistoryEnabled').checked = Boolean(STATE.data.settings.publicHistoryEnabled);
         document.getElementById('setBarcodeEnabled').checked = Boolean(STATE.data.settings.barcodeEnabled);
 
@@ -5508,6 +5628,7 @@ measurementId: "G-ZVZ3QHEPKC"
             finance_enabled: document.getElementById('setFinanceEnabled') ? document.getElementById('setFinanceEnabled').checked : Boolean(STATE.data.settings.financeEnabled),
             exp_warn_months: Math.max(1, parseInt(document.getElementById('setExpWarnMonths').value) || 1),
             promo_enabled: document.getElementById('setPromoEnabled').checked,
+            multi_price_enabled: document.getElementById('setMultiPriceEnabled').checked,
             public_history_enabled: document.getElementById('setPublicHistoryEnabled').checked,
             barcode_enabled: document.getElementById('setBarcodeEnabled').checked
         };
@@ -5554,6 +5675,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 financeEnabled: payload.finance_enabled,
                 expWarnMonths: payload.exp_warn_months,
                 promoEnabled: payload.promo_enabled,
+                multiPriceEnabled: payload.multi_price_enabled,
                 publicHistoryEnabled: payload.public_history_enabled,
                 barcodeEnabled: payload.barcode_enabled,
                 scheduleOpenEnabled: payload.schedule_open_enabled,
@@ -5975,7 +6097,8 @@ measurementId: "G-ZVZ3QHEPKC"
                 <img class="pt-logo" src="${tagLogoSrc()}" alt="">
                 <div class="pt-body">
                     <div class="pt-name">${escapeHTML(p.name)}</div>
-                    <div class="pt-price">${formatWon(p.price)}</div>
+                    <div class="pt-price${window.getActiveVariants(p).length && /–/.test(window.productPriceLabel(p, true)) ? ' is-range' : ''}">${window.productPriceLabel(p, true)}</div>
+                    <div class="pt-promo">${escapeHTML(window.promoTextForProduct ? window.promoTextForProduct(p) : '')}</div>
                 </div>
             </div>`;
 
@@ -6018,7 +6141,7 @@ measurementId: "G-ZVZ3QHEPKC"
             <label class="flex items-center gap-2 cursor-pointer bg-white p-2 border-2 border-black has-[:checked]:bg-main">
                 <input type="checkbox" class="w-5 h-5 accent-black shrink-0" ${STATE.priceTagSelected.has(p.id) ? 'checked' : ''} onchange="window.togglePriceTag('${p.id}', this.checked)">
                 <img src="${p.img || 'https://placehold.co/40x40/e2e8f0/000000?text=No+Img'}" class="w-9 h-9 object-cover border border-black shrink-0">
-                <span class="flex-1 min-w-0"><span class="block font-bold text-xs md:text-sm truncate">${escapeHTML(p.name)}</span><span class="block text-[11px]">${formatWon(p.price)}</span></span>
+                <span class="flex-1 min-w-0"><span class="block font-bold text-xs md:text-sm truncate">${escapeHTML(p.name)}</span><span class="block text-[11px]">${window.productPriceLabel(p, true)}</span></span>
             </label>`).join('') : '<p class="font-bold col-span-full text-center p-4">Produk tidak ditemukan.</p>';
         const all = document.getElementById('priceTagCheckAll');
         if (all) all.checked = STATE.data.products.length > 0 && STATE.data.products.every(p => STATE.priceTagSelected.has(p.id));
@@ -6071,7 +6194,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
     // EXPORT & IMPORT CSV PRODUK
     // ======================================================= //
-    const CSV_HEADERS = ['id', 'name', 'cat', 'price', 'system', 'available', 'stock', 'min_stock', 'exp_dates', 'barcode', 'info'];
+    const CSV_HEADERS = ['id', 'name', 'cat', 'price', 'system', 'available', 'stock', 'min_stock', 'exp_dates', 'barcode', 'variants', 'info'];
     const csvCell = v => {
         const s = String(v === undefined || v === null ? '' : v);
         return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
@@ -6081,7 +6204,7 @@ measurementId: "G-ZVZ3QHEPKC"
         if (!STATE.data.products.length) return await window.customAlert('Belum ada produk untuk di-export.', 'Info');
         const rows = [CSV_HEADERS.join(',')].concat(STATE.data.products.map(p => [
             p.id, p.name, p.cat, Number(p.price || 0), p.stockMode === 'stock' ? 'STOK' : 'ONOFF', p.availFlag ? 'ON' : 'OFF',
-            Number(p.stock || 0), Number(p.minStock || 0), (p.expDates || []).join('|'), p.barcode || '', p.info || ''
+            Number(p.stock || 0), Number(p.minStock || 0), (p.expDates || []).join('|'), p.barcode || '', (p.variants || []).map(v => `${v.name}:${v.price}`).join('|'), p.info || ''
         ].map(csvCell).join(',')));
         // BOM supaya huruf non-latin tetap terbaca rapi saat dibuka di Excel.
         const blob = new Blob(['﻿' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -6153,7 +6276,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const isDate = s => /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(new Date(s).getTime());
         rows.slice(1).forEach((r, i) => {
             const line = i + 2;
-            const name = get(r, 'name'), cat = get(r, 'cat'), priceRaw = get(r, 'price').replace(/[^\d.-]/g, '');
+            const name = window.toTitleCase(get(r, 'name')), cat = window.toTitleCase(get(r, 'cat')), priceRaw = get(r, 'price').replace(/[^\d.-]/g, '');
             if (!name) return errors.push(`Baris ${line}: nama produk kosong`);
             if (!cat) return errors.push(`Baris ${line}: kategori kosong`);
             if (priceRaw === '' || isNaN(Number(priceRaw)) || Number(priceRaw) < 0) return errors.push(`Baris ${line}: harga tidak valid`);
@@ -6165,6 +6288,17 @@ measurementId: "G-ZVZ3QHEPKC"
             if (stockRaw !== '' && (isNaN(Number(stockRaw)) || Number(stockRaw) < 0)) return errors.push(`Baris ${line}: stok tidak valid`);
             if (minRaw !== '' && (isNaN(Number(minRaw)) || Number(minRaw) < 0)) return errors.push(`Baris ${line}: batas minimal stok tidak valid`);
             const exp = get(r, 'exp_dates').split('|').map(s => s.trim()).filter(Boolean);
+            let csvVars = null;
+            if (col('variants') > -1) {
+                csvVars = [];
+                for (const part of get(r, 'variants').split('|').map(x => x.trim()).filter(Boolean)) {
+                    const cut = part.lastIndexOf(':');
+                    const vn = cut > 0 ? part.slice(0, cut).trim() : '';
+                    const vp = cut > 0 ? part.slice(cut + 1).replace(/[^\d]/g, '') : '';
+                    if (!vn || vp === '') return errors.push(`Baris ${line}: format variants "${part}" harus nama:harga (contoh 1kg:15000)`);
+                    csvVars.push({ name: vn.slice(0, 40), price: Number(vp) });
+                }
+            }
             const badExp = exp.find(d => !isDate(d));
             if (badExp) return errors.push(`Baris ${line}: tanggal expired "${badExp}" harus berformat YYYY-MM-DD`);
             const oldP = get(r, 'id') ? STATE.data.products.find(p => p.id === get(r, 'id')) : null;
@@ -6176,6 +6310,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 minStock: minRaw === '' ? null : Math.round(Number(minRaw)),
                 expDates: col('exp_dates') > -1 ? [...new Set(exp)].sort() : null,
                 info: col('info') > -1 ? get(r, 'info') : null,
+                variants: csvVars,
                 barcode: col('barcode') > -1 ? normBarcode(get(r, 'barcode')) : null
             });
         });
@@ -6202,7 +6337,8 @@ measurementId: "G-ZVZ3QHEPKC"
                     stock: it.stock !== null ? it.stock : (old ? Number(old.stock || 0) : 0),
                     minStock: it.minStock !== null ? it.minStock : (old ? Number(old.minStock || 0) : 0),
                     expDates: it.expDates !== null ? it.expDates : (old ? (old.expDates || []) : []),
-                    barcode: it.barcode !== null ? it.barcode : (old ? (old.barcode || '') : '')
+                    barcode: it.barcode !== null ? it.barcode : (old ? (old.barcode || '') : ''),
+                    variants: it.variants !== null ? it.variants : (old ? (old.variants || []) : [])
                 };
                 writes.push(prod);
             });
@@ -6210,7 +6346,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 // Firestore membatasi 500 operasi per batch -> dikirim bertahap.
                 const ops = [
                     ...newCats.map(c => ({ ref: db.collection('categories').doc(c), data: { id: c, name: c } })),
-                    ...writes.map(p => ({ ref: db.collection('products').doc(p.id), data: { id: p.id, name: p.name, cat: p.cat, price: p.price, available: p.availFlag, availability_system: p.stockMode, info: p.info, stock: p.stock, min_stock: p.minStock, exp_dates: p.expDates, barcode: p.barcode } }))
+                    ...writes.map(p => ({ ref: db.collection('products').doc(p.id), data: { id: p.id, name: p.name, cat: p.cat, price: p.price, available: p.availFlag, availability_system: p.stockMode, info: p.info, stock: p.stock, min_stock: p.minStock, exp_dates: p.expDates, barcode: p.barcode, variants: p.variants } }))
                 ];
                 for (let i = 0; i < ops.length; i += 450) {
                     const batch = db.batch();
@@ -6578,6 +6714,14 @@ measurementId: "G-ZVZ3QHEPKC"
             showScanToast(`${p.name}: stok habis / tidak tersedia`, false);
             if (source === 'camera') document.getElementById('scanStatus').textContent = `❌ ${p.name} tidak tersedia`;
             return false;
+        }
+        if (window.getActiveVariants(p).length) {
+            STATE.lastTapRect = null;
+            window.openVariantPicker(p);
+            scanBeep(true);
+            showScanToast(`Pilih sub produk ${p.name}`, true);
+            if (source === 'camera') document.getElementById('scanStatus').textContent = `Pilih sub produk ${p.name}…`;
+            return true;
         }
         const before = (STATE.cart.find(x => x.id === p.id) || {}).qty || 0;
         window.__sfxQuiet = true;
@@ -7712,13 +7856,13 @@ measurementId: "G-ZVZ3QHEPKC"
             window.customAlert = (msg, title) => { if (ERROR_TITLES.includes(title)) window.playSfx('error'); return origAlert(msg, title); };
             try { return await fn.apply(this, args); } finally { window.customAlert = origAlert; }
         };
-        const cartQtyOf = id => (STATE.cart.find(x => x.id === id) || {}).qty || 0;
+        const cartQtyOf = id => STATE.cart.filter(x => x.id === id).reduce((s, x) => s + x.qty, 0);
 
         // Pilih produk (POS admin/kasir & POS Mandiri publik)
         const origAdd = window.addToCart;
-        window.addToCart = withErrorSound(async (productId) => {
+        window.addToCart = withErrorSound(async (productId, variantIdx) => {
             const before = cartQtyOf(productId);
-            const r = await origAdd(productId);
+            const r = await origAdd(productId, variantIdx);
             if (cartQtyOf(productId) > before) window.playSfx('add');
             return r;
         });
@@ -7821,7 +7965,8 @@ measurementId: "G-ZVZ3QHEPKC"
     STATE.cd = { view: new Date(), sel: null, h: 0, m: 0, withTime: false };
     window.cdRender = () => {
         const st = STATE.cd, v = st.view;
-        document.getElementById('cdMonthLabel').textContent = `${CD_MONTHS[v.getMonth()]} ${v.getFullYear()}`;
+        document.getElementById('cdMonthBtn').textContent = `${CD_MONTHS[v.getMonth()]} ▾`;
+        document.getElementById('cdYearBtn').textContent = `${v.getFullYear()} ▾`;
         const first = new Date(v.getFullYear(), v.getMonth(), 1);
         const start = new Date(first); start.setDate(1 - first.getDay());
         const today = cdKey(new Date()), sel = st.sel ? cdKey(st.sel) : '';
@@ -7835,6 +7980,22 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('cdGrid').innerHTML = html;
         document.getElementById('cdHour').textContent = cdPad(st.h);
         document.getElementById('cdMinute').textContent = cdPad(st.m);
+    };
+    window.cdPickMonth = async () => {
+        const v = STATE.cd.view;
+        const m = await window.customSelect(CD_MONTHS.map((n, i) => ({ value: String(i), label: n })), 'Pilih Bulan', String(v.getMonth()));
+        if (m === null) return;
+        STATE.cd.view = new Date(v.getFullYear(), Number(m), 1);
+        window.cdRender();
+    };
+    window.cdPickYear = async () => {
+        const v = STATE.cd.view, now = new Date().getFullYear();
+        const years = [];
+        for (let y = Math.max(now + 2, v.getFullYear()); y >= Math.min(now - 10, v.getFullYear()); y--) years.push({ value: String(y), label: String(y) });
+        const y = await window.customSelect(years, 'Pilih Tahun', String(v.getFullYear()));
+        if (y === null) return;
+        STATE.cd.view = new Date(Number(y), v.getMonth(), 1);
+        window.cdRender();
     };
     window.cdShiftMonth = (n) => { const v = STATE.cd.view; STATE.cd.view = new Date(v.getFullYear(), v.getMonth() + n, 1); window.cdRender(); };
     window.cdShiftTime = (u, n) => {
@@ -7980,6 +8141,135 @@ measurementId: "G-ZVZ3QHEPKC"
             if (isPick) openField(el); else { try { el.focus(); } catch (err) {} }
         }, 0);
     }, true);
+
+    // ======================================================= //
+    // POPUP KECIL PILIH SUB PRODUK (multi level harga)
+    // Muncul menempel di dekat kartu produk yang diketuk, tanpa menggelapkan halaman.
+    // ======================================================= //
+    document.addEventListener('pointerdown', (e) => {
+        const card = e.target.closest && e.target.closest('.product-card');
+        if (card) STATE.lastTapRect = card.getBoundingClientRect();
+        const pop = document.getElementById('variantPopover');
+        if (pop && !pop.classList.contains('d-none') && !pop.contains(e.target) && !card) window.closeVariantPicker();
+    }, true);
+    window.openVariantPicker = (p) => {
+        const pop = document.getElementById('variantPopover');
+        const vars = window.getActiveVariants(p);
+        if (!pop || !vars.length) return;
+        document.getElementById('variantPopTitle').textContent = p.name;
+        document.getElementById('variantPopList').innerHTML = vars.map((v, i) => `<button type="button" onclick="window.pickVariant('${p.id}', ${i})" class="brutal-btn bg-white hover:bg-yellow-100 w-full px-2 py-2 text-xs normal-case flex justify-between items-center gap-2 text-left"><span class="font-bold break-words min-w-0">${escapeHTML(v.name)}</span><span class="font-bold whitespace-nowrap bg-main border-2 border-black px-1.5">${formatWon(v.price)}</span></button>`).join('');
+        pop.classList.remove('d-none');
+        // Posisi: di bawah kartu yang diketuk (atau di atasnya jika ruang bawah tidak cukup).
+        const vw = window.innerWidth, vh = window.innerHeight, w = pop.offsetWidth, h = pop.offsetHeight;
+        const r = STATE.lastTapRect;
+        let left, top;
+        if (r) {
+            left = r.left + r.width / 2 - w / 2;
+            top = r.bottom + 6;
+            if (top + h > vh - 8) top = r.top - h - 6;
+            if (top < 8) top = Math.max(8, Math.min(vh - h - 8, r.top + 8));
+        } else { left = (vw - w) / 2; top = (vh - h) / 2; }
+        pop.style.left = Math.max(8, Math.min(vw - w - 8, left)) + 'px';
+        pop.style.top = Math.max(8, top) + 'px';
+        if (window.playSfx) window.playSfx('open');
+    };
+    window.closeVariantPicker = () => {
+        const pop = document.getElementById('variantPopover');
+        if (pop) pop.classList.add('d-none');
+    };
+    window.pickVariant = async (id, idx) => {
+        window.closeVariantPicker();
+        await window.addToCart(id, idx);
+    };
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.closeVariantPicker(); });
+    document.addEventListener('scroll', (e) => {
+        const pop = document.getElementById('variantPopover');
+        if (pop && !pop.classList.contains('d-none') && !pop.contains(e.target)) window.closeVariantPicker();
+    }, true);
+    window.addEventListener('resize', () => window.closeVariantPicker());
+
+    // Nama produk & kategori: huruf kapital otomatis saat diketik.
+    ['prodName', 'newCatName'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', () => {
+            const pos = el.selectionStart, end = el.selectionEnd;
+            const t = window.toTitleCase(el.value);
+            if (t !== el.value) { el.value = t; try { el.setSelectionRange(pos, end); } catch (e) {} }
+        });
+    });
+
+    // ======================================================= //
+    // CATATAN KEUANGAN: PENJUALAN BULANAN OTOMATIS
+    // Setiap awal bulan (saat admin membuka aplikasi), total penjualan bulan sebelumnya otomatis dicatat
+    // sebagai Pemasukan "Penjualan Bulan <Bulan> <Tahun>" bertanggal 1 bulan berjalan.
+    // Dihitung seperti Dashboard: transaksi hutang yang belum lunas tidak dihitung.
+    // Penanda bulan yang sudah dicatat disimpan di settings/finance_auto, jadi kalau catatannya dihapus
+    // manual tidak akan dibuat ulang. Mulai berlaku dari bulan sebelum fitur ini pertama kali berjalan.
+    // ======================================================= //
+    window.autoMonthlySalesIncome = async () => {
+        if (!STATE.data.settings.financeEnabled || !STATE.user || STATE.user.role !== 'admin') return;
+        const now = new Date();
+        const ymOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const shift = (ym, n) => { const [y, m] = ym.split('-').map(Number); return ymOf(new Date(y, m - 1 + n, 1)); };
+        const curYM = ymOf(now), prevYM = shift(curYM, -1);
+        if (STATE.finAutoChecked === curYM) return;
+        STATE.finAutoChecked = curYM;
+        try {
+            let meta = { start: '', done: {} };
+            if (!IS_PREVIEW && db) {
+                const md = await db.collection('settings').doc('finance_auto').get();
+                if (md.exists) meta = { start: md.data().start || '', done: md.data().done || {} };
+            } else {
+                try { meta = JSON.parse(localStorage.getItem('wi_fin_auto') || 'null') || meta; } catch (e) {}
+            }
+            if (!meta.start) meta.start = prevYM;
+            const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+            let changed = false, guard = 0;
+            for (let ym = meta.start; ym <= prevYM && guard < 24; ym = shift(ym, 1), guard++) {
+                if (meta.done[ym]) continue;
+                const total = (STATE.data.orders || []).reduce((sum, o) => {
+                    if (!o.date || ymOf(new Date(o.date)) !== ym) return sum; // bulan menurut waktu lokal perangkat
+                    if (o.type === 'Hutang' && o.paymentStatus === 'Unpaid') return sum;
+                    return sum + Number(o.total || 0);
+                }, 0);
+                if (total > 0) {
+                    const [y, m] = ym.split('-').map(Number);
+                    const note = {
+                        id: 'fn_sales_' + ym,
+                        type: 'pemasukan',
+                        name: `Penjualan Bulan ${monthNames[m - 1]} ${y}`,
+                        amount: Math.round(total),
+                        desc: 'Otomatis dari total penjualan bulan tersebut (hutang belum lunas tidak dihitung).',
+                        date: shift(ym, 1) + '-01',
+                        ts: Date.now(),
+                        auto: true
+                    };
+                    if (!IS_PREVIEW && db) {
+                        const ref = db.collection('finance_notes').doc(note.id);
+                        const ex = await ref.get();
+                        if (!ex.exists) await ref.set(note);
+                    } else {
+                        let list = [];
+                        try { list = JSON.parse(localStorage.getItem('wi_finance_notes') || '[]'); } catch (e) {}
+                        if (!list.some(n => n.id === note.id)) { list.push(note); localStorage.setItem('wi_finance_notes', JSON.stringify(list)); }
+                    }
+                    if (!STATE.data.financeNotes.some(n => n.id === note.id)) STATE.data.financeNotes.push(note);
+                }
+                meta.done[ym] = true;
+                changed = true;
+            }
+            if (changed) {
+                if (!IS_PREVIEW && db) await db.collection('settings').doc('finance_auto').set(meta);
+                else localStorage.setItem('wi_fin_auto', JSON.stringify(meta));
+                const fp = document.getElementById('admin_finance');
+                if (fp && !fp.classList.contains('d-none') && window.renderFinance) window.renderFinance();
+            }
+        } catch (e) {
+            STATE.finAutoChecked = null; // coba lagi saat data dimuat ulang
+            console.warn('Pencatatan otomatis penjualan bulanan gagal:', e);
+        }
+    };
 
     setInterval(window.updateStoreStatusDisplay, 30000);
 </script>
