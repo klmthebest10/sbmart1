@@ -688,6 +688,36 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
 .cd-day.is-sel.is-sun { color: #fff; }
 [data-theme="dark"] .cd-day:hover, [data-theme="dark"] .cd-day.is-today { border-color: var(--dk-border); }
 [data-theme="dark"] .cd-day.is-sel { background: var(--dk-text); color: var(--dk-bg); }
+
+/* ===== Catatan Keuangan: baris catatan (mode terang & gelap) ===== */
+.fin-row { border: 3px solid #000; border-left-width: 12px; box-shadow: 4px 4px 0 #000; }
+.fin-row.is-note { border-style: dashed; border-left-style: solid; }
+.fin-pemasukan { background: #f0fdf4; border-left-color: #16a34a !important; }
+.fin-pemasukan .fin-badge { background: #4ade80; color: #000; }
+.fin-pemasukan .fin-amt { color: #15803d; }
+.fin-pengeluaran { background: #fef2f2; border-left-color: #dc2626 !important; }
+.fin-pengeluaran .fin-badge { background: #ef4444; color: #fff; }
+.fin-pengeluaran .fin-amt { color: #dc2626; }
+.fin-catatan { background: #ede9fe; border-left-color: #7c3aed !important; }
+.fin-catatan .fin-badge { background: #7c3aed; color: #fff; }
+.fin-catatan .fin-amt { color: #6d28d9; }
+.fin-note-hint { color: #6d28d9; }
+.fin-desc { color: #374151; }
+.fin-recap-badge { background: #fff; color: #000; }
+[data-theme="dark"] .fin-row { border-color: var(--dk-border); box-shadow: 4px 4px 0 var(--dk-border); }
+[data-theme="dark"] .fin-badge, [data-theme="dark"] .fin-recap-badge { border-color: var(--dk-border) !important; }
+[data-theme="dark"] .fin-pemasukan { background: #12402C; border-left-color: #4ADE80 !important; }
+[data-theme="dark"] .fin-pemasukan .fin-badge { background: #0E5A32; color: var(--dk-text); }
+[data-theme="dark"] .fin-pemasukan .fin-amt { color: #86EFAC; }
+[data-theme="dark"] .fin-pengeluaran { background: #4A1E26; border-left-color: #F87171 !important; }
+[data-theme="dark"] .fin-pengeluaran .fin-badge { background: #7A1F2B; color: var(--dk-text); }
+[data-theme="dark"] .fin-pengeluaran .fin-amt { color: #FCA5A5; }
+[data-theme="dark"] .fin-catatan { background: #2E2350; border-left-color: #A78BFA !important; }
+[data-theme="dark"] .fin-catatan .fin-badge { background: #4C2E7A; color: var(--dk-text); }
+[data-theme="dark"] .fin-catatan .fin-amt { color: #C4B5FD; }
+[data-theme="dark"] .fin-note-hint { color: #C4B5FD; }
+[data-theme="dark"] .fin-desc { color: var(--dk-text-muted); }
+[data-theme="dark"] .fin-recap-badge { background: var(--dk-surface); color: var(--dk-text); }
     </style>
 </head>
 <body>
@@ -7459,7 +7489,7 @@ measurementId: "G-ZVZ3QHEPKC"
     const finInPeriod = () => {
         const { start, end } = finRange();
         return STATE.data.financeNotes
-            .filter(n => !String(n.id).startsWith('fn_sales_'))
+            .filter(n => !n.deleted && !String(n.id).startsWith('fn_sales_'))
             .filter(n => { const ym = String(n.date).slice(0, 7); return ym >= start && ym <= end; })
             .concat(window.buildRecapNotes ? window.buildRecapNotes(start, end) : []);
     };
@@ -7478,8 +7508,22 @@ measurementId: "G-ZVZ3QHEPKC"
             amount: Number(n.amount || 0),
             desc: n.desc || '',
             date: n.date || '',
-            ts: Number(n.ts || 0)
+            ts: Number(n.ts || 0),
+            deleted: Boolean(n.deleted)
         };
+    };
+    // Cari catatan: catatan tersimpan, atau rekap penjualan otomatis (id "recap_YYYY-MM") yang belum diedit.
+    const finFindNote = id => {
+        if (!id) return null;
+        const stored = STATE.data.financeNotes.find(x => x.id === id && !x.deleted);
+        if (stored) return stored;
+        const m = String(id).match(/^recap_(\d{4}-\d{2})$/);
+        if (m && window.buildRecapNotes) {
+            const [y, mo] = m[1].split('-').map(Number);
+            const showYM = `${mo === 12 ? y + 1 : y}-${String(mo === 12 ? 1 : mo + 1).padStart(2, '0')}`;
+            return window.buildRecapNotes(showYM, showYM).find(x => x.id === id) || null;
+        }
+        return null;
     };
     const finErrMsg = e => {
         const msg = (e && e.message) ? e.message : String(e);
@@ -7526,22 +7570,25 @@ measurementId: "G-ZVZ3QHEPKC"
     const finRowHtml = n => {
         const t = FIN_TYPES[n.type];
         const isNote = n.type === 'catatan';
-        return `<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3" style="background:${t.bg};border:3px ${isNote ? 'dashed' : 'solid'} #000;border-left:12px solid ${t.bar};box-shadow:4px 4px 0 #000;">
+        const isRecapAuto = Boolean(n.recap);
+        const isRecapEdited = !isRecapAuto && String(n.id).startsWith('recap_');
+        return `<div class="fin-row fin-${n.type} ${isNote ? 'is-note' : ''} flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3">
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap mb-1">
-                    <span class="px-2 py-0.5 text-[10px] font-bold border-2 border-black uppercase" style="${t.badge}">${t.icon} ${t.label}</span>
-                    ${isNote ? '<span class="text-[10px] font-bold italic text-violet-700">tidak dihitung dalam total</span>' : ''}
-                    ${n.recap ? '<span class="px-2 py-0.5 text-[10px] font-bold border-2 border-black bg-white text-black">📊 REKAP OTOMATIS</span>' : ''}
+                    <span class="fin-badge px-2 py-0.5 text-[10px] font-bold border-2 border-black uppercase">${t.icon} ${t.label}</span>
+                    ${isNote ? '<span class="fin-note-hint text-[10px] font-bold italic">tidak dihitung dalam total</span>' : ''}
+                    ${isRecapAuto ? '<span class="fin-recap-badge px-2 py-0.5 text-[10px] font-bold border-2 border-black">📊 REKAP OTOMATIS</span>' : ''}
+                    ${isRecapEdited ? '<span class="fin-recap-badge px-2 py-0.5 text-[10px] font-bold border-2 border-black">📊 REKAP (DIEDIT)</span>' : ''}
                 </div>
                 <div class="font-bold text-sm md:text-base break-words">${escapeHTML(n.name)}</div>
-                ${n.desc ? `<div class="text-xs text-gray-700 break-words whitespace-pre-wrap mt-0.5">${escapeHTML(n.desc)}</div>` : ''}
+                ${n.desc ? `<div class="fin-desc text-xs break-words whitespace-pre-wrap mt-0.5">${escapeHTML(n.desc)}</div>` : ''}
             </div>
             <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
-                <div class="font-bold text-lg md:text-xl whitespace-nowrap" style="color:${t.amt}">${t.sign}${formatWon(n.amount)}</div>
-                ${n.recap ? '<div class="text-[10px] italic text-gray-600 text-right leading-tight">dari Riwayat Transaksi</div>' : `<div class="flex gap-1">
+                <div class="fin-amt font-bold text-lg md:text-xl whitespace-nowrap">${t.sign}${formatWon(n.amount)}</div>
+                <div class="flex gap-1">
                     <button onclick="window.openFinanceModal('${n.id}')" class="brutal-btn bg-main border-2 border-black px-3 py-1 text-[10px]">Edit</button>
                     <button onclick="window.deleteFinanceNote('${n.id}')" class="brutal-btn bg-danger text-white border-2 border-black px-3 py-1 text-[10px]">Hapus</button>
-                </div>`}
+                </div>
             </div>
         </div>`;
     };
@@ -7609,9 +7656,9 @@ measurementId: "G-ZVZ3QHEPKC"
 
     window.openFinanceModal = id => {
         document.getElementById('formFinance').reset();
-        const n = id ? STATE.data.financeNotes.find(x => x.id === id) : null;
+        const n = id ? finFindNote(id) : null;
         document.getElementById('finId').value = n ? n.id : '';
-        document.getElementById('finModalTitle').textContent = n ? 'Edit Catatan' : 'Tambah Catatan';
+        document.getElementById('finModalTitle').textContent = n ? (String(n.id).startsWith('recap_') ? 'Edit Rekap Penjualan' : 'Edit Catatan') : 'Tambah Catatan';
         const typeInput = document.querySelector(`input[name="finType"][value="${n ? n.type : 'pengeluaran'}"]`);
         if (typeInput) typeInput.checked = true;
         document.getElementById('finDate').value = n ? n.date : finTodayDate();
@@ -7638,7 +7685,7 @@ measurementId: "G-ZVZ3QHEPKC"
         if (!isFinite(amount) || amount < 0) return await window.customAlert('Nominal tidak valid.', 'Peringatan');
         if (type !== 'catatan' && amount === 0) return await window.customAlert('Nominal pemasukan/pengeluaran harus lebih dari 0.', 'Peringatan');
 
-        const existing = id ? STATE.data.financeNotes.find(x => x.id === id) : null;
+        const existing = id ? finFindNote(id) : null;
         const note = {
             id: id || 'fn_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
             type, name, amount, desc, date,
@@ -7667,13 +7714,21 @@ measurementId: "G-ZVZ3QHEPKC"
     };
 
     window.deleteFinanceNote = async id => {
-        const n = STATE.data.financeNotes.find(x => x.id === id);
+        const n = finFindNote(id);
         if (!n) return;
-        if (!(await window.customConfirm(`Hapus catatan "${n.name}" (${FIN_TYPES[n.type].label} ${formatWon(n.amount)})?`, 'Hapus Catatan'))) return;
+        const isRecap = String(id).startsWith('recap_');
+        if (!(await window.customConfirm(`Hapus catatan "${n.name}" (${FIN_TYPES[n.type].label} ${formatWon(n.amount)})?` + (isRecap ? '\n\nRekap penjualan bulan ini tidak akan dibuat otomatis lagi.' : ''), 'Hapus Catatan'))) return;
         showLoad();
         try {
-            if (!IS_PREVIEW && db) await db.collection('finance_notes').doc(id).delete();
-            STATE.data.financeNotes = STATE.data.financeNotes.filter(x => x.id !== id);
+            if (isRecap) {
+                // Simpan penanda "dihapus" agar rekap otomatis bulan ini tidak muncul kembali.
+                const tomb = { id, type: n.type, name: n.name, amount: 0, desc: '', date: n.date, ts: Date.now(), deleted: true };
+                if (!IS_PREVIEW && db) await db.collection('finance_notes').doc(id).set(tomb);
+                STATE.data.financeNotes = STATE.data.financeNotes.filter(x => x.id !== id).concat([tomb]);
+            } else {
+                if (!IS_PREVIEW && db) await db.collection('finance_notes').doc(id).delete();
+                STATE.data.financeNotes = STATE.data.financeNotes.filter(x => x.id !== id);
+            }
             if (IS_PREVIEW || !db) finPersistLocal();
             hideLoad();
             window.renderFinance();
@@ -8274,6 +8329,8 @@ measurementId: "G-ZVZ3QHEPKC"
             const date = M + '-01';
             if (date > today) continue; // baru muncul tanggal 1
             const salesYM = recapShift(M, -1);
+            // Sudah diedit (tersimpan sebagai catatan biasa) atau dihapus -> rekap otomatis tidak ditampilkan lagi.
+            if ((STATE.data.financeNotes || []).some(n => n.id === 'recap_' + salesYM)) continue;
             const r = window.getSalesRecap(salesYM);
             if (!r || (!r.count && !r.amount)) continue;
             const [y, m] = salesYM.split('-').map(Number);
