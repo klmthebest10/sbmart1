@@ -1600,13 +1600,23 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                     <label class="block font-bold mb-1">Kategori <span class="text-danger">*</span></label>
                     <select id="prodCat" class="brutal-input bg-white" required></select>
                 </div>
-                <div class="mb-3">
+                <div id="prodPriceModeWrap" class="mb-3 d-none">
+                    <label class="block font-bold mb-1">Sistem Harga <span class="text-danger">*</span></label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="brutal-btn bg-white text-center py-2 px-1 cursor-pointer has-[:checked]:bg-main text-[11px] sm:text-xs leading-tight">
+                            <input type="radio" name="prodPriceMode" value="single" class="hidden" onchange="window.onProdPriceModeChange()">Harga Tunggal
+                        </label>
+                        <label class="brutal-btn bg-white text-center py-2 px-1 cursor-pointer has-[:checked]:bg-main text-[11px] sm:text-xs leading-tight">
+                            <input type="radio" name="prodPriceMode" value="multi" class="hidden" onchange="window.onProdPriceModeChange()">Multi Level Harga
+                        </label>
+                    </div>
+                </div>
+                <div id="prodPriceWrapper" class="mb-3">
                     <label class="block font-bold mb-1">Harga (Won)</label>
                     <input type="number" id="prodPrice" min="0" inputmode="numeric" class="brutal-input bg-white">
-                    <p id="prodPriceHint" class="text-[10px] text-gray-500 mt-1 d-none">Boleh dikosongkan jika sub produk diisi (otomatis memakai harga termurah).</p>
                 </div>
                 <div id="prodVariantWrapper" class="mb-3 d-none border-2 border-black p-2 bg-yellow-50">
-                    <label class="block font-bold mb-1 text-sm">Multi Level Harga <span class="font-normal text-[10px] text-gray-500">(opsional — sub nama produk &amp; harganya)</span></label>
+                    <label class="block font-bold mb-1 text-sm">Multi Level Harga <span class="font-normal text-[10px] text-gray-500">(sub nama produk &amp; harganya)</span></label>
                     <div id="prodVariantList" class="space-y-2"></div>
                     <button type="button" onclick="window.addProdVariantRow()" class="brutal-btn bg-white px-3 py-1 text-xs mt-2">+ Tambah Sub Produk</button>
                     <p class="text-[10px] text-gray-500 mt-1 leading-tight">Contoh Gula: "1/2kg" ₩8.000, "1kg" ₩15.000. Harga boleh sama (untuk varian rasa/warna). Stok tetap dihitung per produk.</p>
@@ -2081,7 +2091,7 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
     </div>
 
     <!-- Popup kecil pilih sub produk (multi level harga) — tanpa menggelapkan halaman -->
-    <div id="variantPopover" class="d-none fixed z-[999985] brutal-box bg-white p-2" style="width: 250px; max-width: calc(100vw - 16px);" role="dialog" aria-label="Pilih sub produk">
+    <div id="variantPopover" class="d-none fixed z-[999985] brutal-box bg-white p-2" style="width: 230px; max-width: calc(100vw - 16px); box-shadow: 6px 6px 0 0 #000;" role="dialog" aria-label="Pilih sub produk">
         <div class="flex items-start justify-between gap-2 mb-1.5">
             <div id="variantPopTitle" class="font-bold text-xs uppercase leading-tight pt-0.5"></div>
             <button type="button" onclick="window.closeVariantPicker()" class="shrink-0 w-6 h-6 border-2 border-black bg-white inline-flex items-center justify-center" aria-label="Tutup"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
@@ -3618,7 +3628,11 @@ measurementId: "G-ZVZ3QHEPKC"
         if (pr.type === 'bxgy') return `Beli ${pr.buyQty} ${promoProdName(pr.buyId)} gratis ${pr.freeQty} ${promoProdName(pr.freeId)}`;
         if (pr.type === 'bxdisc') return `Beli ${pr.minQty} ${promoProdName(pr.productId)} diskon ${pr.percent}%`;
         if (pr.type === 'minspend') return `Belanja min. ${formatWon(pr.minAmount)} gratis ${pr.giftQty} ${promoProdName(pr.giftId)}`;
-        if (pr.type === 'bundle') return `Bundle ${(pr.items || []).map(i => `${i.qty} ${promoProdName(i.id)}`).join(' + ')} hanya ${formatWon(pr.price)}`;
+        if (pr.type === 'bundle') {
+            const its = pr.items || [];
+            if (its.length === 1) return `Beli ${its[0].qty} ${promoProdName(its[0].id)} hanya ${formatWon(pr.price)}`;
+            return `Bundle ${its.map(i => `${i.qty} ${promoProdName(i.id)}`).join(' + ')} hanya ${formatWon(pr.price)}`;
+        }
         return '';
     };
 
@@ -4596,18 +4610,24 @@ measurementId: "G-ZVZ3QHEPKC"
         wrap.appendChild(row);
         window.syncProdPriceHint();
     };
-    window.syncProdPriceHint = () => {
-        const has = window.isMultiPriceOn() && document.querySelectorAll('#prodVariantList .prod-var-row').length > 0;
-        const h = document.getElementById('prodPriceHint');
-        if (h) h.classList.toggle('d-none', !has);
+    window.syncProdPriceHint = () => {};
+    window.getProdPriceMode = () => window.isMultiPriceOn() && document.querySelector('input[name="prodPriceMode"]:checked')?.value === 'multi' ? 'multi' : 'single';
+    // Harga Tunggal -> tampil kolom Harga; Multi Level Harga -> tampil daftar sub produk.
+    window.onProdPriceModeChange = () => {
+        const multi = window.getProdPriceMode() === 'multi';
+        document.getElementById('prodPriceWrapper').classList.toggle('d-none', multi);
+        document.getElementById('prodVariantWrapper').classList.toggle('d-none', !multi);
+        if (multi && !document.querySelector('#prodVariantList .prod-var-row')) window.addProdVariantRow();
     };
     window.prepareProductFormExtras = (p) => {
         window.syncBarcodeUI();
         const mp = window.isMultiPriceOn();
-        document.getElementById('prodVariantWrapper').classList.toggle('d-none', !mp);
+        document.getElementById('prodPriceModeWrap').classList.toggle('d-none', !mp);
         document.getElementById('prodVariantList').innerHTML = '';
-        if (mp) ((p && p.variants) || []).forEach(v => window.addProdVariantRow(v.name, v.price));
-        window.syncProdPriceHint();
+        const hasVars = Boolean(p && Array.isArray(p.variants) && p.variants.length);
+        if (mp && hasVars) p.variants.forEach(v => window.addProdVariantRow(v.name, v.price));
+        document.querySelectorAll('input[name="prodPriceMode"]').forEach(r => { r.checked = r.value === (mp && hasVars ? 'multi' : 'single'); });
+        window.onProdPriceModeChange();
         document.getElementById('prodBarcode').value = p ? (p.barcode || '') : '';
         document.querySelectorAll('input[name="prodSystem"]').forEach(r => { r.checked = Boolean(p) && r.value === (p.stockMode === 'stock' ? 'stock' : 'toggle'); });
         document.getElementById('prodStock').value = p ? Number(p.stock || 0) : '';
@@ -4638,7 +4658,8 @@ measurementId: "G-ZVZ3QHEPKC"
     window.saveProduct = async e => {
         e.preventDefault();
         document.getElementById('prodName').value = window.toTitleCase(document.getElementById('prodName').value.trim());
-        const variantRows = window.isMultiPriceOn() ? Array.from(document.querySelectorAll('#prodVariantList .prod-var-row')) : [];
+        const priceMode = window.getProdPriceMode();
+        const variantRows = priceMode === 'multi' ? Array.from(document.querySelectorAll('#prodVariantList .prod-var-row')) : [];
         const variantList = [];
         for (const row of variantRows) {
             const vn = row.querySelector('.prod-var-name').value.trim();
@@ -4649,11 +4670,13 @@ measurementId: "G-ZVZ3QHEPKC"
             if (variantList.some(v => v.name.toLowerCase() === vn.toLowerCase())) return await window.customAlert(`Sub nama produk "${vn}" dobel. Gunakan nama yang berbeda.`, 'Peringatan');
             variantList.push({ name: vn.slice(0, 40), price: Math.round(Number(vpRaw)) });
         }
+        if (priceMode === 'multi' && !variantList.length) return await window.customAlert('Isi minimal 1 sub produk beserta harganya, atau pilih "Harga Tunggal".', 'Peringatan');
         const priceRawVal = document.getElementById('prodPrice').value;
-        if (!variantList.length && (priceRawVal === '' || isNaN(Number(priceRawVal)) || Number(priceRawVal) < 0)) {
+        if (priceMode === 'single' && (priceRawVal === '' || isNaN(Number(priceRawVal)) || Number(priceRawVal) < 0)) {
             return await window.customAlert('Harga wajib diisi.', 'Peringatan');
         }
-        if (variantList.length && priceRawVal === '') document.getElementById('prodPrice').value = Math.min(...variantList.map(v => v.price));
+        // Multi Level Harga: harga dasar produk otomatis = harga sub produk termurah (dipakai promo & label "Mulai").
+        if (variantList.length) document.getElementById('prodPrice').value = Math.min(...variantList.map(v => v.price));
         const prodCatVal = document.getElementById('prodCat').value;
         if (!prodCatVal || !STATE.data.categories.includes(prodCatVal)) {
             return await window.customAlert(STATE.data.categories.length ? 'Pilih kategori produk terlebih dahulu.' : 'Belum ada kategori. Buat kategori dulu di menu Kategori, lalu tambahkan produk.', 'Peringatan');
@@ -4696,7 +4719,7 @@ measurementId: "G-ZVZ3QHEPKC"
             availability_system: prodSystem,
             exp_dates: uniqExp,
             barcode: barcodeVal !== null ? barcodeVal : (oldProduct ? (oldProduct.barcode || '') : ''),
-            // Saat fitur OFF, sub produk yang sudah tersimpan tidak dihapus.
+            // Harga Tunggal -> sub produk dikosongkan. Saat fitur OFF, sub produk yang sudah tersimpan tidak dihapus.
             variants: window.isMultiPriceOn() ? variantList : (oldProduct ? (oldProduct.variants || []) : [])
         };
         const localProduct = {
@@ -5940,9 +5963,10 @@ measurementId: "G-ZVZ3QHEPKC"
                 ${promoNumInput('pfGiftQty', 'Jumlah Hadiah', d.giftQty || 1, 'min="1"')}
             </div>`;
         } else if (type === 'bundle') {
-            const items = (d.items && d.items.length) ? d.items : [{ id: '', qty: 1 }, { id: '', qty: 1 }];
+            const items = (d.items && d.items.length) ? d.items : [{ id: '', qty: 2 }];
             box.innerHTML = `<div class="bg-yellow-50 border-2 border-black p-3 space-y-3">
                 <label class="block font-bold text-xs">Isi Bundle</label>
+                <p class="text-[10px] text-gray-500 leading-tight -mt-2">Bisa 1 produk (cth: 3 Indomie ₩5.000) atau beberapa produk (cth: 1 Kopi + 1 Roti ₩4.000).</p>
                 <div id="pfBundleItems" class="space-y-2">${items.map(it => bundleRowHtml(it)).join('')}</div>
                 <button type="button" onclick="window.addBundleRow()" class="brutal-btn bg-white px-3 py-1 text-xs">+ Tambah Produk</button>
                 ${promoNumInput('pfBundlePrice', 'Harga Bundle (Won)', d.price || '', 'min="1"')}
@@ -5985,7 +6009,8 @@ measurementId: "G-ZVZ3QHEPKC"
         if (d.type === 'bxdisc' && (!d.productId || d.minQty < 1 || d.percent < 1 || d.percent > 100)) return 'Lengkapi produk, minimal beli (≥1), dan diskon (1–100%).';
         if (d.type === 'minspend' && (d.minAmount < 1 || !d.giftId || d.giftQty < 1)) return 'Lengkapi minimal belanja, produk hadiah, dan jumlah hadiah.';
         if (d.type === 'bundle') {
-            if (d.items.length < 2) return 'Bundle minimal berisi 2 produk.';
+            if (d.items.length < 1) return 'Pilih minimal 1 produk untuk bundle.';
+            if (d.items.length === 1 && d.items[0].qty < 2) return 'Bundle 1 produk: jumlahnya minimal 2 (cth: 3 Indomie ₩5.000).';
             if (d.items.some(i => i.qty < 1)) return 'Jumlah tiap produk di bundle minimal 1.';
             if (new Set(d.items.map(i => i.id)).size !== d.items.length) return 'Produk di dalam bundle tidak boleh dobel.';
             if (d.price < 1) return 'Harga bundle wajib diisi.';
@@ -8158,19 +8183,18 @@ measurementId: "G-ZVZ3QHEPKC"
         if (!pop || !vars.length) return;
         document.getElementById('variantPopTitle').textContent = p.name;
         document.getElementById('variantPopList').innerHTML = vars.map((v, i) => `<button type="button" onclick="window.pickVariant('${p.id}', ${i})" class="brutal-btn bg-white hover:bg-yellow-100 w-full px-2 py-2 text-xs normal-case flex justify-between items-center gap-2 text-left"><span class="font-bold break-words min-w-0">${escapeHTML(v.name)}</span><span class="font-bold whitespace-nowrap bg-main border-2 border-black px-1.5">${formatWon(v.price)}</span></button>`).join('');
+        // Lebar mengikuti kartu produk (min 180px, maks 260px) supaya pas di tengah kartunya.
+        const r0 = STATE.lastTapRect;
+        pop.style.width = Math.round(Math.max(180, Math.min(260, r0 ? r0.width + 16 : 230))) + 'px';
         pop.classList.remove('d-none');
-        // Posisi: di bawah kartu yang diketuk (atau di atasnya jika ruang bawah tidak cukup).
         const vw = window.innerWidth, vh = window.innerHeight, w = pop.offsetWidth, h = pop.offsetHeight;
         const r = STATE.lastTapRect;
         let left, top;
-        if (r) {
-            left = r.left + r.width / 2 - w / 2;
-            top = r.bottom + 6;
-            if (top + h > vh - 8) top = r.top - h - 6;
-            if (top < 8) top = Math.max(8, Math.min(vh - h - 8, r.top + 8));
-        } else { left = (vw - w) / 2; top = (vh - h) / 2; }
+        // Posisi: tepat di tengah kartu produk yang diketuk (tetap di dalam layar).
+        const cx = r ? r.left + r.width / 2 : vw / 2, cy = r ? r.top + r.height / 2 : vh / 2;
+        left = cx - w / 2; top = cy - h / 2;
         pop.style.left = Math.max(8, Math.min(vw - w - 8, left)) + 'px';
-        pop.style.top = Math.max(8, top) + 'px';
+        pop.style.top = Math.max(8, Math.min(vh - h - 8, top)) + 'px';
         if (window.playSfx) window.playSfx('open');
     };
     window.closeVariantPicker = () => {
