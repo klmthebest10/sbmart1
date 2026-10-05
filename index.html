@@ -1043,6 +1043,44 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
         /* Baris item keranjang */
         #gasapp-root .cart-item-row { background: var(--c-surface-2) !important; border: 1px solid var(--c-line) !important; border-left: 3px solid var(--c-primary) !important; border-radius: var(--r-md) !important; }
         #gasapp-root .cart-item-row .brutal-btn { border-radius: var(--r-sm) !important; box-shadow: none !important; }
+        /* ===== POS: kartu produk tinggal diketuk ===== */
+        #gasapp-root .pos-tap-card { position: relative; cursor: pointer; user-select: none; -webkit-user-select: none; }
+        #gasapp-root .pos-tap-card:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--c-focus), var(--sh-2) !important; }
+        #gasapp-root .pos-tap-card:active { transform: scale(.96); }
+        #gasapp-root .pos-qty-badge {
+            position: absolute; top: 8px; right: 8px; z-index: 3; min-width: 26px; height: 26px; padding: 0 7px;
+            border-radius: 999px; background: var(--c-accent); color: #fff; font-weight: 700; font-size: 13px;
+            display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,.25);
+            font-variant-numeric: tabular-nums;
+        }
+        #gasapp-root .brutal-box > .pos-qty-badge, #gasapp-root .brutal-box > .pos-soldout-badge { border-radius: 999px !important; }
+        #gasapp-root .pos-qty-badge.pop { animation: posPop .28s ease; }
+        @keyframes posPop { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+        #gasapp-root .pos-soldout-badge {
+            position: absolute; top: 8px; left: 8px; z-index: 3; padding: 2px 9px; border-radius: 999px;
+            background: var(--c-text); color: var(--c-bg); font-size: 11px; font-weight: 700;
+        }
+        /* ===== Status koneksi ===== */
+        .net-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; margin-right: 8px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+        .net-pill .net-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+        .net-pill.is-offline { background: #FEF3C7; color: #92400E; border-color: #FCD34D; }
+        .net-pill.is-sync { background: var(--c-accent-soft); color: var(--c-accent); }
+        .net-pill.is-sync .net-dot { animation: netBlink 1s infinite; }
+        html[data-theme="dark"] .net-pill.is-offline { background: #3A2E0E; color: #FCD34D; border-color: #6B5512; }
+        @keyframes netBlink { 50% { opacity: .25; } }
+        .net-toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); z-index: 9999998;
+            max-width: min(92vw, 460px); padding: 10px 16px; border-radius: 14px; font-size: 13px; font-weight: 600; line-height: 1.35;
+            background: #1F2937; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+        .net-toast.show { opacity: 1; transform: translate(-50%, 0); }
+        .net-toast.is-warn { background: #92400E; }
+        .net-toast.is-ok { background: #166534; }
+        /* ===== Shift kasir ===== */
+        .shift-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; background: var(--c-text-3); }
+        .shift-dot.is-open { background: var(--c-success); box-shadow: 0 0 0 3px var(--c-success-soft); }
+        .shift-dot.is-closed { background: var(--c-danger); box-shadow: 0 0 0 3px var(--c-danger-soft); }
+        /* Tombol jenis diskon (% / ₩) */
+        #gasapp-root #cartDiscWrap [role="group"] { border-radius: 10px; }
+        #gasapp-root #cartDiscWrap [role="group"] button.bg-black { background: var(--c-text) !important; color: var(--c-bg) !important; }
     </style>
 </head>
 <body>
@@ -1214,6 +1252,8 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                     <div class="flex items-center gap-2 flex-wrap">
                         <h2 class="text-2xl md:text-3xl font-bold uppercase bg-main px-2 border-2 border-black border-l-8 border-l-dark">KASIR</h2>
+                        <button onclick="window.openShiftModal()" id="btnShift" class="d-none brutal-btn bg-white px-3 py-1 text-xs md:text-sm flex items-center gap-1.5" title="Shift kasir"><span id="shiftDot" class="shift-dot"></span><span id="shiftLabel">Buka Shift</span></button>
+                        <button onclick="window.showShortcutHelp()" id="btnShortcutHelp" class="hidden lg:inline-flex brutal-btn bg-white px-2.5 py-1 text-xs items-center gap-1" title="Pintasan keyboard">⌨️ Pintasan</button>
                         <button onclick="window.openLowStockModal()" id="btnLowStock" class="d-none brutal-btn bg-danger text-white px-3 py-1 text-xs md:text-sm flex items-center gap-1 pulse-call">⚠️ Stok Menipis (<span id="lowStockCount">0</span>)</button>
                         <button onclick="window.openExpiryModal()" id="btnExpWarn" class="d-none brutal-btn bg-danger text-white px-3 py-1 text-xs md:text-sm flex items-center gap-1 pulse-call">⏰ Dekat Expired (<span id="expWarnCount">0</span>)</button>
                     </div>
@@ -1260,7 +1300,7 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                         <h3 class="text-xl font-bold uppercase">Dashboard</h3>
                         <div id="dashFilterBar" class="flex gap-1.5 md:gap-2 w-full sm:w-auto"></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 md:gap-4 mb-3">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 mb-3">
                         <div class="brutal-box bg-success p-2.5 md:p-4 min-w-0">
                             <div class="text-[10px] md:text-xs font-bold uppercase">Jumlah Pendapatan</div>
                             <div id="dashRevenue" class="text-base md:text-3xl font-bold break-all">₩0</div>
@@ -1270,6 +1310,16 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                             <div class="text-[10px] md:text-xs font-bold uppercase">Jumlah Transaksi</div>
                             <div id="dashTrxCount" class="text-base md:text-3xl font-bold">0</div>
                             <div id="dashPeriodLabel" class="text-[9px] md:text-[11px] italic leading-tight"></div>
+                        </div>
+                        <div class="brutal-box bg-white p-2.5 md:p-4 min-w-0">
+                            <div class="text-[10px] md:text-xs font-bold uppercase">Laba Kotor</div>
+                            <div id="dashProfit" class="text-base md:text-3xl font-bold break-all">₩0</div>
+                            <div id="dashProfitHint" class="text-[9px] md:text-[11px] italic leading-tight text-gray-500"></div>
+                        </div>
+                        <div class="brutal-box bg-white p-2.5 md:p-4 min-w-0">
+                            <div class="text-[10px] md:text-xs font-bold uppercase">Rata-rata / Transaksi</div>
+                            <div id="dashAvg" class="text-base md:text-3xl font-bold break-all">₩0</div>
+                            <div id="dashAvgHint" class="text-[9px] md:text-[11px] italic leading-tight text-gray-500"></div>
                         </div>
                     </div>
                     <div class="brutal-box bg-white p-3 md:p-4 mb-4">
@@ -1388,6 +1438,7 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                             <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-sm pointer-events-none">🔍</span>
                             <input type="text" id="adminHistSearch" autocomplete="off" oninput="window.renderAdminHistory()" placeholder="Cari nama pelanggan / kode invoice..." class="brutal-input bg-white py-2 pl-8 pr-2 text-sm w-full">
                         </div>
+                        <button type="button" onclick="window.exportHistoryCSV()" class="brutal-btn bg-white px-3 py-2 text-xs whitespace-nowrap" title="Unduh laporan transaksi yang sedang ditampilkan (CSV/Excel)">⬇️ Export</button>
                         <button type="button" onclick="document.getElementById('adminHistSearch').value=''; window.renderAdminHistory()" class="brutal-btn bg-white px-3 py-2 text-xs whitespace-nowrap">Reset</button>
                     </div>
                     <div id="adminHistDebtInfo" class="d-none space-y-2 mb-3"></div>
@@ -1718,6 +1769,32 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                                 <p class="set-hint">Jika ON: di form produk bisa diisi sub nama produk &amp; harganya (lebih dari 1, misal Gula: 1/2kg, 1kg). Di POS, produk tersebut memunculkan pilihan sub produk saat dipilih.</p>
                             </div>
 
+                            <!-- Diskon Manual -->
+                            <div class="set-card">
+                                <h4 class="set-title">Diskon Manual di Keranjang</h4>
+                                <label class="flex items-center gap-2 font-bold cursor-pointer bg-yellow-50 p-3 border-2 border-black w-full">
+                                    <input type="checkbox" id="setManualDiscEnabled" class="w-5 h-5 accent-black"> Aktifkan Diskon Manual
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer mt-2 text-sm">
+                                    <input type="checkbox" id="setManualDiscCashier" class="w-4 h-4 accent-black"> Kasir juga boleh memberi diskon
+                                </label>
+                                <label class="block text-xs font-bold mt-2">Batas diskon kasir (% dari belanja)</label>
+                                <input type="number" id="setManualDiscMaxPct" min="1" max="100" inputmode="numeric" class="brutal-input bg-white text-sm !w-28" placeholder="100">
+                                <p class="set-hint">Diskon per transaksi dalam % atau nominal, dihitung setelah promo. Tercatat di nota, riwayat &amp; laporan.</p>
+                            </div>
+
+                            <!-- Shift Kasir -->
+                            <div class="set-card">
+                                <h4 class="set-title">Shift Kasir (Buka / Tutup Kasir)</h4>
+                                <label class="flex items-center gap-2 font-bold cursor-pointer bg-yellow-50 p-3 border-2 border-black w-full">
+                                    <input type="checkbox" id="setShiftEnabled" class="w-5 h-5 accent-black"> Aktifkan Shift Kasir
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer mt-2 text-sm">
+                                    <input type="checkbox" id="setShiftRequired" class="w-4 h-4 accent-black"> Wajib buka shift sebelum transaksi
+                                </label>
+                                <p class="set-hint">Catat modal awal laci kas, lalu saat tutup shift hitung uang fisik: aplikasi menampilkan total per metode bayar, kas seharusnya &amp; selisih. Laporan shift bisa dicetak.</p>
+                            </div>
+
                             <!-- Riwayat Transaksi Publik -->
                             <div class="set-card">
                                 <h4 class="set-title">Riwayat Transaksi Publik</h4>
@@ -1859,6 +1936,20 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                     <div id="cartExtraList" class="mt-2 space-y-1"></div>
                 </div>
 
+                <!-- Diskon manual per transaksi (fitur on/off di Pengaturan) -->
+                <div id="cartDiscWrap" class="mb-3 d-none">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold shrink-0">🏷️ Diskon</span>
+                        <div class="flex shrink-0 border-2 border-black overflow-hidden" role="group" aria-label="Jenis diskon">
+                            <button type="button" id="cartDiscTypePct" onclick="window.setCartDiscType('pct')" class="px-3 py-1.5 text-xs font-bold">%</button>
+                            <button type="button" id="cartDiscTypeAmt" onclick="window.setCartDiscType('amt')" class="px-3 py-1.5 text-xs font-bold">₩</button>
+                        </div>
+                        <input type="number" id="cartDiscValue" min="0" step="1" inputmode="numeric" oninput="window.onCartDiscInput()" class="brutal-input bg-white text-sm text-right flex-1 min-w-0" placeholder="0">
+                        <button type="button" id="cartDiscClear" onclick="window.clearCartDiscount()" class="d-none brutal-btn bg-white w-9 h-9 p-0 inline-flex items-center justify-center shrink-0" title="Hapus diskon" aria-label="Hapus diskon">✕</button>
+                    </div>
+                    <p id="cartDiscHint" class="text-[10px] text-gray-500 mt-1 d-none"></p>
+                </div>
+
                 <div id="cartPromoInfo" class="mb-2 d-none"></div>
 
                 <div class="flex justify-between items-center font-bold mb-2">
@@ -1866,6 +1957,9 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                 </div>
                 <div id="cartDiscountRow" class="flex justify-between items-center font-bold mb-2 text-danger d-none">
                     <span>Potongan Promo:</span><span id="cartDiscount">-₩0</span>
+                </div>
+                <div id="cartManualDiscRow" class="flex justify-between items-center font-bold mb-2 text-danger d-none">
+                    <span id="cartManualDiscLabel">Diskon:</span><span id="cartManualDisc">-₩0</span>
                 </div>
                 <div id="cartExtraRow" class="flex justify-between items-center font-bold mb-2 d-none">
                     <span>Tambahan:</span><span id="cartExtraTotal">₩0</span>
@@ -1966,9 +2060,16 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                         </label>
                     </div>
                 </div>
-                <div id="prodPriceWrapper" class="mb-3">
-                    <label class="block font-bold mb-1">Harga (Won)</label>
-                    <input type="number" id="prodPrice" min="0" inputmode="numeric" class="brutal-input bg-white">
+                <div id="prodPriceWrapper" class="mb-3 grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold mb-1">Harga Jual (Won)</label>
+                        <input type="number" id="prodPrice" min="0" inputmode="numeric" class="brutal-input bg-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Harga Modal <span class="font-normal text-[10px] text-gray-500">(opsional)</span></label>
+                        <input type="number" id="prodCost" min="0" inputmode="numeric" class="brutal-input bg-white" placeholder="untuk hitung laba">
+                    </div>
+                    <p id="prodMarginHint" class="col-span-2 text-[11px] text-gray-500 -mt-1"></p>
                 </div>
                 <div id="prodVariantWrapper" class="mb-3 d-none border-2 border-black p-2 bg-yellow-50">
                     <label class="block font-bold mb-1 text-sm">Multi Level Harga <span class="font-normal text-[10px] text-gray-500">(sub nama produk &amp; harganya)</span></label>
@@ -2244,7 +2345,7 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
             <div class="p-3 border-b-4 border-black font-bold uppercase bg-accent">Import CSV Produk</div>
             <div class="p-4 bg-gray-50 text-sm">
                 <p class="font-bold mb-2">Pilih file .csv hasil "Export CSV" (atau dengan kolom yang sama):</p>
-                <p class="text-[11px] italic mb-3 leading-tight">Kolom wajib: <b>name</b>, <b>cat</b>, <b>price</b>. Kolom opsional: id, system (STOK / ONOFF), available, stock, min_stock (wajib untuk STOK), exp_dates (pisahkan dengan |), variants (sub produk, contoh: 1/2kg:8000|1kg:15000), info. Baris dengan id yang sudah ada akan di-update, selain itu ditambahkan sebagai produk baru.</p>
+                <p class="text-[11px] italic mb-3 leading-tight">Kolom wajib: <b>name</b>, <b>cat</b>, <b>price</b>. Kolom opsional: id, system (STOK / ONOFF), available, stock, min_stock (wajib untuk STOK), exp_dates (pisahkan dengan |), cost (harga modal), variants (sub produk, contoh: 1/2kg:8000|1kg:15000), info. Baris dengan id yang sudah ada akan di-update, selain itu ditambahkan sebagai produk baru.</p>
                 <input type="file" id="csvImportFile" accept=".csv,text/csv" class="brutal-input bg-white text-xs">
             </div>
             <div class="p-0 flex border-t-4 border-black">
@@ -2445,6 +2546,17 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
         </div>
     </div>
 
+    <!-- Modal Shift Kasir (buka / tutup / riwayat) -->
+    <div id="modalShift" class="fixed inset-0 modal-backdrop d-none z-[60] flex items-center justify-center p-3">
+        <div class="brutal-box bg-white w-full max-w-md relative flex flex-col max-h-[92vh] overflow-hidden">
+            <div class="p-3 border-b-4 border-black font-bold uppercase bg-main shrink-0 flex justify-between items-center gap-2">
+                <span id="shiftModalTitle">Shift Kasir</span>
+                <button type="button" onclick="window.closeModal('modalShift')" class="w-8 h-8 border-2 border-black bg-white inline-flex items-center justify-center" aria-label="Tutup">✕</button>
+            </div>
+            <div id="shiftBody" class="p-4 overflow-y-auto flex-1"></div>
+        </div>
+    </div>
+
     <!-- Popup kecil pilih sub produk (multi level harga) — tanpa menggelapkan halaman -->
     <div id="variantPopover" class="d-none fixed z-[999985] brutal-box bg-white p-2" style="width: 230px; max-width: calc(100vw - 16px); box-shadow: 6px 6px 0 0 #000;" role="dialog" aria-label="Pilih sub produk">
         <div class="flex items-start justify-between gap-2 mb-1.5">
@@ -2625,6 +2737,8 @@ measurementId: "G-ZVZ3QHEPKC"
                 firebase.initializeApp(firebaseConfig);
             }
             db = firebase.firestore();
+            // Offline: simpan seluruh data di perangkat tanpa batas ukuran cache.
+            try { db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED }); } catch (e) { console.warn('Pengaturan cache Firestore gagal:', e); }
             auth = firebase.auth();
             db.enablePersistence({ synchronizeTabs: true }).catch(err => {
                 if (err.code === 'failed-precondition') console.warn('Firestore multi-tab persistence not enabled');
@@ -2665,6 +2779,8 @@ measurementId: "G-ZVZ3QHEPKC"
                 expWarnMonths: 1,
                 promoEnabled: false,
                 multiPriceEnabled: false,
+                manualDiscEnabled: false, manualDiscCashier: false, manualDiscMaxPct: 100,
+                shiftEnabled: false, shiftRequired: false,
                 publicHistoryEnabled: false,
                 barcodeEnabled: false,
                 priceTagColor: "#FFD500",
@@ -2692,7 +2808,12 @@ measurementId: "G-ZVZ3QHEPKC"
     // "gula pasir" -> "Gula Pasir"; huruf yang sudah besar dibiarkan (mis. "ABC"), angka tidak diubah ("1/2kg").
     window.toTitleCase = (str) => String(str || '').replace(/(^|[\s\-\/(.,&+])(\p{L})/gu, (m, a, b) => a + b.toLocaleUpperCase('id'));
     window.normVariants = (arr) => Array.isArray(arr)
-        ? arr.map(v => ({ name: String((v && v.name) || '').trim().slice(0, 40), price: Math.max(0, Math.round(Number(v && v.price) || 0)) })).filter(v => v.name)
+        ? arr.map(v => {
+            const o = { name: String((v && v.name) || '').trim().slice(0, 40), price: Math.max(0, Math.round(Number(v && v.price) || 0)) };
+            const c = Math.round(Number(v && v.cost) || 0);
+            if (c > 0) o.cost = c;
+            return o;
+        }).filter(v => v.name)
         : [];
     window.isMultiPriceOn = () => Boolean(STATE.data.settings.multiPriceEnabled);
     window.getActiveVariants = (p) => (window.isMultiPriceOn() && p && Array.isArray(p.variants)) ? p.variants : [];
@@ -3037,6 +3158,11 @@ measurementId: "G-ZVZ3QHEPKC"
                     expWarnMonths: Math.max(1, parseInt(s.exp_warn_months) || 1),
                     promoEnabled: Boolean(s.promo_enabled),
                     multiPriceEnabled: Boolean(s.multi_price_enabled),
+                    manualDiscEnabled: Boolean(s.manual_disc_enabled),
+                    manualDiscCashier: Boolean(s.manual_disc_cashier),
+                    manualDiscMaxPct: Math.min(100, Math.max(1, Number(s.manual_disc_max_pct) || 100)),
+                    shiftEnabled: Boolean(s.shift_enabled),
+                    shiftRequired: Boolean(s.shift_required),
                     publicHistoryEnabled: Boolean(s.public_history_enabled),
                     barcodeEnabled: Boolean(s.barcode_enabled),
                     priceTagColor: /^#[0-9a-fA-F]{6}$/.test(s.price_tag_color || '') ? s.price_tag_color : '#FFD500',
@@ -3088,7 +3214,8 @@ measurementId: "G-ZVZ3QHEPKC"
                         minStock: Math.max(0, parseInt(prod.min_stock) || 0),
                         expDates: Array.isArray(prod.exp_dates) ? prod.exp_dates.filter(Boolean) : [],
                         barcode: prod.barcode || '',
-                        variants: window.normVariants(prod.variants)
+                        variants: window.normVariants(prod.variants),
+                        cost: Math.max(0, Number(prod.cost) || 0)
                     };
                 });
             }
@@ -3147,7 +3274,8 @@ measurementId: "G-ZVZ3QHEPKC"
         editedBy: o.editedBy || '',
         source: o.source || '',
         cashierId: o.cashier_id || '',
-        cashierName: o.cashier_name || ''
+        cashierName: o.cashier_name || '',
+        shiftId: o.shift_id || ''
     };
 }
 
@@ -3661,6 +3789,12 @@ measurementId: "G-ZVZ3QHEPKC"
         if(mode === 'pos' || isPosOn) {
             const actionClass = p.available ? 'cursor-pointer hover:bg-yellow-100 active:scale-95' : 'cursor-not-allowed'; 
             const clickAttr = p.available ? `onclick="${mode === 'pos' ? `window.addToCart('${p.id}')` : `window.addToCart('${p.id}')`}"` : '';
+            // POS admin/kasir: cukup ketuk kartunya (tanpa tombol "Tambah"). Produk kosong diberi label di gambar.
+            if (mode === 'pos') {
+                const inCart = STATE.cart.filter(x => x.id === p.id).reduce((s, x) => s + x.qty, 0);
+                const soldOut = p.available ? '' : '<div class="pos-soldout-badge">Habis</div>';
+                return `<div ${clickAttr} data-pid="${p.id}" class="product-card pos-tap-card brutal-box flex flex-col h-full transition-transform ${opacity} ${actionClass}" role="button" tabindex="${p.available ? 0 : -1}" aria-label="Tambah ${escapeHTML(p.name)} ke keranjang"><span class="pos-qty-badge${inCart ? '' : ' d-none'}">${inCart}</span>${soldOut}${imgBlock}<div class="product-card-body p-2 flex-1 flex flex-col pointer-events-none">${nameRowHtml}${stockHtml}</div></div>`;
+            }
             const btnHTML = p.available ? `<div class="product-card-btn w-full text-center border-2 border-black bg-main py-1 md:py-2 mt-2 text-xs md:text-sm uppercase font-bold">Tambah</div>` : `<div class="product-card-btn w-full text-center border-2 border-black bg-gray-300 py-1 md:py-2 mt-2 text-xs md:text-sm uppercase font-bold text-gray-500">Kosong</div>`;
             return `<div ${clickAttr} class="product-card brutal-box flex flex-col h-full transition-transform ${opacity} ${actionClass}">${imgBlock}<div class="product-card-body p-2 flex-1 flex flex-col pointer-events-none">${nameRowHtml}${descHtml}${stockHtml}${btnHTML}</div></div>`;
         }
@@ -3904,6 +4038,8 @@ measurementId: "G-ZVZ3QHEPKC"
         else {
             const item = { id: p.id, name: v ? `${p.name} (${v.name})` : p.name, price: v ? v.price : p.price, qty: 1 };
             if (v) item.variant = v.name;
+            const itemCost = v ? Number(v.cost || 0) : Number(p.cost || 0);
+            if (itemCost > 0) item.cost = itemCost;
             STATE.cart.push(item);
         }
         window.updateCartUI(); 
@@ -4033,11 +4169,64 @@ measurementId: "G-ZVZ3QHEPKC"
     };
 
     STATE.cartExtras = [];
+    // ===== Diskon manual per transaksi =====
+    STATE.cartDiscount = { type: 'pct', value: 0 };
+    window.canManualDiscount = () => {
+        const st = STATE.data.settings;
+        if (!st.manualDiscEnabled || !STATE.user) return false;
+        return STATE.user.role === 'admin' || (STATE.user.role === 'cashier' && Boolean(st.manualDiscCashier));
+    };
+    window.getManualDiscount = (base) => {
+        if (!window.canManualDiscount() || base <= 0) return 0;
+        const d = STATE.cartDiscount || {};
+        const v = Math.max(0, Number(d.value) || 0);
+        if (!v) return 0;
+        return Math.min(base, Math.round(d.type === 'pct' ? base * Math.min(100, v) / 100 : v));
+    };
     window.getCartTotals = () => {
         const subtotal = STATE.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
         const promo = window.computeCartPromos(STATE.cart);
         const extraTotal = (STATE.cartExtras || []).reduce((s, x) => s + Number(x.amount || 0), 0);
-        return { subtotal, discount: promo.discount, extraTotal, total: Math.max(0, subtotal - promo.discount) + extraTotal, promo };
+        const base = Math.max(0, subtotal - promo.discount);
+        const manualDiscount = window.getManualDiscount(base);
+        return { subtotal, discount: promo.discount + manualDiscount, promoDiscount: promo.discount, manualDiscount, extraTotal, total: Math.max(0, base - manualDiscount) + extraTotal, promo };
+    };
+    window.syncCartDiscUI = () => {
+        const wrap = document.getElementById('cartDiscWrap');
+        if (!wrap) return;
+        const allowed = window.canManualDiscount();
+        wrap.classList.toggle('d-none', !allowed);
+        if (!allowed) return;
+        const d = STATE.cartDiscount;
+        const on = 'bg-black text-white', off = 'bg-white';
+        const bp = document.getElementById('cartDiscTypePct'), ba = document.getElementById('cartDiscTypeAmt');
+        bp.className = 'px-3 py-1.5 text-xs font-bold ' + (d.type === 'pct' ? on : off);
+        ba.className = 'px-3 py-1.5 text-xs font-bold ' + (d.type === 'amt' ? on : off);
+        const inp = document.getElementById('cartDiscValue');
+        if (document.activeElement !== inp) inp.value = d.value ? d.value : '';
+        inp.placeholder = d.type === 'pct' ? '0 %' : '₩0';
+        document.getElementById('cartDiscClear').classList.toggle('d-none', !d.value);
+    };
+    window.setCartDiscType = (t) => { STATE.cartDiscount.type = t; window.onCartDiscInput(); };
+    window.clearCartDiscount = () => { STATE.cartDiscount = { type: STATE.cartDiscount.type, value: 0 }; document.getElementById('cartDiscValue').value = ''; window.calculateTotal(); };
+    window.onCartDiscInput = () => {
+        const inp = document.getElementById('cartDiscValue');
+        let v = Math.max(0, Math.floor(Number(inp.value) || 0));
+        const st = STATE.data.settings, d = STATE.cartDiscount;
+        const hint = document.getElementById('cartDiscHint');
+        let msg = '';
+        if (d.type === 'pct' && v > 100) { v = 100; inp.value = 100; }
+        // Batas diskon untuk kasir
+        if (STATE.user && STATE.user.role === 'cashier') {
+            const maxPct = Math.min(100, Number(st.manualDiscMaxPct) || 100);
+            const sub = STATE.cart.reduce((s, i) => s + i.price * i.qty, 0);
+            const base = Math.max(0, sub - window.computeCartPromos(STATE.cart).discount);
+            if (d.type === 'pct' && v > maxPct) { v = maxPct; inp.value = maxPct; msg = `Batas diskon kasir ${maxPct}%.`; }
+            if (d.type === 'amt' && base > 0 && v > Math.floor(base * maxPct / 100)) { v = Math.floor(base * maxPct / 100); inp.value = v; msg = `Batas diskon kasir ${maxPct}% (${formatWon(v)}).`; }
+        }
+        d.value = v;
+        hint.textContent = msg; hint.classList.toggle('d-none', !msg);
+        window.calculateTotal();
     };
 
     // ===== Tambahan opsional di keranjang (nama + nominal) =====
@@ -4231,9 +4420,16 @@ measurementId: "G-ZVZ3QHEPKC"
         }
         const discRow = document.getElementById('cartDiscountRow');
         if (discRow) {
-            discRow.classList.toggle('d-none', t.discount <= 0);
-            document.getElementById('cartDiscount').textContent = '-' + formatWon(t.discount);
+            discRow.classList.toggle('d-none', t.promoDiscount <= 0);
+            document.getElementById('cartDiscount').textContent = '-' + formatWon(t.promoDiscount);
         }
+        const mdRow = document.getElementById('cartManualDiscRow');
+        if (mdRow) {
+            mdRow.classList.toggle('d-none', t.manualDiscount <= 0);
+            document.getElementById('cartManualDisc').textContent = '-' + formatWon(t.manualDiscount);
+            document.getElementById('cartManualDiscLabel').textContent = STATE.cartDiscount.type === 'pct' ? `Diskon (${STATE.cartDiscount.value}%):` : 'Diskon:';
+        }
+        window.syncCartDiscUI();
         const promoBox = document.getElementById('cartPromoInfo');
         if (promoBox) {
             const p = t.promo;
@@ -4337,6 +4533,10 @@ measurementId: "G-ZVZ3QHEPKC"
 
     window.processCheckout = async (isPrint) => {
         if(STATE.cart.length === 0) return await window.customAlert('Keranjang kosong!', 'Peringatan');
+        if (STATE.user && STATE.data.settings.shiftEnabled && STATE.data.settings.shiftRequired && !STATE.shift) {
+            await window.customAlert('Buka shift kasir terlebih dahulu sebelum memproses transaksi.', 'Peringatan');
+            return window.openShiftModal();
+        }
         // Mencegah pesanan terkirim dobel kalau tombol Proses/Nota diklik berkali-kali (koneksi lambat, dsb).
         if (STATE.isCheckingOut) return;
         STATE.isCheckingOut = true;
@@ -4405,7 +4605,8 @@ measurementId: "G-ZVZ3QHEPKC"
                 subtotal,
                 ongkir: 0,
                 discount: totals.discount,
-                promos: totals.promo.applied.map(a => ({ name: a.name, text: a.text, discount: a.discount })),
+                promos: totals.promo.applied.map(a => ({ name: a.name, text: a.text, discount: a.discount }))
+                    .concat(totals.manualDiscount > 0 ? [{ name: 'Diskon', text: STATE.cartDiscount.type === 'pct' ? `${STATE.cartDiscount.value}%` : 'Nominal', discount: totals.manualDiscount, manual: true }] : []),
                 extras: (STATE.cartExtras || []).map(x => ({ name: x.name, amount: Number(x.amount) || 0 })),
                 extra_total: totals.extraTotal,
                 bonus_items: totals.promo.bonus.map(b => ({ id: b.id, name: b.name, qty: b.qty })),
@@ -4421,6 +4622,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 payload.cashier_name = window.getCashierNameById(STATE.user.id, STATE.user.name);
             }
             if (!STATE.user) payload.source = 'public'; // transaksi dari POS Mandiri (publik)
+            if (STATE.user && STATE.shift && STATE.shift.id) payload.shift_id = STATE.shift.id;
             const localOrder = {
                 id: payload.id, date: payload.date, custId: payload.cust_id, custName: payload.cust_name,
                 orderType: payload.order_type, type: payload.type, paymentStatus: payload.payment_status,
@@ -4431,7 +4633,8 @@ measurementId: "G-ZVZ3QHEPKC"
                 paidAmount: payload.paid_amount || 0,
                 changeAmount: payload.change_amount || 0,
                 source: payload.source || '',
-                cashierId: payload.cashier_id || '', cashierName: payload.cashier_name || ''
+                cashierId: payload.cashier_id || '', cashierName: payload.cashier_name || '',
+                shiftId: payload.shift_id || ''
             };
 
             if(!IS_PREVIEW && db) {
@@ -4446,7 +4649,12 @@ measurementId: "G-ZVZ3QHEPKC"
                     }
                 }
                 await window.adjustProductStocks(itemsToQtyMap(allItems, -1));
-                if (STATE.user) await fetchAllData(); else await fetchPublicData();
+                if (!window.isAppOnline()) {
+                    // Offline: transaksi sudah tersimpan di perangkat & otomatis terkirim saat online lagi.
+                    if (STATE.user && !STATE.data.orders.some(o => o.id === localOrder.id)) STATE.data.orders.push(localOrder);
+                    if (payload.type === 'Hutang' && custId) { const c = STATE.data.customers.find(x => x.id === custId); if (c) c.debt = Number(c.debt || 0) + total; }
+                    saveLocalDataCache();
+                } else if (STATE.user) await fetchAllData(); else await fetchPublicData();
             } else {
                 STATE.data.orders.push(localOrder);
 
@@ -4459,6 +4667,7 @@ measurementId: "G-ZVZ3QHEPKC"
 
             STATE.cart = [];
             STATE.cartExtras = [];
+            STATE.cartDiscount = { type: STATE.cartDiscount.type, value: 0 };
             STATE.ongkir = 0;
             document.getElementById('inputBayar').value = '';
             if(document.getElementById('cartNote')) document.getElementById('cartNote').value = '';
@@ -4552,7 +4761,7 @@ measurementId: "G-ZVZ3QHEPKC"
         ? `<div style="display:flex; justify-content:space-between; gap:8px;"><span>Catatan:</span> <span style="font-weight:bold; text-align:right; max-width:65%; word-break:break-word; white-space:pre-wrap;">${escapeHTML(order.notes)}</span></div>`
         : '';
     const extraRows = (order.extras || []).map(x => `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${escapeHTML(x.name)}:</span> <span>${formatWon(x.amount)}</span></div>`).join('');
-    const promoRows = (order.promos || []).filter(p => Number(p.discount) > 0).map(p => `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Promo ${escapeHTML(p.name)}:</span> <span>-${formatWon(p.discount)}</span></div>`).join('');
+    const promoRows = (order.promos || []).filter(p => Number(p.discount) > 0).map(p => `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${p.manual || p.name === 'Diskon' ? `Diskon${p.text && p.text.endsWith('%') ? ' ' + escapeHTML(p.text) : ''}` : 'Promo ' + escapeHTML(p.name)}:</span> <span>-${formatWon(p.discount)}</span></div>`).join('');
 
     // Nominal bayar & kembalian khusus metode Cash.
     const paid = Number(order.paidAmount || 0);
@@ -4956,12 +5165,12 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('prodStock').required = isStockMode;
         document.getElementById('prodMinStock').required = isStockMode;
     };
-    window.addProdVariantRow = (name = '', price = '') => {
+    window.addProdVariantRow = (name = '', price = '', cost = '') => {
         const wrap = document.getElementById('prodVariantList');
         if (!wrap) return;
         const row = document.createElement('div');
         row.className = 'flex items-center gap-2 prod-var-row';
-        row.innerHTML = `<input type="text" maxlength="40" autocomplete="off" class="prod-var-name brutal-input bg-white text-sm flex-1 min-w-0" placeholder="Sub nama (cth: 1kg)" value="${escapeHTML(name)}"><input type="number" min="0" step="1" inputmode="numeric" class="prod-var-price brutal-input bg-white text-sm text-right !w-28 shrink-0" placeholder="₩ Harga" value="${price === '' ? '' : Number(price)}"><button type="button" onclick="this.parentElement.remove(); window.syncProdPriceHint()" class="brutal-btn bg-danger text-white px-2 py-1 text-xs inline-flex items-center justify-center shrink-0" title="Hapus sub produk"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>`;
+        row.innerHTML = `<input type="text" maxlength="40" autocomplete="off" class="prod-var-name brutal-input bg-white text-sm flex-1 min-w-0" placeholder="Sub nama (cth: 1kg)" value="${escapeHTML(name)}"><input type="number" min="0" step="1" inputmode="numeric" class="prod-var-price brutal-input bg-white text-sm text-right !w-24 shrink-0" placeholder="Harga" title="Harga jual" value="${price === '' ? '' : Number(price)}"><input type="number" min="0" step="1" inputmode="numeric" class="prod-var-cost brutal-input bg-white text-sm text-right !w-20 shrink-0" placeholder="Modal" title="Harga modal (opsional)" value="${cost === '' || cost === undefined || cost === null || Number(cost) === 0 ? '' : Number(cost)}"><button type="button" onclick="this.parentElement.remove(); window.syncProdPriceHint()" class="brutal-btn bg-danger text-white px-2 py-1 text-xs inline-flex items-center justify-center shrink-0" title="Hapus sub produk"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>`;
         wrap.appendChild(row);
         window.syncProdPriceHint();
     };
@@ -4980,7 +5189,9 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('prodPriceModeWrap').classList.toggle('d-none', !mp);
         document.getElementById('prodVariantList').innerHTML = '';
         const hasVars = Boolean(p && Array.isArray(p.variants) && p.variants.length);
-        if (mp && hasVars) p.variants.forEach(v => window.addProdVariantRow(v.name, v.price));
+        if (mp && hasVars) p.variants.forEach(v => window.addProdVariantRow(v.name, v.price, v.cost));
+        document.getElementById('prodCost').value = p && Number(p.cost) > 0 ? Number(p.cost) : '';
+        window.syncMarginHint();
         document.querySelectorAll('input[name="prodPriceMode"]').forEach(r => { r.checked = r.value === (mp && hasVars ? 'multi' : 'single'); });
         window.onProdPriceModeChange();
         document.getElementById('prodBarcode').value = p ? (p.barcode || '') : '';
@@ -5023,7 +5234,10 @@ measurementId: "G-ZVZ3QHEPKC"
             if (!vn) return await window.customAlert('Sub nama produk wajib diisi untuk setiap harga.', 'Peringatan');
             if (vpRaw === '' || isNaN(Number(vpRaw)) || Number(vpRaw) < 0) return await window.customAlert(`Harga sub produk "${vn}" wajib diisi (angka 0 atau lebih).`, 'Peringatan');
             if (variantList.some(v => v.name.toLowerCase() === vn.toLowerCase())) return await window.customAlert(`Sub nama produk "${vn}" dobel. Gunakan nama yang berbeda.`, 'Peringatan');
-            variantList.push({ name: vn.slice(0, 40), price: Math.round(Number(vpRaw)) });
+            const vcRaw = row.querySelector('.prod-var-cost') ? row.querySelector('.prod-var-cost').value : '';
+            const vItem = { name: vn.slice(0, 40), price: Math.round(Number(vpRaw)) };
+            if (vcRaw !== '' && Number(vcRaw) > 0) vItem.cost = Math.round(Number(vcRaw));
+            variantList.push(vItem);
         }
         if (priceMode === 'multi' && !variantList.length) return await window.customAlert('Isi minimal 1 sub produk beserta harganya, atau pilih "Harga Tunggal".', 'Peringatan');
         const priceRawVal = document.getElementById('prodPrice').value;
@@ -5075,12 +5289,13 @@ measurementId: "G-ZVZ3QHEPKC"
             exp_dates: uniqExp,
             barcode: barcodeVal !== null ? barcodeVal : (oldProduct ? (oldProduct.barcode || '') : ''),
             // Harga Tunggal -> sub produk dikosongkan. Saat fitur OFF, sub produk yang sudah tersimpan tidak dihapus.
-            variants: window.isMultiPriceOn() ? variantList : (oldProduct ? (oldProduct.variants || []) : [])
+            variants: window.isMultiPriceOn() ? variantList : (oldProduct ? (oldProduct.variants || []) : []),
+            cost: Math.max(0, Math.round(Number(document.getElementById('prodCost').value) || 0))
         };
         const localProduct = {
             id: payload.id, name: payload.name, cat: payload.cat, price: payload.price, img: payload.img,
             info: payload.info, availFlag: availFlag, available: availFlag, stockMode: prodSystem, barcode: payload.barcode,
-            stock: stock, minStock: minStock, expDates: uniqExp, variants: payload.variants
+            stock: stock, minStock: minStock, expDates: uniqExp, variants: payload.variants, cost: payload.cost
         };
         try {
             if(!IS_PREVIEW && db) {
@@ -5599,6 +5814,7 @@ measurementId: "G-ZVZ3QHEPKC"
             if (STATE.historyFilter === '1year') { const d = new Date(); d.setFullYear(now.getFullYear() - 1); return oDate >= d; }
             return true; 
         }).sort((a,b) => new Date(b.date) - new Date(a.date));
+        STATE.lastHistoryFiltered = filtered;
 
         const isCashierView = Boolean(STATE.user) && STATE.user.role === 'cashier';
         window.renderHistDebtInfo('adminHistDebtInfo', histQ, STATE.data.orders, true);
@@ -5928,6 +6144,11 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('setExpWarnMonths').value = Math.max(1, parseInt(STATE.data.settings.expWarnMonths) || 1);
         document.getElementById('setPromoEnabled').checked = Boolean(STATE.data.settings.promoEnabled);
         document.getElementById('setMultiPriceEnabled').checked = Boolean(STATE.data.settings.multiPriceEnabled);
+        document.getElementById('setManualDiscEnabled').checked = Boolean(STATE.data.settings.manualDiscEnabled);
+        document.getElementById('setManualDiscCashier').checked = Boolean(STATE.data.settings.manualDiscCashier);
+        document.getElementById('setManualDiscMaxPct').value = Number(STATE.data.settings.manualDiscMaxPct) || 100;
+        document.getElementById('setShiftEnabled').checked = Boolean(STATE.data.settings.shiftEnabled);
+        document.getElementById('setShiftRequired').checked = Boolean(STATE.data.settings.shiftRequired);
         document.getElementById('setPublicHistoryEnabled').checked = Boolean(STATE.data.settings.publicHistoryEnabled);
         document.getElementById('setBarcodeEnabled').checked = Boolean(STATE.data.settings.barcodeEnabled);
 
@@ -6007,6 +6228,11 @@ measurementId: "G-ZVZ3QHEPKC"
             exp_warn_months: Math.max(1, parseInt(document.getElementById('setExpWarnMonths').value) || 1),
             promo_enabled: document.getElementById('setPromoEnabled').checked,
             multi_price_enabled: document.getElementById('setMultiPriceEnabled').checked,
+            manual_disc_enabled: document.getElementById('setManualDiscEnabled').checked,
+            manual_disc_cashier: document.getElementById('setManualDiscCashier').checked,
+            manual_disc_max_pct: Math.min(100, Math.max(1, parseInt(document.getElementById('setManualDiscMaxPct').value) || 100)),
+            shift_enabled: document.getElementById('setShiftEnabled').checked,
+            shift_required: document.getElementById('setShiftRequired').checked,
             public_history_enabled: document.getElementById('setPublicHistoryEnabled').checked,
             barcode_enabled: document.getElementById('setBarcodeEnabled').checked
         };
@@ -6054,6 +6280,11 @@ measurementId: "G-ZVZ3QHEPKC"
                 expWarnMonths: payload.exp_warn_months,
                 promoEnabled: payload.promo_enabled,
                 multiPriceEnabled: payload.multi_price_enabled,
+                manualDiscEnabled: payload.manual_disc_enabled,
+                manualDiscCashier: payload.manual_disc_cashier,
+                manualDiscMaxPct: payload.manual_disc_max_pct,
+                shiftEnabled: payload.shift_enabled,
+                shiftRequired: payload.shift_required,
                 publicHistoryEnabled: payload.public_history_enabled,
                 barcodeEnabled: payload.barcode_enabled,
                 scheduleOpenEnabled: payload.schedule_open_enabled,
@@ -6574,7 +6805,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
     // EXPORT & IMPORT CSV PRODUK
     // ======================================================= //
-    const CSV_HEADERS = ['id', 'name', 'cat', 'price', 'system', 'available', 'stock', 'min_stock', 'exp_dates', 'barcode', 'variants', 'info'];
+    const CSV_HEADERS = ['id', 'name', 'cat', 'price', 'cost', 'system', 'available', 'stock', 'min_stock', 'exp_dates', 'barcode', 'variants', 'info'];
     const csvCell = v => {
         const s = String(v === undefined || v === null ? '' : v);
         return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
@@ -6583,7 +6814,7 @@ measurementId: "G-ZVZ3QHEPKC"
     window.exportProductsCSV = async () => {
         if (!STATE.data.products.length) return await window.customAlert('Belum ada produk untuk di-export.', 'Info');
         const rows = [CSV_HEADERS.join(',')].concat(STATE.data.products.map(p => [
-            p.id, p.name, p.cat, Number(p.price || 0), p.stockMode === 'stock' ? 'STOK' : 'ONOFF', p.availFlag ? 'ON' : 'OFF',
+            p.id, p.name, p.cat, Number(p.price || 0), Number(p.cost || 0) || '', p.stockMode === 'stock' ? 'STOK' : 'ONOFF', p.availFlag ? 'ON' : 'OFF',
             Number(p.stock || 0), Number(p.minStock || 0), (p.expDates || []).join('|'), p.barcode || '', (p.variants || []).map(v => `${v.name}:${v.price}`).join('|'), p.info || ''
         ].map(csvCell).join(',')));
         // BOM supaya huruf non-latin tetap terbaca rapi saat dibuka di Excel.
@@ -6685,6 +6916,7 @@ measurementId: "G-ZVZ3QHEPKC"
             if ((system || (oldP && oldP.stockMode)) === 'stock' && minRaw === '' && !(oldP && oldP.stockMode === 'stock')) return errors.push(`Baris ${line}: produk Sistem Stok wajib mengisi min_stock (batas minimal stok)`);
             items.push({
                 id: get(r, 'id'), name, cat, price: Math.round(Number(priceRaw)), system,
+                cost: col('cost') > -1 ? Math.max(0, Math.round(Number(get(r, 'cost').replace(/[^\d.]/g, '')) || 0)) : null,
                 available: col('available') > -1 && availRaw !== '' ? ['on', '1', 'true', 'ya', 'yes', 'tersedia'].includes(availRaw) : null,
                 stock: stockRaw === '' ? null : Math.round(Number(stockRaw)),
                 minStock: minRaw === '' ? null : Math.round(Number(minRaw)),
@@ -6718,7 +6950,8 @@ measurementId: "G-ZVZ3QHEPKC"
                     minStock: it.minStock !== null ? it.minStock : (old ? Number(old.minStock || 0) : 0),
                     expDates: it.expDates !== null ? it.expDates : (old ? (old.expDates || []) : []),
                     barcode: it.barcode !== null ? it.barcode : (old ? (old.barcode || '') : ''),
-                    variants: it.variants !== null ? it.variants : (old ? (old.variants || []) : [])
+                    variants: it.variants !== null ? it.variants : (old ? (old.variants || []) : []),
+                    cost: it.cost !== null && it.cost !== undefined ? it.cost : (old ? Number(old.cost || 0) : 0)
                 };
                 writes.push(prod);
             });
@@ -6726,7 +6959,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 // Firestore membatasi 500 operasi per batch -> dikirim bertahap.
                 const ops = [
                     ...newCats.map(c => ({ ref: db.collection('categories').doc(c), data: { id: c, name: c } })),
-                    ...writes.map(p => ({ ref: db.collection('products').doc(p.id), data: { id: p.id, name: p.name, cat: p.cat, price: p.price, available: p.availFlag, availability_system: p.stockMode, info: p.info, stock: p.stock, min_stock: p.minStock, exp_dates: p.expDates, barcode: p.barcode, variants: p.variants } }))
+                    ...writes.map(p => ({ ref: db.collection('products').doc(p.id), data: { id: p.id, name: p.name, cat: p.cat, price: p.price, available: p.availFlag, availability_system: p.stockMode, info: p.info, stock: p.stock, min_stock: p.minStock, exp_dates: p.expDates, barcode: p.barcode, variants: p.variants, cost: Number(p.cost || 0) } }))
                 ];
                 for (let i = 0; i < ops.length; i += 450) {
                     const batch = db.batch();
@@ -6898,6 +7131,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const revenue = orders.reduce((s, o) => dashPaid(o) ? s + Number(o.total || 0) : s, 0);
         document.getElementById('dashRevenue').textContent = formatWon(revenue);
         document.getElementById('dashTrxCount').textContent = orders.length.toLocaleString('id-ID');
+        if (window.renderDashProfit) window.renderDashProfit(orders, revenue);
         document.getElementById('dashPeriodLabel').textContent = `${finDateLabel(dashDayKey(range.start), false)} – hari ini`;
 
         // Data grafik per batang
@@ -8701,6 +8935,498 @@ measurementId: "G-ZVZ3QHEPKC"
         const fp = document.getElementById('admin_finance');
         if (fp && !fp.classList.contains('d-none') && window.renderFinance) window.renderFinance();
     };
+
+    // ======================================================= //
+    // MODE OFFLINE + ONLINE
+    // - Data Firestore disimpan di perangkat (persistence + cache tanpa batas).
+    // - Saat offline, simpan/ubah/hapus langsung tercatat di perangkat (tidak menunggu server) dan
+    //   otomatis terkirim begitu koneksi kembali. Indikator status tampil di header.
+    // ======================================================= //
+    window.isAppOnline = () => navigator.onLine !== false;
+    STATE.netPending = 0;
+    (function installOfflineWrites() {
+        if (typeof firebase === 'undefined' || !firebase.firestore || IS_PREVIEW || !db) return;
+        const F = firebase.firestore;
+        const track = (real, label) => {
+            STATE.netPending++; window.syncNetBadge();
+            const settle = () => { STATE.netPending = Math.max(0, STATE.netPending - 1); window.syncNetBadge(); };
+            real.then(settle, err => {
+                settle();
+                console.warn('Sinkron gagal (' + label + '):', err);
+                window.showNetToast('⚠️ Gagal sinkron ke server: ' + ((err && (err.code || err.message)) || 'tidak diketahui'), 'warn');
+            });
+        };
+        const wrapWrite = (proto, name) => {
+            const orig = proto && proto[name];
+            if (!orig || orig.__offlineWrapped) return;
+            const w = function (...args) {
+                const real = orig.apply(this, args);
+                track(real, name);
+                // Offline: perubahan sudah tersimpan di cache perangkat -> lanjutkan tanpa menunggu server.
+                if (!window.isAppOnline()) return new Promise(r => setTimeout(r, 30));
+                // Online tapi koneksi lambat/putus-sambung: jangan biarkan layar "loading" menggantung.
+                return Promise.race([real, new Promise(r => setTimeout(r, 7000))]);
+            };
+            w.__offlineWrapped = true;
+            proto[name] = w;
+        };
+        wrapWrite(F.DocumentReference.prototype, 'set');
+        wrapWrite(F.DocumentReference.prototype, 'update');
+        wrapWrite(F.DocumentReference.prototype, 'delete');
+        wrapWrite(F.WriteBatch.prototype, 'commit');
+        // add(): buat id di perangkat dulu supaya bisa langsung dipakai walau offline.
+        if (F.CollectionReference && F.CollectionReference.prototype.add && !F.CollectionReference.prototype.add.__offlineWrapped) {
+            const addW = function (data) { const ref = this.doc(); return ref.set(data).then(() => ref); };
+            addW.__offlineWrapped = true;
+            F.CollectionReference.prototype.add = addW;
+        }
+        // get(): saat offline langsung ambil dari cache perangkat (lebih cepat, tidak menunggu timeout jaringan).
+        const wrapGet = (proto) => {
+            const orig = proto && proto.get;
+            if (!orig || orig.__offlineWrapped) return;
+            const g = function (opts) {
+                if (opts || window.isAppOnline()) return orig.call(this, opts);
+                return orig.call(this, { source: 'cache' }).catch(() => orig.call(this));
+            };
+            g.__offlineWrapped = true;
+            proto.get = g;
+        };
+        wrapGet(F.DocumentReference.prototype);
+        wrapGet(F.Query.prototype);
+    })();
+
+    window.showNetToast = (msg, kind) => {
+        let t = document.getElementById('netToast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'netToast';
+            t.setAttribute('role', 'status');
+            (document.getElementById('gasapp-root') || document.body).appendChild(t);
+        }
+        t.textContent = msg;
+        t.className = 'net-toast is-' + (kind || 'info') + ' show';
+        clearTimeout(window.__netToastTimer);
+        window.__netToastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+    };
+    window.syncNetBadge = () => {
+        let el = document.getElementById('netStatus');
+        const nav = document.getElementById('navMenu');
+        if (!el && nav) {
+            el = document.createElement('button');
+            el.id = 'netStatus';
+            el.type = 'button';
+            el.className = 'net-pill d-none';
+            el.onclick = () => window.customAlert(window.isAppOnline()
+                ? (STATE.netPending ? `Sedang mengirim ${STATE.netPending} perubahan ke server…` : 'Online. Semua data sudah tersinkron.')
+                : 'Mode OFFLINE.\n\nAplikasi tetap bisa dipakai: transaksi, perubahan stok & data lain disimpan di perangkat ini dan otomatis terkirim ke server saat internet tersambung lagi.\n\nJangan hapus data browser / cache aplikasi selama masih ada data yang belum tersinkron.', 'Status Koneksi');
+            nav.parentElement.insertBefore(el, nav);
+        }
+        if (!el) return;
+        const online = window.isAppOnline();
+        if (!online) { el.innerHTML = '<span class="net-dot"></span>Offline'; el.className = 'net-pill is-offline'; }
+        else if (STATE.netPending > 0) { el.innerHTML = '<span class="net-dot"></span>Sinkron…'; el.className = 'net-pill is-sync'; }
+        else el.className = 'net-pill d-none';
+    };
+    window.addEventListener('offline', () => {
+        window.syncNetBadge();
+        window.showNetToast('📴 Offline — aplikasi tetap bisa dipakai, data disimpan di perangkat.', 'warn');
+    });
+    window.addEventListener('online', () => {
+        window.syncNetBadge();
+        window.showNetToast('🔄 Kembali online — menyinkronkan data…', 'info');
+        if (db && db.waitForPendingWrites) db.waitForPendingWrites().then(() => {
+            window.syncNetBadge();
+            window.showNetToast('✅ Semua data tersinkron ke server.', 'ok');
+        }).catch(() => {});
+    });
+    window.addEventListener('load', () => setTimeout(window.syncNetBadge, 500));
+
+    // ======================================================= //
+    // KARTU PRODUK POS: angka jumlah di keranjang (tanpa render ulang grid)
+    // ======================================================= //
+    window.syncPosCardBadges = () => {
+        const grid = document.getElementById('adminPosProductGrid');
+        if (!grid) return;
+        const qty = {};
+        STATE.cart.forEach(i => { qty[i.id] = (qty[i.id] || 0) + i.qty; });
+        grid.querySelectorAll('.pos-tap-card').forEach(card => {
+            const b = card.querySelector('.pos-qty-badge');
+            if (!b) return;
+            const n = qty[card.dataset.pid] || 0;
+            if (b.textContent !== String(n)) {
+                b.textContent = n;
+                if (n) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
+            }
+            b.classList.toggle('d-none', !n);
+        });
+    };
+    (() => {
+        const origUpdate = window.updateCartUI;
+        window.updateCartUI = (...a) => { const r = origUpdate(...a); try { window.syncPosCardBadges(); } catch (e) {} return r; };
+    })();
+    // Kartu bisa dipilih dengan keyboard (Enter / Spasi)
+    document.addEventListener('keydown', (e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('pos-tap-card')) {
+            e.preventDefault(); e.target.click();
+        }
+    });
+
+    // ======================================================= //
+    // SHIFT KASIR (buka / tutup kasir & laporan shift)
+    // ======================================================= //
+    STATE.shift = null;
+    const shiftKey = () => STATE.user ? 'wi_shift_' + STATE.user.id : '';
+    const shiftUserName = () => STATE.user ? (STATE.user.role === 'cashier' ? window.getCashierNameById(STATE.user.id, STATE.user.name) : (STATE.user.name || 'Admin')) : '';
+    const shiftLocalList = () => { try { return JSON.parse(localStorage.getItem('wi_shifts') || '[]'); } catch (e) { return []; } };
+    const shiftLocalSave = (list) => { try { localStorage.setItem('wi_shifts', JSON.stringify(list.slice(-200))); } catch (e) {} };
+    const fmtTime = iso => { const d = new Date(iso); return isNaN(d) ? '-' : d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }); };
+    const fmtDateTime = iso => { const d = new Date(iso); return isNaN(d) ? '-' : d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
+
+    window.loadCurrentShift = async () => {
+        STATE.shift = null;
+        if (!STATE.user || !STATE.data.settings.shiftEnabled) return window.syncShiftButton();
+        try { STATE.shift = JSON.parse(localStorage.getItem(shiftKey()) || 'null'); } catch (e) {}
+        if (!STATE.shift && !IS_PREVIEW && db) {
+            try {
+                const snap = await db.collection('shifts').where('user_id', '==', STATE.user.id).where('status', '==', 'open').limit(1).get();
+                if (!snap.empty) { STATE.shift = snap.docs[0].data(); localStorage.setItem(shiftKey(), JSON.stringify(STATE.shift)); }
+            } catch (e) { console.warn('Gagal memuat shift aktif:', e); }
+        }
+        window.syncShiftButton();
+    };
+    window.syncShiftButton = () => {
+        const b = document.getElementById('btnShift');
+        if (!b) return;
+        const on = Boolean(STATE.user) && Boolean(STATE.data.settings.shiftEnabled);
+        b.classList.toggle('d-none', !on);
+        if (!on) return;
+        const open = Boolean(STATE.shift);
+        document.getElementById('shiftDot').className = 'shift-dot ' + (open ? 'is-open' : 'is-closed');
+        document.getElementById('shiftLabel').textContent = open ? `Shift sejak ${fmtTime(STATE.shift.opened_at)}` : 'Buka Shift';
+    };
+    window.computeShiftSummary = (shift) => {
+        const orders = (STATE.data.orders || []).filter(o => o.shiftId === shift.id);
+        const by = { Cash: 0, Transfer: 0, Kartu: 0, Hutang: 0 };
+        let discount = 0, items = 0;
+        orders.forEach(o => {
+            by[o.type] = (by[o.type] || 0) + Number(o.total || 0);
+            discount += Number(o.discount || 0);
+            (o.items || []).forEach(i => { items += Number(i.qty) || 0; });
+        });
+        const total = Object.values(by).reduce((a, b) => a + b, 0);
+        const expectedCash = Number(shift.opening_cash || 0) + by.Cash;
+        return { count: orders.length, by, total, discount, items, expectedCash };
+    };
+
+    window.openShiftModal = async () => {
+        if (!STATE.user) return;
+        if (!STATE.data.settings.shiftEnabled) return await window.customAlert('Fitur Shift Kasir belum diaktifkan di Pengaturan.', 'Info');
+        const body = document.getElementById('shiftBody');
+        const sh = STATE.shift;
+        if (!sh) {
+            document.getElementById('shiftModalTitle').textContent = 'Buka Shift';
+            body.innerHTML = `
+                <p class="text-sm text-gray-600 mb-3">Masukkan jumlah uang tunai di laci kas saat mulai bertugas.</p>
+                <label class="block font-bold mb-1 text-sm">Modal Awal Kas (₩)</label>
+                <input type="number" id="shiftOpenCash" min="0" step="1" inputmode="numeric" class="brutal-input bg-white text-lg font-bold" placeholder="0">
+                <div class="text-xs text-gray-500 mt-2">Petugas: <b>${escapeHTML(shiftUserName())}</b></div>
+                <button type="button" onclick="window.startShift()" class="brutal-btn bg-main w-full py-3 mt-4">Mulai Shift</button>
+                <button type="button" onclick="window.showShiftHistory()" class="brutal-btn bg-white w-full py-2 mt-2 text-sm">Riwayat Shift</button>`;
+            window.openModal('modalShift');
+            setTimeout(() => document.getElementById('shiftOpenCash')?.focus(), 80);
+            return;
+        }
+        const sum = window.computeShiftSummary(sh);
+        document.getElementById('shiftModalTitle').textContent = 'Tutup Shift';
+        const row = (k, v, cls = '') => `<div class="flex justify-between gap-2 py-1 ${cls}"><span>${k}</span><span class="font-bold whitespace-nowrap">${v}</span></div>`;
+        body.innerHTML = `
+            <div class="text-xs text-gray-500 mb-2">Dibuka ${fmtDateTime(sh.opened_at)} oleh <b>${escapeHTML(sh.user_name || '')}</b></div>
+            <div class="bg-gray-50 border-2 border-black p-3 text-sm mb-3">
+                ${row('Jumlah transaksi', sum.count.toLocaleString('id-ID'))}
+                ${row('Item terjual', sum.items.toLocaleString('id-ID'))}
+                ${row('Cash', formatWon(sum.by.Cash))}
+                ${row('Transfer', formatWon(sum.by.Transfer))}
+                ${row('Kartu', formatWon(sum.by.Kartu))}
+                ${row('Hutang', formatWon(sum.by.Hutang))}
+                ${sum.discount ? row('Total potongan', '-' + formatWon(sum.discount)) : ''}
+                ${row('Total penjualan', formatWon(sum.total), 'border-t-2 border-black mt-1 pt-2')}
+            </div>
+            <div class="bg-yellow-50 border-2 border-black p-3 text-sm mb-3">
+                ${row('Modal awal kas', formatWon(sh.opening_cash || 0))}
+                ${row('+ Penjualan cash', formatWon(sum.by.Cash))}
+                ${row('Kas seharusnya', formatWon(sum.expectedCash), 'border-t-2 border-black mt-1 pt-2 text-base')}
+            </div>
+            <label class="block font-bold mb-1 text-sm">Uang Fisik di Laci (₩)</label>
+            <input type="number" id="shiftCloseCash" min="0" step="1" inputmode="numeric" oninput="window.onShiftCountInput()" class="brutal-input bg-white text-lg font-bold" placeholder="${sum.expectedCash}">
+            <div id="shiftDiffInfo" class="text-sm font-bold mt-2"></div>
+            <label class="block font-bold mb-1 text-sm mt-3">Catatan (opsional)</label>
+            <input type="text" id="shiftCloseNote" maxlength="200" class="brutal-input bg-white text-sm" placeholder="cth: setor ke pemilik ₩500.000">
+            <div class="grid grid-cols-2 gap-2 mt-4">
+                <button type="button" onclick="window.printShiftReport()" class="brutal-btn bg-white py-2.5 text-sm">🖨️ Cetak Sementara</button>
+                <button type="button" onclick="window.closeShift()" class="brutal-btn bg-danger text-white py-2.5 text-sm">Tutup Shift</button>
+            </div>
+            <button type="button" onclick="window.showShiftHistory()" class="brutal-btn bg-white w-full py-2 mt-2 text-sm">Riwayat Shift</button>`;
+        window.openModal('modalShift');
+    };
+    window.onShiftCountInput = () => {
+        const sum = window.computeShiftSummary(STATE.shift);
+        const raw = document.getElementById('shiftCloseCash').value;
+        const el = document.getElementById('shiftDiffInfo');
+        if (raw === '') { el.textContent = ''; return; }
+        const diff = Number(raw) - sum.expectedCash;
+        el.className = 'text-sm font-bold mt-2 ' + (diff === 0 ? 'text-success' : 'text-danger');
+        el.textContent = diff === 0 ? '✓ Kas sesuai' : (diff > 0 ? `Lebih ${formatWon(diff)}` : `Kurang ${formatWon(-diff)}`);
+    };
+    window.startShift = async () => {
+        const v = Math.max(0, Math.round(Number(document.getElementById('shiftOpenCash').value) || 0));
+        const sh = {
+            id: genId('SHIFT'), user_id: STATE.user.id, user_name: shiftUserName(), role: STATE.user.role,
+            opened_at: new Date().toISOString(), opening_cash: v, status: 'open'
+        };
+        showLoad();
+        try {
+            if (!IS_PREVIEW && db) await db.collection('shifts').doc(sh.id).set(sh);
+            else { const l = shiftLocalList(); l.push(sh); shiftLocalSave(l); }
+            STATE.shift = sh;
+            localStorage.setItem(shiftKey(), JSON.stringify(sh));
+            hideLoad();
+            window.closeModal('modalShift');
+            window.syncShiftButton();
+            if (window.playSfx) window.playSfx('select');
+            window.showNetToast(`🟢 Shift dimulai — modal awal ${formatWon(v)}`, 'ok');
+        } catch (e) { hideLoad(); await window.customAlert('Gagal membuka shift: ' + e.message, 'Gagal'); }
+    };
+    window.closeShift = async () => {
+        const sh = STATE.shift;
+        if (!sh) return;
+        const sum = window.computeShiftSummary(sh);
+        const raw = document.getElementById('shiftCloseCash').value;
+        if (raw === '') return await window.customAlert('Isi jumlah uang fisik di laci terlebih dahulu.', 'Peringatan');
+        const counted = Math.max(0, Math.round(Number(raw) || 0));
+        const diff = counted - sum.expectedCash;
+        if (!(await window.customConfirm(`Tutup shift sekarang?\n\nKas seharusnya: ${formatWon(sum.expectedCash)}\nUang fisik: ${formatWon(counted)}\nSelisih: ${diff === 0 ? 'sesuai' : (diff > 0 ? '+' : '-') + formatWon(Math.abs(diff))}`, 'Tutup Shift'))) return;
+        const closed = {
+            ...sh, status: 'closed', closed_at: new Date().toISOString(),
+            closing_cash: counted, expected_cash: sum.expectedCash, diff,
+            trx_count: sum.count, items: sum.items, totals: sum.by, total_sales: sum.total, discount: sum.discount,
+            note: (document.getElementById('shiftCloseNote').value || '').trim()
+        };
+        showLoad();
+        try {
+            if (!IS_PREVIEW && db) await db.collection('shifts').doc(sh.id).set(closed);
+            else { const l = shiftLocalList().filter(x => x.id !== sh.id); l.push(closed); shiftLocalSave(l); }
+            STATE.shift = null;
+            localStorage.removeItem(shiftKey());
+            hideLoad();
+            window.closeModal('modalShift');
+            window.syncShiftButton();
+            if (window.playSfx) window.playSfx('success');
+            if (await window.customConfirm('Shift ditutup. Cetak laporan shift?', 'Shift Ditutup')) window.printShiftReport(closed);
+        } catch (e) { hideLoad(); await window.customAlert('Gagal menutup shift: ' + e.message, 'Gagal'); }
+    };
+    window.shiftReportHtml = (sh) => {
+        const sum = sh.status === 'closed'
+            ? { count: sh.trx_count || 0, items: sh.items || 0, by: sh.totals || {}, total: sh.total_sales || 0, discount: sh.discount || 0, expectedCash: sh.expected_cash || 0 }
+            : window.computeShiftSummary(sh);
+        const r = (k, v, b) => `<div style="display:flex;justify-content:space-between;margin-bottom:3px;${b ? 'font-weight:bold;' : ''}"><span>${k}</span><span>${v}</span></div>`;
+        const by = sum.by || {};
+        return `<div class="receipt-88mm" id="printReceiptCore">
+            <div style="text-align:center;border-bottom:2px dashed black;padding-bottom:10px;margin-bottom:10px;">
+                <h2 style="margin:0;font-size:16px;font-weight:bold;text-transform:uppercase;">${escapeHTML(STATE.data.settings.storeName || 'WARUNG INDONESIA')}</h2>
+                <div style="font-size:13px;font-weight:bold;margin-top:4px;">LAPORAN SHIFT${sh.status === 'closed' ? '' : ' (SEMENTARA)'}</div>
+            </div>
+            <div style="font-size:12px;border-bottom:2px dashed black;padding-bottom:8px;margin-bottom:8px;">
+                ${r('Petugas', escapeHTML(sh.user_name || '-'))}${r('Buka', fmtDateTime(sh.opened_at))}${r('Tutup', sh.closed_at ? fmtDateTime(sh.closed_at) : '-')}
+            </div>
+            <div style="font-size:12px;border-bottom:2px dashed black;padding-bottom:8px;margin-bottom:8px;">
+                ${r('Transaksi', sum.count)}${r('Item terjual', sum.items)}
+                ${r('Cash', formatWon(by.Cash || 0))}${r('Transfer', formatWon(by.Transfer || 0))}${r('Kartu', formatWon(by.Kartu || 0))}${r('Hutang', formatWon(by.Hutang || 0))}
+                ${sum.discount ? r('Potongan', '-' + formatWon(sum.discount)) : ''}${r('TOTAL PENJUALAN', formatWon(sum.total), true)}
+            </div>
+            <div style="font-size:12px;">
+                ${r('Modal awal', formatWon(sh.opening_cash || 0))}${r('Kas seharusnya', formatWon(sum.expectedCash), true)}
+                ${sh.status === 'closed' ? r('Uang fisik', formatWon(sh.closing_cash || 0)) + r('Selisih', (sh.diff > 0 ? '+' : sh.diff < 0 ? '-' : '') + formatWon(Math.abs(sh.diff || 0)), true) : ''}
+                ${sh.note ? `<div style="margin-top:6px;font-style:italic;">Catatan: ${escapeHTML(sh.note)}</div>` : ''}
+            </div>
+            <div style="text-align:center;margin-top:16px;font-size:10px;">Dicetak ${fmtDateTime(new Date().toISOString())}</div>
+        </div>`;
+    };
+    window.printShiftReport = (sh) => {
+        sh = sh || STATE.shift;
+        if (!sh) return;
+        const pa = document.getElementById('printArea');
+        pa.innerHTML = window.shiftReportHtml(sh);
+        pa.classList.remove('d-none');
+        window.print();
+        setTimeout(() => pa.classList.add('d-none'), 800);
+    };
+    window.showShiftHistory = async () => {
+        const body = document.getElementById('shiftBody');
+        document.getElementById('shiftModalTitle').textContent = 'Riwayat Shift';
+        body.innerHTML = '<p class="text-sm text-gray-500">Memuat…</p>';
+        window.openModal('modalShift');
+        let list = [];
+        try {
+            if (!IS_PREVIEW && db) {
+                const q = STATE.user.role === 'admin'
+                    ? db.collection('shifts').orderBy('opened_at', 'desc').limit(40)
+                    : db.collection('shifts').where('user_id', '==', STATE.user.id).limit(60);
+                const snap = await q.get();
+                list = snap.docs.map(d => d.data());
+            } else list = shiftLocalList();
+        } catch (e) { body.innerHTML = `<p class="text-sm text-danger">Gagal memuat riwayat: ${escapeHTML(e.message)}</p>`; return; }
+        list.sort((a, b) => String(b.opened_at).localeCompare(String(a.opened_at)));
+        STATE.shiftHistory = list;
+        body.innerHTML = (list.length ? list.map((sh, i) => {
+            const diff = Number(sh.diff || 0);
+            const badge = sh.status === 'open' ? '<span class="text-[10px] font-bold px-2 py-0.5 bg-success text-white rounded-full">AKTIF</span>'
+                : `<span class="text-xs font-bold ${diff === 0 ? 'text-success' : 'text-danger'}">${diff === 0 ? 'Sesuai' : (diff > 0 ? '+' : '-') + formatWon(Math.abs(diff))}</span>`;
+            return `<button type="button" onclick="window.printShiftReport(STATE.shiftHistory[${i}])" class="w-full text-left border-2 border-black bg-white p-3 mb-2 hover:bg-gray-50">
+                <div class="flex justify-between items-center gap-2"><span class="font-bold text-sm">${escapeHTML(sh.user_name || '-')}</span>${badge}</div>
+                <div class="text-xs text-gray-500 mt-0.5">${fmtDateTime(sh.opened_at)}${sh.closed_at ? ' → ' + fmtTime(sh.closed_at) : ''}</div>
+                ${sh.status === 'closed' ? `<div class="text-xs mt-1">${sh.trx_count || 0} transaksi • ${formatWon(sh.total_sales || 0)}</div>` : ''}
+            </button>`;
+        }).join('') : '<p class="text-sm text-gray-500 text-center py-6">Belum ada riwayat shift.</p>')
+            + '<p class="text-[10px] text-gray-500 mt-2">Ketuk salah satu shift untuk mencetak laporannya.</p>'
+            + `<button type="button" onclick="window.openShiftModal()" class="brutal-btn bg-white w-full py-2 mt-3 text-sm">← Kembali</button>`;
+    };
+    // Muat shift aktif setiap kali halaman POS dibuka.
+    (() => {
+        const origShow = window.showPage;
+        window.showPage = async (pageId) => {
+            const r = await origShow(pageId);
+            if (pageId === 'pageAdminPOS' && STATE.user) {
+                await window.loadCurrentShift();
+            }
+            return r;
+        };
+    })();
+
+    // ======================================================= //
+    // DASHBOARD: LABA KOTOR & RATA-RATA TRANSAKSI
+    // Laba = total penjualan (lunas) - harga modal barang terjual (termasuk bonus promo).
+    // ======================================================= //
+    window.itemCostOf = (i) => {
+        if (Number(i.cost) > 0) return Number(i.cost);
+        const p = STATE.data.products.find(x => x.id === i.id);
+        if (!p) return 0;
+        if (i.variant && Array.isArray(p.variants)) { const v = p.variants.find(x => x.name === i.variant); if (v && Number(v.cost) > 0) return Number(v.cost); }
+        return Number(p.cost || 0);
+    };
+    window.orderCost = (o) => {
+        let cost = 0, missing = 0;
+        (o.items || []).forEach(i => { const c = window.itemCostOf(i); if (c > 0) cost += c * (Number(i.qty) || 0); else missing += Number(i.qty) || 0; });
+        (o.bonusItems || []).forEach(b => { cost += window.itemCostOf(b) * (Number(b.qty) || 0); });
+        return { cost, missing };
+    };
+    window.renderDashProfit = (orders, revenue) => {
+        const pEl = document.getElementById('dashProfit');
+        if (!pEl) return;
+        const paid = orders.filter(o => dashPaid(o));
+        let cost = 0, missing = 0;
+        paid.forEach(o => { const c = window.orderCost(o); cost += c.cost; missing += c.missing; });
+        const hasCost = STATE.data.products.some(p => Number(p.cost) > 0 || (p.variants || []).some(v => Number(v.cost) > 0));
+        const hint = document.getElementById('dashProfitHint');
+        if (!hasCost) { pEl.textContent = '—'; hint.textContent = 'isi Harga Modal produk untuk melihat laba'; }
+        else {
+            const profit = revenue - cost;
+            pEl.textContent = formatWon(profit);
+            pEl.style.color = profit < 0 ? 'var(--c-danger)' : '';
+            hint.textContent = (revenue > 0 ? `margin ${Math.round(profit / revenue * 100)}%` : 'margin -') + (missing ? ` • ${missing} item tanpa harga modal` : '');
+        }
+        document.getElementById('dashAvg').textContent = formatWon(paid.length ? Math.round(revenue / paid.length) : 0);
+        const items = orders.reduce((s, o) => s + (o.items || []).reduce((a, i) => a + (Number(i.qty) || 0), 0), 0);
+        document.getElementById('dashAvgHint').textContent = `${items.toLocaleString('id-ID')} item terjual`;
+    };
+    // Petunjuk margin di form produk
+    window.syncMarginHint = () => {
+        const h = document.getElementById('prodMarginHint');
+        if (!h) return;
+        const price = Number(document.getElementById('prodPrice').value) || 0, cost = Number(document.getElementById('prodCost').value) || 0;
+        if (!price || !cost) { h.textContent = ''; return; }
+        const m = price - cost;
+        h.textContent = `Laba per item ${formatWon(m)} (margin ${Math.round(m / price * 100)}%)`;
+        h.style.color = m < 0 ? 'var(--c-danger)' : '';
+    };
+    ['prodPrice', 'prodCost'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', window.syncMarginHint); });
+
+    // ======================================================= //
+    // RIWAYAT: EXPORT LAPORAN TRANSAKSI (CSV, bisa dibuka di Excel / Google Sheets)
+    // ======================================================= //
+    window.exportHistoryCSV = async () => {
+        if (!STATE.lastHistoryFiltered) window.renderAdminHistory();
+        const list = (STATE.lastHistoryFiltered || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+        if (!list.length) return await window.customAlert('Tidak ada transaksi pada filter yang dipilih.', 'Info');
+        const head = ['Tanggal', 'Jam', 'No Invoice', 'Pelanggan', 'Metode', 'Status', 'Kasir', 'Item', 'Jumlah Item', 'Subtotal', 'Potongan', 'Tambahan', 'Total', 'Harga Modal', 'Laba Kotor', 'Catatan'];
+        const rows = [head.join(',')];
+        let sumTotal = 0, sumProfit = 0;
+        list.forEach(o => {
+            const d = new Date(o.date);
+            const extras = (o.extras || []).reduce((s, x) => s + Number(x.amount || 0), 0);
+            const c = window.orderCost(o);
+            const total = Number(o.total || 0);
+            sumTotal += total; sumProfit += total - c.cost;
+            const pad = n => String(n).padStart(2, '0');
+            rows.push([
+                `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+                o.id, o.custName || 'Umum', o.type || '', o.paymentStatus === 'Unpaid' ? 'Belum Lunas' : 'Lunas',
+                o.cashierName || (o.source === 'public' ? 'Mandiri' : 'Admin'),
+                (o.items || []).map(i => `${i.name} x${i.qty}`).join('; '),
+                (o.items || []).reduce((s, i) => s + (Number(i.qty) || 0), 0),
+                Number(o.subtotal || 0), Number(o.discount || 0), extras, total, c.cost, total - c.cost, o.notes || ''
+            ].map(csvCell).join(','));
+        });
+        rows.push(['', '', '', '', '', '', '', 'TOTAL', '', '', '', '', sumTotal, '', sumProfit, ''].map(csvCell).join(','));
+        const blob = new Blob(['﻿' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+        const dt = new Date();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Laporan_Transaksi_${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}.csv`;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    };
+
+    // ======================================================= //
+    // PINTASAN KEYBOARD (komputer kasir)
+    // ======================================================= //
+    const SHORTCUTS = [
+        ['F2 atau /', 'Cari produk / scan barcode'],
+        ['F4', 'Buka keranjang'],
+        ['F7', 'Isi diskon (jika aktif)'],
+        ['F8', 'Proses transaksi'],
+        ['F9', 'Proses + cetak nota'],
+        ['F10', 'Buka / tutup shift'],
+        ['Enter', 'Pilih produk yang sedang disorot'],
+        ['Esc', 'Tutup pencarian / popup kecil']
+    ];
+    window.showShortcutHelp = () => window.customAlert(SHORTCUTS.map(([k, v]) => `${k}  —  ${v}`).join('\n'), 'Pintasan Keyboard');
+    document.addEventListener('keydown', (e) => {
+        const pos = document.getElementById('pageAdminPOS');
+        if (!STATE.user || !pos || pos.classList.contains('d-none')) return;
+        const tag = (e.target && e.target.tagName) || '';
+        const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+        const anyModal = Array.from(document.querySelectorAll('.modal-backdrop')).some(m => !m.classList.contains('d-none') && m.id !== 'modalCart');
+        const key = e.key;
+        if (anyModal && key !== 'Escape') return;
+        const run = (fn) => { e.preventDefault(); fn(); };
+        if (key === 'F2' || (key === '/' && !typing)) return run(() => {
+            const inp = document.getElementById('posInlineSearch');
+            if (inp.classList.contains('d-none')) window.togglePosSearch(); else inp.focus();
+        });
+        if (key === 'F4') return run(() => window.openCart());
+        if (key === 'F7') return run(() => {
+            if (!window.canManualDiscount()) return;
+            if (!window.isPosDocked()) window.openCart();
+            setTimeout(() => document.getElementById('cartDiscValue')?.focus(), 120);
+        });
+        if (key === 'F8') return run(() => { if (STATE.cart.length) window.processCheckout(false); });
+        if (key === 'F9') return run(() => { if (STATE.cart.length) window.processCheckout(true); });
+        if (key === 'F10') return run(() => window.openShiftModal());
+        if (key === 'Escape') {
+            const inp = document.getElementById('posInlineSearch');
+            if (inp && !inp.classList.contains('d-none') && document.activeElement === inp && !inp.value) { e.preventDefault(); window.togglePosSearch(); }
+        }
+    });
 
     setInterval(window.updateStoreStatusDisplay, 30000);
 </script>
