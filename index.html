@@ -908,7 +908,6 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
             box-shadow: none !important;
             background-color: var(--c-surface) !important;
             color: var(--c-text) !important;
-            padding: .6rem .8rem;
             min-height: 44px;
             transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
         }
@@ -1081,6 +1080,124 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
         /* Tombol jenis diskon (% / ₩) */
         #gasapp-root #cartDiscWrap [role="group"] { border-radius: 10px; }
         #gasapp-root #cartDiscWrap [role="group"] button.bg-black { background: var(--c-text) !important; color: var(--c-bg) !important; }
+        /* ===== Harga grosir ===== */
+        #gasapp-root .product-card-ws { color: var(--c-accent); }
+        #gasapp-root .cart-ws-tag { display: inline-block; margin-top: 2px; font-size: 10px; font-weight: 700; color: var(--c-success); background: var(--c-success-soft); padding: 1px 7px; border-radius: 999px; }
+        #gasapp-root .cart-ws-tag s { font-weight: 500; opacity: .7; }
+        #gasapp-root .cart-ws-next { margin-top: 2px; font-size: 10px; font-weight: 600; color: var(--c-accent); }
+        #gasapp-root .ws-switch { width: 36px; height: 20px; border-radius: 999px; background: var(--c-line-strong); position: relative; transition: background .2s; flex-shrink: 0; }
+        #gasapp-root .ws-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s; }
+        #gasapp-root .ws-switch.is-on { background: var(--c-success); }
+        #gasapp-root .ws-switch.is-on::after { transform: translateX(16px); }
+        /* ===== Banner versi baru ===== */
+        .update-bar { position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 9999997;
+            display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 14px; background: #111827; color: #fff;
+            font-size: 13px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.25); max-width: calc(100vw - 20px); }
+        .update-bar button { background: #FFC83D; color: #1F1600; border: none; border-radius: 10px; padding: 6px 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .update-bar button.ghost { background: transparent; color: #cbd5e1; padding: 6px 8px; }
+        /* ===== Padding isian: kelas pl-/pr- (ikon di dalam kolom, mis. 🔍) tetap dihormati ===== */
+        :where(#gasapp-root) .brutal-input { padding: .6rem .8rem; }
+        #gasapp-root .brutal-input.pl-8 { padding-left: 2.1rem !important; }
+        #gasapp-root .brutal-input.pl-9 { padding-left: 2.35rem !important; }
+        #gasapp-root .brutal-input.pl-10 { padding-left: 2.6rem !important; }
+        #gasapp-root .brutal-input.pr-8 { padding-right: 2.1rem !important; }
+
+        /* ===== Kelas Tailwind "!" (penting) mengikuti tema terang/gelap ===== */
+        #gasapp-root .\!bg-danger { background-color: var(--c-danger) !important; color: #fff !important; border-color: transparent !important; }
+        #gasapp-root .\!bg-main { background-color: var(--c-primary) !important; color: var(--c-on-primary) !important; border-color: transparent !important; }
+        #gasapp-root .\!bg-black { background-color: #1F2937 !important; color: #fff !important; border-color: transparent !important; }
+        #gasapp-root .\!bg-white { background-color: var(--c-surface) !important; color: var(--c-text) !important; }
+        #gasapp-root .\!bg-danger *, #gasapp-root .\!bg-black > :not(.bg-main):not(.bg-danger) { color: inherit; }
+        html[data-theme="dark"] #gasapp-root .\!bg-main, html[data-theme="dark"] #gasapp-root .\!bg-main * { color: var(--c-on-primary) !important; }
+        html[data-theme="dark"] #gasapp-root .\!bg-black { background-color: var(--c-accent) !important; color: #fff !important; }
+
+        /* ===== Tombol keranjang (POS HP & katalog publik) selalu menonjol di kedua mode ===== */
+        #gasapp-root #btnPosCart, #gasapp-root #btnCustCartFloat, #gasapp-root #navBtnPubCart {
+            background-color: #1F2937 !important; color: #fff !important; border-color: transparent !important;
+        }
+        @media (max-width: 1023px) {
+            #gasapp-root #btnPosCart { box-shadow: 0 10px 28px rgba(15,23,42,.35), 0 2px 6px rgba(15,23,42,.2) !important; }
+        }
+        #gasapp-root #btnCustCartFloat { box-shadow: 0 10px 28px rgba(15,23,42,.35) !important; }
+        html[data-theme="dark"] #gasapp-root #btnPosCart, html[data-theme="dark"] #gasapp-root #btnCustCartFloat, html[data-theme="dark"] #gasapp-root #navBtnPubCart {
+            background-color: var(--c-accent) !important; color: #fff !important;
+            box-shadow: 0 10px 28px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08) !important;
+        }
+        #gasapp-root #btnPosCart span, #gasapp-root #btnCustCartFloat > span:not(.bg-main):not(.bg-danger) { color: inherit; }
+
+        /* ===== Popup Bayar Cicilan ===== */
+        #gasapp-root .inst-card { background: var(--c-surface); border-radius: 24px; box-shadow: var(--sh-3); }
+        #gasapp-root .inst-head { padding: 22px 22px 14px; border-bottom: 1px solid var(--c-line); margin: 0 4px; }
+        #gasapp-root .inst-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+        #gasapp-root .inst-x { width: 40px; height: 40px; border-radius: 999px; background: var(--c-surface-2); color: var(--c-text-2); font-size: 16px; font-weight: 700; flex-shrink: 0; margin: -6px -6px 0 0; }
+        #gasapp-root .inst-x:hover { background: var(--c-surface-3); }
+        #gasapp-root .inst-body { padding: 18px 22px 6px; }
+        #gasapp-root .inst-info { border-radius: 14px; padding: 12px 14px; background: var(--c-surface-2); border: 1px solid var(--c-line); min-width: 0; }
+        #gasapp-root .inst-info.is-debt { background: var(--c-danger-soft); border-color: color-mix(in srgb, var(--c-danger) 25%, transparent); }
+        #gasapp-root .inst-k { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--c-text-2); }
+        #gasapp-root .inst-v { font-size: 1.15rem; font-weight: 800; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #gasapp-root .inst-info.is-debt .inst-v { color: var(--c-danger); }
+        #gasapp-root .inst-label { display: block; font-size: .95rem; font-weight: 700; margin-bottom: 8px; }
+        #gasapp-root .inst-opt { font-weight: 500; color: var(--c-text-3); }
+        #gasapp-root .inst-amount { width: 100%; height: 60px; border-radius: 14px; border: 1.5px solid var(--c-line-strong); background: var(--c-surface); color: var(--c-text);
+            font-size: 1.6rem; font-weight: 800; text-align: right; padding: 0 16px; outline: none; font-variant-numeric: tabular-nums; transition: border-color .15s, box-shadow .15s; }
+        #gasapp-root .inst-amount::placeholder { color: var(--c-text-3); font-weight: 700; }
+        #gasapp-root .inst-amount:focus { border-color: var(--c-accent); box-shadow: 0 0 0 4px var(--c-focus); }
+        #gasapp-root .inst-chip { height: 42px; border-radius: 999px; border: 1px solid var(--c-line-strong); background: var(--c-surface); color: var(--c-text); font-weight: 700; font-size: .85rem; white-space: nowrap; font-variant-numeric: tabular-nums; transition: all .15s; }
+        #gasapp-root .inst-chip:hover { background: var(--c-surface-2); }
+        #gasapp-root .inst-chip.is-active { border-color: var(--c-accent); color: var(--c-accent); background: var(--c-accent-soft); }
+        #gasapp-root .inst-chip.is-all { background: var(--c-accent); color: #fff; border-color: transparent; }
+        #gasapp-root .inst-chip.is-all.is-active { box-shadow: 0 0 0 3px var(--c-focus); }
+        #gasapp-root .inst-remain { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 14px;
+            background: var(--c-primary-soft); border: 1px solid color-mix(in srgb, var(--c-primary-strong) 30%, transparent); font-weight: 700; font-size: 1rem; }
+        #gasapp-root .inst-remain span:last-child { font-weight: 800; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+        #gasapp-root .inst-remain.is-paid { background: var(--c-success-soft); border-color: color-mix(in srgb, var(--c-success) 30%, transparent); color: var(--c-success); }
+        #gasapp-root .inst-seg { height: 46px; border-radius: 14px; border: 1px solid var(--c-line-strong); background: var(--c-surface); color: var(--c-text); font-weight: 600; transition: all .15s; }
+        #gasapp-root .inst-seg.is-active { border: 2px solid var(--c-accent); background: var(--c-accent-soft); color: var(--c-accent); font-weight: 700; }
+        #gasapp-root .inst-input { width: 100%; height: 52px; border-radius: 14px; border: 1px solid var(--c-line-strong); background: var(--c-surface); color: var(--c-text); padding: 0 16px; outline: none; font-size: .95rem; }
+        #gasapp-root .inst-input:focus { border-color: var(--c-accent); box-shadow: 0 0 0 4px var(--c-focus); }
+        #gasapp-root .inst-foot { padding: 16px 22px 22px; }
+        #gasapp-root .inst-btn { height: 56px; border-radius: 16px; font-weight: 700; font-size: 1.05rem; transition: all .15s; }
+        #gasapp-root .inst-btn.is-ghost { background: var(--c-surface); border: 1px solid var(--c-line-strong); color: var(--c-text); }
+        #gasapp-root .inst-btn.is-ghost:hover { background: var(--c-surface-2); }
+        #gasapp-root .inst-btn.is-primary { background: var(--c-accent); color: #fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--c-accent) 35%, transparent); }
+        #gasapp-root .inst-btn.is-primary:disabled { background: var(--c-accent-soft); color: color-mix(in srgb, var(--c-accent) 70%, var(--c-text)); box-shadow: none; cursor: not-allowed; }
+        #gasapp-root .inst-btn:active:not(:disabled) { transform: scale(.98); }
+
+        /* ===== Sakelar "Harga sama" (multi level harga) ===== */
+        #gasapp-root .var-same-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 4px; border-radius: 999px; background: var(--c-surface); border: 1px solid var(--c-line); }
+        #gasapp-root #prodVariantList.var-same-on .prod-var-price, #gasapp-root #prodVariantList.var-same-on .prod-var-cost { display: none; }
+
+        /* ===== Pengaturan printer ===== */
+        #gasapp-root .prn-opt { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--c-line-strong); background: var(--c-surface); color: var(--c-text); font-size: .9rem; }
+        #gasapp-root .prn-opt .prn-sub { font-size: 11px; color: var(--c-text-3); font-weight: 500; }
+        #gasapp-root .prn-opt.is-active { border: 2px solid var(--c-accent); background: var(--c-accent-soft); }
+        #gasapp-root .prn-opt.is-active .font-bold { color: var(--c-accent); }
+        /* ===== Hasil scan kontras: warna isian solid (tombol/kartu berwarna) memakai token khusus
+                 supaya teks putih tetap terbaca (≥4.5:1) di mode terang & gelap ===== */
+        :root { --c-success: #15803D; --c-accent-fill: #2563EB; --c-success-fill: #15803D; --c-danger-fill: #DC2626; }
+        html[data-theme="dark"] { --c-accent-fill: #2F62D9; --c-success-fill: #18864A; --c-danger-fill: #D2373E; --c-accent: #7AA2F7; --c-focus: rgba(122,162,247,.35); }
+        #gasapp-root .bg-accent, #gasapp-root .brutal-btn.bg-accent { background-color: var(--c-accent-fill) !important; color: #fff !important; }
+        #gasapp-root .bg-success, #gasapp-root .brutal-btn.bg-success { background-color: var(--c-success-fill) !important; color: #fff !important; }
+        #gasapp-root .bg-danger, #gasapp-root .brutal-btn.bg-danger { background-color: var(--c-danger-fill) !important; color: #fff !important; }
+        html #gasapp-root .\!bg-danger.\!bg-danger.\!bg-danger { background-color: var(--c-danger-fill) !important; color: #fff !important; border-color: transparent !important; }
+        html #gasapp-root .\!bg-main.\!bg-main.\!bg-main { background-color: var(--c-primary) !important; color: var(--c-on-primary) !important; border-color: transparent !important; }
+        html #gasapp-root .\!bg-black.\!bg-black.\!bg-black { background-color: #1F2937 !important; color: #fff !important; border-color: transparent !important; }
+        html[data-theme="dark"] #gasapp-root .\!bg-black.\!bg-black.\!bg-black { background-color: var(--c-accent-fill) !important; }
+        html[data-theme="dark"] #gasapp-root .\!bg-main.\!bg-main.\!bg-main { color: var(--c-on-primary) !important; }
+        html[data-theme="dark"] #gasapp-root #btnPosCart, html[data-theme="dark"] #gasapp-root #btnCustCartFloat, html[data-theme="dark"] #gasapp-root #navBtnPubCart { background-color: var(--c-accent-fill) !important; }
+        #gasapp-root .pos-qty-badge, #gasapp-root .inst-chip.is-all, #gasapp-root .inst-btn.is-primary:not(:disabled) { background-color: var(--c-accent-fill); color: #fff; }
+        #gasapp-root .has-\[\:checked\]\:bg-success:has(:checked), #gasapp-root .cart-ws-tag, #gasapp-root .inst-remain.is-paid { color: var(--c-success) !important; }
+
+        /* Teks di dalam kotak berwarna solid mewarisi warna kotaknya (aturan dark mode lama memaksa teks terang) */
+        html[data-theme="dark"] #gasapp-root :is(.bg-success, .bg-accent, .bg-danger, .\!bg-danger, .\!bg-black, #btnPosCart, #btnCustCartFloat) :is(div, span, p, label, h1, h2, h3, h4, small, b, strong):not([class*="bg-"]):not([class*="text-"]) { color: inherit !important; }
+        html[data-theme="dark"] #gasapp-root :is(.bg-success, .bg-accent, .bg-danger) :is(div, span, p, h3, h4)[class*="text-gray"] { color: rgba(255,255,255,.85) !important; }
+        /* Teks gelap khusus kuning hanya untuk teks yang benar-benar berada di atas kuning */
+        html[data-theme="dark"] #gasapp-root .bg-main :is(.bg-white, .brutal-box, .brutal-input, .bg-gray-50, .bg-gray-100, [class*="bg-white"]),
+        html[data-theme="dark"] #gasapp-root .bg-main :is(.bg-white, .brutal-box, .bg-gray-50, .bg-gray-100) * { color: var(--c-text) !important; }
+        html[data-theme="dark"] #gasapp-root .bg-main :is(.bg-white, .brutal-box) .text-gray-500 { color: var(--c-text-3) !important; }
+        #gasapp-root .inst-amount::-webkit-inner-spin-button, #gasapp-root .inst-amount::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        #gasapp-root .inst-amount { -moz-appearance: textfield; appearance: textfield; }
     </style>
 </head>
 <body>
@@ -1253,6 +1370,7 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                     <div class="flex items-center gap-2 flex-wrap">
                         <h2 class="text-2xl md:text-3xl font-bold uppercase bg-main px-2 border-2 border-black border-l-8 border-l-dark">KASIR</h2>
                         <button onclick="window.openShiftModal()" id="btnShift" class="d-none brutal-btn bg-white px-3 py-1 text-xs md:text-sm flex items-center gap-1.5" title="Shift kasir"><span id="shiftDot" class="shift-dot"></span><span id="shiftLabel">Buka Shift</span></button>
+                        <button onclick="window.openPrinterSettings()" id="btnPrinterSet" class="brutal-btn bg-white px-2.5 py-1 text-xs inline-flex items-center gap-1" title="Pengaturan printer nota">🖨️ <span class="hidden sm:inline">Printer</span></button>
                         <button onclick="window.showShortcutHelp()" id="btnShortcutHelp" class="hidden lg:inline-flex brutal-btn bg-white px-2.5 py-1 text-xs items-center gap-1" title="Pintasan keyboard">⌨️ Pintasan</button>
                         <button onclick="window.openLowStockModal()" id="btnLowStock" class="d-none brutal-btn bg-danger text-white px-3 py-1 text-xs md:text-sm flex items-center gap-1 pulse-call">⚠️ Stok Menipis (<span id="lowStockCount">0</span>)</button>
                         <button onclick="window.openExpiryModal()" id="btnExpWarn" class="d-none brutal-btn bg-danger text-white px-3 py-1 text-xs md:text-sm flex items-center gap-1 pulse-call">⏰ Dekat Expired (<span id="expWarnCount">0</span>)</button>
@@ -1769,6 +1887,28 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                                 <p class="set-hint">Jika ON: di form produk bisa diisi sub nama produk &amp; harganya (lebih dari 1, misal Gula: 1/2kg, 1kg). Di POS, produk tersebut memunculkan pilihan sub produk saat dipilih.</p>
                             </div>
 
+                            <!-- Printer Nota (per perangkat) -->
+                            <div class="set-card">
+                                <h4 class="set-title">Printer Nota</h4>
+                                <p class="set-hint !mt-0 mb-2">Ukuran kertas 58/80 mm &amp; koneksi printer (dialog cetak, Bluetooth, RawBT, USB). Disimpan per perangkat.</p>
+                                <button type="button" onclick="window.openPrinterSettings()" class="brutal-btn bg-white w-full py-2 text-sm">🖨️ Atur Printer di Perangkat Ini</button>
+                            </div>
+
+                            <!-- Harga Grosir -->
+                            <div class="set-card">
+                                <h4 class="set-title">Harga Grosir (Bertingkat)</h4>
+                                <label class="flex items-center gap-2 font-bold cursor-pointer bg-yellow-50 p-3 border-2 border-black w-full">
+                                    <input type="checkbox" id="setWholesaleEnabled" class="w-5 h-5 accent-black"> Aktifkan Harga Grosir
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer mt-2 text-sm">
+                                    <input type="checkbox" id="setWholesaleCustMode" class="w-4 h-4 accent-black"> Mode "Pelanggan Grosir" di keranjang (harga grosir terendah tanpa minimal jumlah)
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer mt-2 text-sm">
+                                    <input type="checkbox" id="setWholesaleShow" class="w-4 h-4 accent-black"> Tampilkan info harga grosir di kartu produk &amp; tag harga
+                                </label>
+                                <p class="set-hint">Atur di form produk (Harga Tunggal): mis. beli ≥10 pcs ₩1.300/pcs, ≥40 pcs ₩1.200/pcs. Harga di keranjang otomatis berubah sesuai jumlah, kasir melihat saran "tambah x lagi" dan nota mencatat penghematannya.</p>
+                            </div>
+
                             <!-- Diskon Manual -->
                             <div class="set-card">
                                 <h4 class="set-title">Diskon Manual di Keranjang</h4>
@@ -1936,6 +2076,11 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                     <div id="cartExtraList" class="mt-2 space-y-1"></div>
                 </div>
 
+                <!-- Mode pelanggan grosir (fitur on/off di Pengaturan) -->
+                <button type="button" id="cartWsModeBtn" onclick="window.toggleWholesaleMode()" class="d-none brutal-btn bg-white w-full mb-3 px-3 py-2 text-xs flex items-center justify-between">
+                    <span>📦 Pelanggan Grosir</span><span id="cartWsModeState" class="ws-switch"></span>
+                </button>
+
                 <!-- Diskon manual per transaksi (fitur on/off di Pengaturan) -->
                 <div id="cartDiscWrap" class="mb-3 d-none">
                     <div class="flex items-center gap-2">
@@ -1957,6 +2102,9 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                 </div>
                 <div id="cartDiscountRow" class="flex justify-between items-center font-bold mb-2 text-danger d-none">
                     <span>Potongan Promo:</span><span id="cartDiscount">-₩0</span>
+                </div>
+                <div id="cartWsSavingRow" class="flex justify-between items-center text-xs font-bold mb-2 text-success d-none">
+                    <span>📦 Hemat harga grosir:</span><span id="cartWsSaving">₩0</span>
                 </div>
                 <div id="cartManualDiscRow" class="flex justify-between items-center font-bold mb-2 text-danger d-none">
                     <span id="cartManualDiscLabel">Diskon:</span><span id="cartManualDisc">-₩0</span>
@@ -2071,8 +2219,26 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                     </div>
                     <p id="prodMarginHint" class="col-span-2 text-[11px] text-gray-500 -mt-1"></p>
                 </div>
+                <div id="prodWholesaleWrapper" class="mb-3 d-none border-2 border-black p-2 bg-blue-50">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <label class="font-bold text-sm">Harga Grosir <span class="font-normal text-[10px] text-gray-500">(opsional, per item)</span></label>
+                        <button type="button" onclick="window.addWholesaleRow()" class="brutal-btn bg-white px-3 py-1 text-xs shrink-0">+ Tingkat</button>
+                    </div>
+                    <div class="flex text-[10px] font-bold text-gray-500 gap-2 px-1 mb-1"><span class="w-24">Min. jumlah</span><span class="flex-1">Harga / item</span></div>
+                    <div id="prodWholesaleList" class="space-y-2"></div>
+                    <p id="prodWholesaleHint" class="text-[10px] text-gray-500 mt-1 leading-tight">Contoh: ≥10 → ₩1.300, ≥40 → ₩1.200. Harga harus lebih murah dari harga jual dan makin murah untuk jumlah yang lebih banyak.</p>
+                </div>
                 <div id="prodVariantWrapper" class="mb-3 d-none border-2 border-black p-2 bg-yellow-50">
-                    <label class="block font-bold mb-1 text-sm">Multi Level Harga <span class="font-normal text-[10px] text-gray-500">(sub nama produk &amp; harganya)</span></label>
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <label class="font-bold text-sm">Multi Level Harga <span class="font-normal text-[10px] text-gray-500">(sub nama produk &amp; harganya)</span></label>
+                        <button type="button" id="prodVarSameBtn" onclick="window.toggleVarSamePrice()" class="var-same-toggle shrink-0" aria-pressed="false" title="Semua sub produk memakai harga yang sama (varian rasa/warna)">
+                            <span class="ws-switch"></span><span class="text-[11px] font-bold">Harga sama</span>
+                        </button>
+                    </div>
+                    <div id="prodVarSameWrap" class="d-none grid grid-cols-2 gap-2 mb-2">
+                        <div><label class="block text-[11px] font-bold mb-0.5">Harga semua varian</label><input type="number" id="prodVarSamePrice" min="0" inputmode="numeric" class="brutal-input bg-white text-sm" placeholder="₩ harga"></div>
+                        <div><label class="block text-[11px] font-bold mb-0.5">Modal <span class="font-normal text-gray-500">(opsional)</span></label><input type="number" id="prodVarSameCost" min="0" inputmode="numeric" class="brutal-input bg-white text-sm" placeholder="₩ modal"></div>
+                    </div>
                     <div id="prodVariantList" class="space-y-2"></div>
                     <button type="button" onclick="window.addProdVariantRow()" class="brutal-btn bg-white px-3 py-1 text-xs mt-2">+ Tambah Sub Produk</button>
                     <p class="text-[10px] text-gray-500 mt-1 leading-tight">Contoh Gula: "1/2kg" ₩8.000, "1kg" ₩15.000. Harga boleh sama (untuk varian rasa/warna). Stok tetap dihitung per produk.</p>
@@ -2345,7 +2511,7 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
             <div class="p-3 border-b-4 border-black font-bold uppercase bg-accent">Import CSV Produk</div>
             <div class="p-4 bg-gray-50 text-sm">
                 <p class="font-bold mb-2">Pilih file .csv hasil "Export CSV" (atau dengan kolom yang sama):</p>
-                <p class="text-[11px] italic mb-3 leading-tight">Kolom wajib: <b>name</b>, <b>cat</b>, <b>price</b>. Kolom opsional: id, system (STOK / ONOFF), available, stock, min_stock (wajib untuk STOK), exp_dates (pisahkan dengan |), cost (harga modal), variants (sub produk, contoh: 1/2kg:8000|1kg:15000), info. Baris dengan id yang sudah ada akan di-update, selain itu ditambahkan sebagai produk baru.</p>
+                <p class="text-[11px] italic mb-3 leading-tight">Kolom wajib: <b>name</b>, <b>cat</b>, <b>price</b>. Kolom opsional: id, system (STOK / ONOFF), available, stock, min_stock (wajib untuk STOK), exp_dates (pisahkan dengan |), cost (harga modal), wholesale (harga grosir, contoh: 10:1300|40:1200), variants (sub produk, contoh: 1/2kg:8000|1kg:15000), info. Baris dengan id yang sudah ada akan di-update, selain itu ditambahkan sebagai produk baru.</p>
                 <input type="file" id="csvImportFile" accept=".csv,text/csv" class="brutal-input bg-white text-xs">
             </div>
             <div class="p-0 flex border-t-4 border-black">
@@ -2546,6 +2712,39 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
         </div>
     </div>
 
+    <!-- Modal Bayar Cicilan Hutang -->
+    <div id="modalInstallment" class="fixed inset-0 modal-backdrop d-none z-[60] flex items-center justify-center p-3">
+        <div class="inst-card w-full max-w-md relative flex flex-col max-h-[94vh] overflow-hidden">
+            <div class="inst-head flex items-start justify-between gap-3 shrink-0">
+                <h3 class="inst-title">Bayar Cicilan Hutang</h3>
+                <button type="button" id="instClose" class="inst-x" aria-label="Tutup">✕</button>
+            </div>
+            <div class="inst-body overflow-y-auto">
+                <div class="grid grid-cols-2 gap-3 mb-5">
+                    <div class="inst-info"><div class="inst-k">Pelanggan</div><div id="instCustName" class="inst-v"></div></div>
+                    <div class="inst-info is-debt"><div class="inst-k">Sisa Hutang</div><div id="instDebt" class="inst-v"></div></div>
+                </div>
+                <label for="instAmount" class="inst-label">Nominal Cicilan</label>
+                <input type="number" id="instAmount" min="1" step="1" inputmode="numeric" autocomplete="off" class="inst-amount" placeholder="₩0">
+                <div id="instChips" class="grid grid-cols-4 gap-2 mt-3"></div>
+                <div id="instRemainBox" class="inst-remain mt-4"><span>Sisa setelah bayar</span><span id="instRemain">₩0</span></div>
+                <div id="instWarn" class="text-xs font-bold text-danger mt-2 d-none"></div>
+                <div class="inst-label mt-5">Metode Pembayaran</div>
+                <div id="instMethods" class="grid grid-cols-3 gap-2">
+                    <button type="button" data-m="Cash" class="inst-seg">Cash</button>
+                    <button type="button" data-m="Transfer" class="inst-seg">Transfer</button>
+                    <button type="button" data-m="Kartu" class="inst-seg">Kartu</button>
+                </div>
+                <label for="instNote" class="inst-label mt-5">Catatan <span class="inst-opt">(opsional)</span></label>
+                <input type="text" id="instNote" maxlength="120" autocomplete="off" class="inst-input" placeholder="Contoh: cicilan minggu ke-2">
+            </div>
+            <div class="inst-foot grid grid-cols-2 gap-3 shrink-0">
+                <button type="button" id="instCancel" class="inst-btn is-ghost">Batal</button>
+                <button type="button" id="instSave" class="inst-btn is-primary" disabled>Simpan Cicilan</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Shift Kasir (buka / tutup / riwayat) -->
     <div id="modalShift" class="fixed inset-0 modal-backdrop d-none z-[60] flex items-center justify-center p-3">
         <div class="brutal-box bg-white w-full max-w-md relative flex flex-col max-h-[92vh] overflow-hidden">
@@ -2687,11 +2886,30 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
         // Didaftarkan secepatnya (tidak menunggu semua gambar selesai dimuat) agar syarat install cepat terpenuhi.
         let swReloaded = false;
         const hadController = Boolean(navigator.serviceWorker.controller);
+        // Aman dimuat ulang = keranjang kosong & tidak ada popup/form yang sedang terbuka.
+        const appIdle = () => {
+            try {
+                if (window.STATE_REF && window.STATE_REF.cart && window.STATE_REF.cart.length) return false;
+                if (window.STATE_REF && window.STATE_REF.isCheckingOut) return false;
+                return !Array.from(document.querySelectorAll('.modal-backdrop')).some(m => !m.classList.contains('d-none'));
+            } catch (e) { return true; }
+        };
+        const doReload = () => { if (swReloaded) return; swReloaded = true; window.location.reload(); };
+        window.showUpdateBar = () => {
+            if (document.getElementById('updateBar')) return;
+            const bar = document.createElement('div');
+            bar.id = 'updateBar';
+            bar.className = 'update-bar no-print';
+            bar.innerHTML = '<span>✨ Versi baru aplikasi siap</span><button type="button" id="updateBarGo">Muat ulang</button><button type="button" class="ghost" id="updateBarLater">Nanti</button>';
+            document.body.appendChild(bar);
+            document.getElementById('updateBarGo').onclick = doReload;
+            document.getElementById('updateBarLater').onclick = () => bar.remove();
+        };
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-            // Muat ulang satu kali saat versi baru aktif (hanya jika sebelumnya sudah dikontrol SW lama).
+            // Versi baru aktif: muat ulang otomatis hanya kalau aplikasi sedang tidak dipakai,
+            // selain itu tampilkan tombol "Muat ulang" supaya transaksi yang sedang berjalan tidak hilang.
             if (!hadController || swReloaded || window.__receiptOnly) return;
-            swReloaded = true;
-            window.location.reload();
+            if (appIdle()) doReload(); else window.showUpdateBar();
         });
         navigator.serviceWorker.register('./sw.js', { scope: './' }).then(reg => {
             if (reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -2702,7 +2920,10 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                     if (nw.state === 'installed' && navigator.serviceWorker.controller) nw.postMessage({ type: 'SKIP_WAITING' });
                 });
             });
-            document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+            document.addEventListener('visibilitychange', () => { if (!document.hidden && navigator.onLine) reg.update().catch(() => {}); });
+            // Cek versi baru berkala (setiap 30 menit) & setiap kali koneksi kembali online.
+            setInterval(() => { if (navigator.onLine) reg.update().catch(() => {}); }, 30 * 60 * 1000);
+            window.addEventListener('online', () => reg.update().catch(() => {}));
         }).catch(err => console.warn('Service worker gagal didaftarkan (pastikan file sw.js ada satu folder dengan index.html):', err));
     }
     window.syncPWAInstallButtons();
@@ -2728,6 +2949,9 @@ measurementId: "G-ZVZ3QHEPKC"
 };
     // ======================================================= //
 
+    // Versi aplikasi: SAMAKAN dengan VERSION di sw.js setiap kali update.
+    const APP_VERSION = 'v16';
+    window.APP_VERSION = APP_VERSION;
     let db = null;
     let auth = null;
 
@@ -2740,7 +2964,8 @@ measurementId: "G-ZVZ3QHEPKC"
             // Offline: simpan seluruh data di perangkat tanpa batas ukuran cache.
             try { db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED }); } catch (e) { console.warn('Pengaturan cache Firestore gagal:', e); }
             auth = firebase.auth();
-            db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+            db.enablePersistence({ synchronizeTabs: true }).then(() => { window.__persistOK = true; }).catch(err => {
+                window.__persistOK = false;
                 if (err.code === 'failed-precondition') console.warn('Firestore multi-tab persistence not enabled');
                 else if (err.code === 'unimplemented') console.warn('Browser does not support Firestore persistence');
             });
@@ -2780,6 +3005,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 promoEnabled: false,
                 multiPriceEnabled: false,
                 manualDiscEnabled: false, manualDiscCashier: false, manualDiscMaxPct: 100,
+                wholesaleEnabled: false, wholesaleCustMode: false, wholesaleShow: true,
                 shiftEnabled: false, shiftRequired: false,
                 publicHistoryEnabled: false,
                 barcodeEnabled: false,
@@ -2803,6 +3029,7 @@ measurementId: "G-ZVZ3QHEPKC"
             orders: [] 
         }
     };
+    window.STATE_REF = STATE;
 
     // ===== Helper: huruf kapital tiap kata & multi level harga (varian) =====
     // "gula pasir" -> "Gula Pasir"; huruf yang sudah besar dibiarkan (mis. "ABC"), angka tidak diubah ("1/2kg").
@@ -2816,6 +3043,23 @@ measurementId: "G-ZVZ3QHEPKC"
         }).filter(v => v.name)
         : [];
     window.isMultiPriceOn = () => Boolean(STATE.data.settings.multiPriceEnabled);
+    // Harga grosir bertingkat: [{min: jumlah minimal, price: harga per item}], urut dari jumlah terkecil.
+    window.normWholesale = (arr) => {
+        if (!Array.isArray(arr)) return [];
+        const seen = new Set();
+        return arr.map(t => ({ min: Math.floor(Number(t && t.min) || 0), price: Math.max(0, Math.round(Number(t && t.price) || 0)) }))
+            .filter(t => t.min >= 2 && t.price > 0 && !seen.has(t.min) && seen.add(t.min))
+            .sort((a, b) => a.min - b.min);
+    };
+    window.isWholesaleOn = () => Boolean(STATE.data.settings.wholesaleEnabled);
+    window.getWholesaleTiers = (p) => (window.isWholesaleOn() && p && !(window.getActiveVariants && window.getActiveVariants(p).length) && Array.isArray(p.wholesale)) ? p.wholesale : [];
+    window.wholesaleTextForProduct = (p, short) => {
+        if (STATE.data.settings.wholesaleShow === false) return '';
+        const t = window.getWholesaleTiers(p);
+        if (!t.length) return '';
+        if (short) return `Grosir ≥${t[0].min}: ${formatWon(t[0].price)}`;
+        return 'Grosir ' + t.map(x => `≥${x.min} ${formatWon(x.price)}`).join(' • ');
+    };
     window.getActiveVariants = (p) => (window.isMultiPriceOn() && p && Array.isArray(p.variants)) ? p.variants : [];
     // Label harga: produk bervarian menampilkan harga termurah ("Mulai ₩x" jika harganya berbeda-beda).
     window.productPriceLabel = (p, short) => {
@@ -2839,6 +3083,27 @@ measurementId: "G-ZVZ3QHEPKC"
                 bestSellerCounts: STATE.data.bestSellerCounts || {}
             }));
         } catch(e) {}
+    }
+
+    // Cadangan data untuk admin/kasir: riwayat transaksi terbaru & pelanggan, supaya aplikasi tetap
+    // menampilkan data walau dibuka offline di perangkat yang penyimpanan Firestore-nya tidak tersedia.
+    function saveStaffCache() {
+        if (!STATE.user || !['admin', 'cashier'].includes(STATE.user.role)) return;
+        const recent = (STATE.data.orders || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 400);
+        const data = { uid: STATE.user.id, at: Date.now(), orders: recent, customers: STATE.data.customers || [], financeNotes: STATE.data.financeNotes || [] };
+        try { localStorage.setItem('wi_staff_cache', JSON.stringify(data)); }
+        catch (e) { try { data.orders = recent.slice(0, 120); data.financeNotes = []; localStorage.setItem('wi_staff_cache', JSON.stringify(data)); } catch (e2) {} }
+    }
+    window.saveStaffCache = saveStaffCache;
+    function loadStaffCache() {
+        try {
+            const c = JSON.parse(localStorage.getItem('wi_staff_cache') || 'null');
+            if (!c || !STATE.user || c.uid !== STATE.user.id) return false;
+            if (!STATE.data.orders.length && Array.isArray(c.orders)) STATE.data.orders = c.orders;
+            if (!STATE.data.customers.length && Array.isArray(c.customers)) STATE.data.customers = c.customers;
+            if (!(STATE.data.financeNotes || []).length && Array.isArray(c.financeNotes)) STATE.data.financeNotes = c.financeNotes;
+            return true;
+        } catch (e) { return false; }
     }
 
     function loadLocalDataCache() {
@@ -3159,6 +3424,9 @@ measurementId: "G-ZVZ3QHEPKC"
                     promoEnabled: Boolean(s.promo_enabled),
                     multiPriceEnabled: Boolean(s.multi_price_enabled),
                     manualDiscEnabled: Boolean(s.manual_disc_enabled),
+                    wholesaleEnabled: Boolean(s.wholesale_enabled),
+                    wholesaleCustMode: Boolean(s.wholesale_cust_mode),
+                    wholesaleShow: s.wholesale_show === undefined ? true : Boolean(s.wholesale_show),
                     manualDiscCashier: Boolean(s.manual_disc_cashier),
                     manualDiscMaxPct: Math.min(100, Math.max(1, Number(s.manual_disc_max_pct) || 100)),
                     shiftEnabled: Boolean(s.shift_enabled),
@@ -3215,7 +3483,8 @@ measurementId: "G-ZVZ3QHEPKC"
                         expDates: Array.isArray(prod.exp_dates) ? prod.exp_dates.filter(Boolean) : [],
                         barcode: prod.barcode || '',
                         variants: window.normVariants(prod.variants),
-                        cost: Math.max(0, Number(prod.cost) || 0)
+                        cost: Math.max(0, Number(prod.cost) || 0),
+                        wholesale: window.normWholesale(prod.wholesale)
                     };
                 });
             }
@@ -3275,7 +3544,8 @@ measurementId: "G-ZVZ3QHEPKC"
         source: o.source || '',
         cashierId: o.cashier_id || '',
         cashierName: o.cashier_name || '',
-        shiftId: o.shift_id || ''
+        shiftId: o.shift_id || '',
+        wholesaleSaving: Number(o.wholesale_saving || 0)
     };
 }
 
@@ -3449,7 +3719,8 @@ measurementId: "G-ZVZ3QHEPKC"
             }
             if (window.refreshBestSellers) window.refreshBestSellers();
             if (role === 'admin' && window.autoMonthlySalesIncome) window.autoMonthlySalesIncome();
-        } catch(e) { console.error(e); } finally { hideLoad(); }
+            saveStaffCache();
+        } catch(e) { console.error(e); loadStaffCache(); } finally { hideLoad(); }
     }
 
     window.addEventListener('load', async () => {
@@ -3470,6 +3741,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const savedUser = localStorage.getItem('wi_user');
         if (savedUser) { 
             STATE.user = JSON.parse(savedUser); 
+            loadStaffCache();
             await fetchAllData(); 
             // Login pelanggan & akun Dapur sudah dihapus: sesi lama dengan peran tersebut otomatis dikeluarkan.
             if (STATE.user && !['admin', 'cashier'].includes(STATE.user.role)) {
@@ -3778,8 +4050,10 @@ measurementId: "G-ZVZ3QHEPKC"
             ? `<button type="button" onclick="event.stopPropagation(); window.showProductInfo('${p.id}')" class="product-info-badge" style="pointer-events:auto;" title="Info Produk" aria-label="Info Produk">i</button>`
             : '';
         const promoTxt = window.promoTextForProduct ? window.promoTextForProduct(p) : '';
+        const wsTxt = window.wholesaleTextForProduct ? window.wholesaleTextForProduct(p, true) : '';
         // Promo aktif yang terkait produk: tampil kecil & miring di bawah nama produk, diawali ikon kado.
-        const promoLineHtml = promoTxt ? `<div class="product-card-promo text-[10px] md:text-[11px] italic leading-snug mt-1">🎁 ${escapeHTML(promoTxt)}</div>` : '';
+        const promoLineHtml = (promoTxt ? `<div class="product-card-promo text-[10px] md:text-[11px] italic leading-snug mt-1">🎁 ${escapeHTML(promoTxt)}</div>` : '')
+            + (wsTxt ? `<div class="product-card-ws text-[10px] md:text-[11px] font-semibold leading-snug mt-1">📦 ${escapeHTML(wsTxt)}</div>` : '');
         const nameRowHtml = `<div class="flex items-start justify-between gap-1 mb-2 flex-1"><div class="min-w-0"><h3 class="product-card-name font-bold text-xs md:text-sm leading-tight">${escapeHTML(p.name)}</h3>${promoLineHtml}</div>${infoIconHtml}</div>`;
         // Keterangan produk ini hanya TERLIHAT (via CSS) saat tampilan katalog 1 kolom di HP (akses umum/pelanggan);
         // di layout lain elemen ini tetap ada di HTML tapi disembunyikan, jadi tidak perlu render ulang kartu saat
@@ -3812,7 +4086,8 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('productInfoName').textContent = p.name || '';
         document.getElementById('productInfoPrice').textContent = window.productPriceLabel(p);
         const infoVars = window.getActiveVariants(p);
-        document.getElementById('productInfoDesc').textContent = (p.info || '') + (infoVars.length ? `${p.info ? '\n\n' : ''}Harga: ${infoVars.map(v => `${v.name} ${formatWon(v.price)}`).join(' • ')}` : '');
+        const infoWs = window.wholesaleTextForProduct(p);
+        document.getElementById('productInfoDesc').textContent = (p.info || '') + (infoVars.length ? `${p.info ? '\n\n' : ''}Harga: ${infoVars.map(v => `${v.name} ${formatWon(v.price)}`).join(' • ')}` : '') + (infoWs ? `${p.info || infoVars.length ? '\n\n' : ''}${infoWs}` : '');
         document.getElementById('productInfoDesc').style.whiteSpace = 'pre-line';
         window.openModal('modalProductInfo');
     };
@@ -4075,6 +4350,7 @@ measurementId: "G-ZVZ3QHEPKC"
     window.matchMedia(POS_DOCK_QUERY).addEventListener('change', () => window.layoutPosCart());
 
     window.updateCartUI = () => { 
+        window.applyWholesalePricing();
         const totalQty = STATE.cart.reduce((sum, item) => sum + item.qty, 0);
         const totalNominal = STATE.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
         document.getElementById('cartCount').textContent = totalQty; 
@@ -4183,13 +4459,37 @@ measurementId: "G-ZVZ3QHEPKC"
         if (!v) return 0;
         return Math.min(base, Math.round(d.type === 'pct' ? base * Math.min(100, v) / 100 : v));
     };
+    STATE.cartWholesaleMode = false;
+    window.applyWholesalePricing = () => {
+        STATE.cart.forEach(item => {
+            if (item.variant) return;
+            const p = STATE.data.products.find(x => x.id === item.id);
+            const tiers = window.getWholesaleTiers(p);
+            if (item.basePrice === undefined) item.basePrice = Number(item.price) || 0;
+            let tier = null;
+            if (tiers.length) {
+                if (STATE.cartWholesaleMode && window.canWholesaleMode()) tier = tiers[tiers.length - 1];
+                else tiers.forEach(t => { if (item.qty >= t.min) tier = t; });
+            }
+            if (tier) { item.price = tier.price; item.tierMin = tier.min; item.wholesale = true; }
+            else { item.price = item.basePrice; delete item.tierMin; delete item.wholesale; }
+        });
+    };
+    window.canWholesaleMode = () => window.isWholesaleOn() && Boolean(STATE.data.settings.wholesaleCustMode) && Boolean(STATE.user);
+    window.toggleWholesaleMode = () => {
+        STATE.cartWholesaleMode = !STATE.cartWholesaleMode;
+        window.renderCartModal();
+        window.updateCartUI();
+    };
     window.getCartTotals = () => {
+        window.applyWholesalePricing();
         const subtotal = STATE.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
         const promo = window.computeCartPromos(STATE.cart);
         const extraTotal = (STATE.cartExtras || []).reduce((s, x) => s + Number(x.amount || 0), 0);
         const base = Math.max(0, subtotal - promo.discount);
         const manualDiscount = window.getManualDiscount(base);
-        return { subtotal, discount: promo.discount + manualDiscount, promoDiscount: promo.discount, manualDiscount, extraTotal, total: Math.max(0, base - manualDiscount) + extraTotal, promo };
+        const wholesaleSaving = STATE.cart.reduce((s, i) => s + (i.wholesale ? Math.max(0, (Number(i.basePrice) || 0) - i.price) * i.qty : 0), 0);
+        return { subtotal, discount: promo.discount + manualDiscount, promoDiscount: promo.discount, manualDiscount, wholesaleSaving, extraTotal, total: Math.max(0, base - manualDiscount) + extraTotal, promo };
     };
     window.syncCartDiscUI = () => {
         const wrap = document.getElementById('cartDiscWrap');
@@ -4263,6 +4563,7 @@ measurementId: "G-ZVZ3QHEPKC"
     };
 
     window.renderCartModal = () => {
+        window.applyWholesalePricing();
         const list = document.getElementById('cartItemsList');
         const isCustOn = Boolean(STATE.data.settings.customerEnabled);
         const isCardOn = Boolean(STATE.data.settings.cardEnabled);
@@ -4273,7 +4574,14 @@ measurementId: "G-ZVZ3QHEPKC"
             list.innerHTML = STATE.cart.map((item, index) => {
                 const prod = STATE.data.products.find(p => p.id === item.id);
                 const stockInfo = (prod && prod.stockMode === 'stock') ? `<div class="text-[10px] ${item.qty > Number(prod.stock || 0) ? 'text-danger font-bold' : 'text-gray-500'}">Sisa stok: ${Number(prod.stock || 0)}</div>` : '';
-                return `<div class="cart-item-row flex justify-between items-center mb-2 p-2 border-2 border-black"><div class="flex-1"><h4 class="font-bold text-xs md:text-sm leading-tight">${escapeHTML(item.name)}</h4><div class="text-xs md:text-sm">${formatWon(item.price)}</div>${stockInfo}</div><div class="flex items-center gap-1 md:gap-2"><button onclick="window.changeQty(${index}, -1)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-white border-2 border-black">-</button><input type="number" min="1" inputmode="numeric" value="${item.qty}" onchange="window.setCartQty(${index}, this.value)" onclick="this.select()" class="w-11 md:w-12 text-center font-bold text-sm md:text-base border-2 border-black bg-white py-0.5"><button onclick="window.changeQty(${index}, 1)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-main border-2 border-black">+</button><button onclick="window.changeQty(${index}, -999)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-danger text-white border-2 border-black ml-1 md:ml-2 inline-flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button></div></div>`;
+                let wsInfo = '';
+                const wsTiers = item.variant ? [] : window.getWholesaleTiers(prod);
+                if (wsTiers.length) {
+                    if (item.wholesale) wsInfo = `<div class="cart-ws-tag">📦 Grosir ≥${item.tierMin} · <s>${formatWon(item.basePrice)}</s></div>`;
+                    const next = wsTiers.find(t => t.min > item.qty && !(STATE.cartWholesaleMode && window.canWholesaleMode()));
+                    if (next) wsInfo += `<div class="cart-ws-next">+${next.min - item.qty} lagi → ${formatWon(next.price)}/item</div>`;
+                }
+                return `<div class="cart-item-row flex justify-between items-center mb-2 p-2 border-2 border-black"><div class="flex-1"><h4 class="font-bold text-xs md:text-sm leading-tight">${escapeHTML(item.name)}</h4><div class="text-xs md:text-sm">${formatWon(item.price)}</div>${wsInfo}${stockInfo}</div><div class="flex items-center gap-1 md:gap-2"><button onclick="window.changeQty(${index}, -1)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-white border-2 border-black">-</button><input type="number" min="1" inputmode="numeric" value="${item.qty}" onchange="window.setCartQty(${index}, this.value)" onclick="this.select()" class="w-11 md:w-12 text-center font-bold text-sm md:text-base border-2 border-black bg-white py-0.5"><button onclick="window.changeQty(${index}, 1)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-main border-2 border-black">+</button><button onclick="window.changeQty(${index}, -999)" class="w-6 h-6 md:w-8 md:h-8 font-bold bg-danger text-white border-2 border-black ml-1 md:ml-2 inline-flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button></div></div>`;
             }).join('');
         }
 
@@ -4430,6 +4738,14 @@ measurementId: "G-ZVZ3QHEPKC"
             document.getElementById('cartManualDiscLabel').textContent = STATE.cartDiscount.type === 'pct' ? `Diskon (${STATE.cartDiscount.value}%):` : 'Diskon:';
         }
         window.syncCartDiscUI();
+        const wsRow = document.getElementById('cartWsSavingRow');
+        if (wsRow) { wsRow.classList.toggle('d-none', !(t.wholesaleSaving > 0)); document.getElementById('cartWsSaving').textContent = formatWon(t.wholesaleSaving || 0); }
+        const wsBtn = document.getElementById('cartWsModeBtn');
+        if (wsBtn) {
+            const allow = window.canWholesaleMode() && STATE.cart.some(i => window.getWholesaleTiers(STATE.data.products.find(p => p.id === i.id)).length);
+            wsBtn.classList.toggle('d-none', !allow && !STATE.cartWholesaleMode);
+            document.getElementById('cartWsModeState').classList.toggle('is-on', Boolean(STATE.cartWholesaleMode));
+        }
         const promoBox = document.getElementById('cartPromoInfo');
         if (promoBox) {
             const p = t.promo;
@@ -4609,6 +4925,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     .concat(totals.manualDiscount > 0 ? [{ name: 'Diskon', text: STATE.cartDiscount.type === 'pct' ? `${STATE.cartDiscount.value}%` : 'Nominal', discount: totals.manualDiscount, manual: true }] : []),
                 extras: (STATE.cartExtras || []).map(x => ({ name: x.name, amount: Number(x.amount) || 0 })),
                 extra_total: totals.extraTotal,
+                wholesale_saving: totals.wholesaleSaving || 0,
                 bonus_items: totals.promo.bonus.map(b => ({ id: b.id, name: b.name, qty: b.qty })),
                 total,
                 paid_amount: bayarNominal,
@@ -4629,6 +4946,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 items: payload.items, subtotal: payload.subtotal, ongkir: 0,
                 discount: payload.discount, promos: payload.promos, bonusItems: payload.bonus_items,
                 extras: payload.extras,
+                wholesaleSaving: payload.wholesale_saving || 0,
                 total: payload.total, address: '', notes: payload.notes, debtPaid: 0,
                 paidAmount: payload.paid_amount || 0,
                 changeAmount: payload.change_amount || 0,
@@ -4654,6 +4972,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     if (STATE.user && !STATE.data.orders.some(o => o.id === localOrder.id)) STATE.data.orders.push(localOrder);
                     if (payload.type === 'Hutang' && custId) { const c = STATE.data.customers.find(x => x.id === custId); if (c) c.debt = Number(c.debt || 0) + total; }
                     saveLocalDataCache();
+                    saveStaffCache();
                 } else if (STATE.user) await fetchAllData(); else await fetchPublicData();
             } else {
                 STATE.data.orders.push(localOrder);
@@ -4668,6 +4987,7 @@ measurementId: "G-ZVZ3QHEPKC"
             STATE.cart = [];
             STATE.cartExtras = [];
             STATE.cartDiscount = { type: STATE.cartDiscount.type, value: 0 };
+            STATE.cartWholesaleMode = false;
             STATE.ongkir = 0;
             document.getElementById('inputBayar').value = '';
             if(document.getElementById('cartNote')) document.getElementById('cartNote').value = '';
@@ -4727,7 +5047,7 @@ measurementId: "G-ZVZ3QHEPKC"
     };
 
     window.generateReceiptHtml = (order, custName, targetId, receiptType) => {
-    let itemsHtml = (order.items || []).map(i => `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${i.qty}x ${escapeHTML(i.name)}</span><span>${formatWon(i.price * i.qty)}</span></div>`).join('')
+    let itemsHtml = (order.items || []).map(i => `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${i.qty}x ${escapeHTML(i.name)}${i.wholesale ? `<br><span style="font-size:10px;">&nbsp;&nbsp;@${formatWon(i.price)} harga grosir</span>` : ''}</span><span>${formatWon(i.price * i.qty)}</span></div>`).join('')
         + (order.bonusItems || []).map(b => `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${b.qty}x ${escapeHTML(b.name)} (Bonus)</span><span>${formatWon(0)}</span></div>`).join('');
 
     if(receiptType === 'DEBT_RECAP') {
@@ -4740,7 +5060,7 @@ measurementId: "G-ZVZ3QHEPKC"
         }
         const pays = (cust && Array.isArray(cust.payments)) ? cust.payments : [];
         if (pays.length) {
-            html += `<div style="font-size:12px; border-top:1px dashed #000; padding-top:8px; margin-top:4px;"><div style="font-weight:bold; margin-bottom:4px;">RIWAYAT CICILAN</div>${pays.map(p => `<div style="display:flex;justify-content:space-between;"><span>${safeDate(p.date)}</span><span>${formatWon(p.amount)}</span></div>`).join('')}<div style="display:flex;justify-content:space-between; font-weight:bold; margin-top:4px;"><span>Total Dicicil:</span><span>${formatWon(pays.reduce((s, p) => s + Number(p.amount || 0), 0))}</span></div></div>`;
+            html += `<div style="font-size:12px; border-top:1px dashed #000; padding-top:8px; margin-top:4px;"><div style="font-weight:bold; margin-bottom:4px;">RIWAYAT CICILAN</div>${pays.map(p => `<div style="display:flex;justify-content:space-between;"><span>${safeDate(p.date)}${p.method ? ' · ' + escapeHTML(p.method) : ''}</span><span>${formatWon(p.amount)}</span></div>`).join('')}<div style="display:flex;justify-content:space-between; font-weight:bold; margin-top:4px;"><span>Total Dicicil:</span><span>${formatWon(pays.reduce((s, p) => s + Number(p.amount || 0), 0))}</span></div></div>`;
         }
         html += `<div style="font-size:16px; font-weight:bold; text-align:right; margin-top:12px; padding-top:12px; border-top:2px solid black;">TOTAL HUTANG: ${formatWon(cust?.debt || 0)}</div></div>`; 
         document.getElementById(targetId).innerHTML = html; 
@@ -4761,7 +5081,8 @@ measurementId: "G-ZVZ3QHEPKC"
         ? `<div style="display:flex; justify-content:space-between; gap:8px;"><span>Catatan:</span> <span style="font-weight:bold; text-align:right; max-width:65%; word-break:break-word; white-space:pre-wrap;">${escapeHTML(order.notes)}</span></div>`
         : '';
     const extraRows = (order.extras || []).map(x => `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${escapeHTML(x.name)}:</span> <span>${formatWon(x.amount)}</span></div>`).join('');
-    const promoRows = (order.promos || []).filter(p => Number(p.discount) > 0).map(p => `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${p.manual || p.name === 'Diskon' ? `Diskon${p.text && p.text.endsWith('%') ? ' ' + escapeHTML(p.text) : ''}` : 'Promo ' + escapeHTML(p.name)}:</span> <span>-${formatWon(p.discount)}</span></div>`).join('');
+    const wsSave = Number(order.wholesaleSaving || 0);
+    const promoRows = (wsSave > 0 ? `<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-weight:normal; font-size:11px;"><span>Hemat harga grosir:</span> <span>${formatWon(wsSave)}</span></div>` : '') + (order.promos || []).filter(p => Number(p.discount) > 0).map(p => `<div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>${p.manual || p.name === 'Diskon' ? `Diskon${p.text && p.text.endsWith('%') ? ' ' + escapeHTML(p.text) : ''}` : 'Promo ' + escapeHTML(p.name)}:</span> <span>-${formatWon(p.discount)}</span></div>`).join('');
 
     // Nominal bayar & kembalian khusus metode Cash.
     const paid = Number(order.paidAmount || 0);
@@ -5165,6 +5486,27 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('prodStock').required = isStockMode;
         document.getElementById('prodMinStock').required = isStockMode;
     };
+    STATE.varSamePrice = false;
+    window.syncVarSameUI = () => {
+        const on = Boolean(STATE.varSamePrice);
+        const b = document.getElementById('prodVarSameBtn');
+        if (!b) return;
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.querySelector('.ws-switch').classList.toggle('is-on', on);
+        document.getElementById('prodVarSameWrap').classList.toggle('d-none', !on);
+        document.getElementById('prodVariantList').classList.toggle('var-same-on', on);
+    };
+    window.toggleVarSamePrice = () => {
+        STATE.varSamePrice = !STATE.varSamePrice;
+        if (STATE.varSamePrice) {
+            // Ambil harga dari baris pertama yang terisi sebagai harga bersama
+            const first = Array.from(document.querySelectorAll('#prodVariantList .prod-var-row')).find(r => r.querySelector('.prod-var-price').value !== '');
+            const sp = document.getElementById('prodVarSamePrice'), sc = document.getElementById('prodVarSameCost');
+            if (first && sp.value === '') sp.value = first.querySelector('.prod-var-price').value;
+            if (first && sc.value === '' && first.querySelector('.prod-var-cost')) sc.value = first.querySelector('.prod-var-cost').value;
+        }
+        window.syncVarSameUI();
+    };
     window.addProdVariantRow = (name = '', price = '', cost = '') => {
         const wrap = document.getElementById('prodVariantList');
         if (!wrap) return;
@@ -5177,9 +5519,31 @@ measurementId: "G-ZVZ3QHEPKC"
     window.syncProdPriceHint = () => {};
     window.getProdPriceMode = () => window.isMultiPriceOn() && document.querySelector('input[name="prodPriceMode"]:checked')?.value === 'multi' ? 'multi' : 'single';
     // Harga Tunggal -> tampil kolom Harga; Multi Level Harga -> tampil daftar sub produk.
+    window.addWholesaleRow = (min = '', price = '') => {
+        const wrap = document.getElementById('prodWholesaleList');
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 prod-ws-row';
+        row.innerHTML = `<span class="text-xs font-bold shrink-0">≥</span><input type="number" min="2" step="1" inputmode="numeric" class="prod-ws-min brutal-input bg-white text-sm text-center !w-20 shrink-0" placeholder="10" value="${min === '' ? '' : Number(min)}"><input type="number" min="1" step="1" inputmode="numeric" class="prod-ws-price brutal-input bg-white text-sm text-right flex-1 min-w-0" placeholder="₩ harga / item" value="${price === '' ? '' : Number(price)}"><span class="prod-ws-pct text-[10px] font-bold text-success w-10 shrink-0 text-right"></span><button type="button" onclick="this.parentElement.remove(); window.syncWholesaleHints()" class="brutal-btn bg-danger text-white px-2 py-1 text-xs inline-flex items-center justify-center shrink-0" title="Hapus tingkat">✕</button>`;
+        row.addEventListener('input', window.syncWholesaleHints);
+        wrap.appendChild(row);
+        window.syncWholesaleHints();
+    };
+    window.syncWholesaleHints = () => {
+        const base = Number(document.getElementById('prodPrice').value) || 0;
+        document.querySelectorAll('#prodWholesaleList .prod-ws-row').forEach(r => {
+            const pr = Number(r.querySelector('.prod-ws-price').value) || 0;
+            const el = r.querySelector('.prod-ws-pct');
+            el.textContent = base && pr && pr < base ? `-${Math.round((1 - pr / base) * 100)}%` : '';
+        });
+    };
+    window.syncWholesaleSection = () => {
+        const show = window.isWholesaleOn() && window.getProdPriceMode() !== 'multi';
+        document.getElementById('prodWholesaleWrapper').classList.toggle('d-none', !show);
+    };
     window.onProdPriceModeChange = () => {
         const multi = window.getProdPriceMode() === 'multi';
         document.getElementById('prodPriceWrapper').classList.toggle('d-none', multi);
+        if (window.syncWholesaleSection) window.syncWholesaleSection();
         document.getElementById('prodVariantWrapper').classList.toggle('d-none', !multi);
         if (multi && !document.querySelector('#prodVariantList .prod-var-row')) window.addProdVariantRow();
     };
@@ -5190,7 +5554,15 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('prodVariantList').innerHTML = '';
         const hasVars = Boolean(p && Array.isArray(p.variants) && p.variants.length);
         if (mp && hasVars) p.variants.forEach(v => window.addProdVariantRow(v.name, v.price, v.cost));
+        // Semua sub produk berharga sama (>1 varian) -> sakelar "Harga sama" otomatis aktif
+        STATE.varSamePrice = Boolean(hasVars && p.variants.length > 1 && p.variants.every(v => v.price === p.variants[0].price && Number(v.cost || 0) === Number(p.variants[0].cost || 0)));
+        document.getElementById('prodVarSamePrice').value = STATE.varSamePrice ? p.variants[0].price : '';
+        document.getElementById('prodVarSameCost').value = STATE.varSamePrice && Number(p.variants[0].cost) > 0 ? p.variants[0].cost : '';
+        window.syncVarSameUI();
         document.getElementById('prodCost').value = p && Number(p.cost) > 0 ? Number(p.cost) : '';
+        document.getElementById('prodWholesaleList').innerHTML = '';
+        ((p && p.wholesale) || []).forEach(t => window.addWholesaleRow(t.min, t.price));
+        window.syncWholesaleSection();
         window.syncMarginHint();
         document.querySelectorAll('input[name="prodPriceMode"]').forEach(r => { r.checked = r.value === (mp && hasVars ? 'multi' : 'single'); });
         window.onProdPriceModeChange();
@@ -5227,10 +5599,17 @@ measurementId: "G-ZVZ3QHEPKC"
         const priceMode = window.getProdPriceMode();
         const variantRows = priceMode === 'multi' ? Array.from(document.querySelectorAll('#prodVariantList .prod-var-row')) : [];
         const variantList = [];
+        const samePriceOn = priceMode === 'multi' && STATE.varSamePrice;
+        const samePriceRaw = document.getElementById('prodVarSamePrice').value;
+        if (samePriceOn && (samePriceRaw === '' || isNaN(Number(samePriceRaw)) || Number(samePriceRaw) < 0)) return await window.customAlert('Isi "Harga semua varian" (angka 0 atau lebih).', 'Peringatan');
         for (const row of variantRows) {
             const vn = row.querySelector('.prod-var-name').value.trim();
+            if (samePriceOn) {
+                row.querySelector('.prod-var-price').value = samePriceRaw;
+                if (row.querySelector('.prod-var-cost')) row.querySelector('.prod-var-cost').value = document.getElementById('prodVarSameCost').value;
+            }
             const vpRaw = row.querySelector('.prod-var-price').value;
-            if (!vn && vpRaw === '') continue;
+            if (!vn && (vpRaw === '' || samePriceOn)) continue;
             if (!vn) return await window.customAlert('Sub nama produk wajib diisi untuk setiap harga.', 'Peringatan');
             if (vpRaw === '' || isNaN(Number(vpRaw)) || Number(vpRaw) < 0) return await window.customAlert(`Harga sub produk "${vn}" wajib diisi (angka 0 atau lebih).`, 'Peringatan');
             if (variantList.some(v => v.name.toLowerCase() === vn.toLowerCase())) return await window.customAlert(`Sub nama produk "${vn}" dobel. Gunakan nama yang berbeda.`, 'Peringatan');
@@ -5243,6 +5622,28 @@ measurementId: "G-ZVZ3QHEPKC"
         const priceRawVal = document.getElementById('prodPrice').value;
         if (priceMode === 'single' && (priceRawVal === '' || isNaN(Number(priceRawVal)) || Number(priceRawVal) < 0)) {
             return await window.customAlert('Harga wajib diisi.', 'Peringatan');
+        }
+        // Harga grosir: validasi tingkat harga
+        const wsList = [];
+        if (window.isWholesaleOn() && priceMode === 'single') {
+            const basePrice = Number(priceRawVal) || 0;
+            const costVal = Number(document.getElementById('prodCost').value) || 0;
+            for (const row of document.querySelectorAll('#prodWholesaleList .prod-ws-row')) {
+                const mn = row.querySelector('.prod-ws-min').value, pr = row.querySelector('.prod-ws-price').value;
+                if (mn === '' && pr === '') continue;
+                const m = Math.floor(Number(mn)), v = Math.round(Number(pr));
+                if (!(m >= 2)) return await window.customAlert('Jumlah minimal harga grosir harus 2 atau lebih.', 'Peringatan');
+                if (!(v > 0)) return await window.customAlert(`Isi harga grosir untuk jumlah ≥${m}.`, 'Peringatan');
+                if (v >= basePrice) return await window.customAlert(`Harga grosir ≥${m} (${formatWon(v)}) harus lebih murah dari harga jual ${formatWon(basePrice)}.`, 'Peringatan');
+                if (wsList.some(t => t.min === m)) return await window.customAlert(`Jumlah minimal ${m} dobel.`, 'Peringatan');
+                wsList.push({ min: m, price: v });
+            }
+            wsList.sort((a, b) => a.min - b.min);
+            for (let i = 1; i < wsList.length; i++) {
+                if (wsList[i].price >= wsList[i - 1].price) return await window.customAlert(`Harga untuk ≥${wsList[i].min} harus lebih murah dari harga untuk ≥${wsList[i - 1].min}.`, 'Peringatan');
+            }
+            const below = wsList.filter(t => costVal && t.price < costVal);
+            if (below.length && !(await window.customConfirm(`Harga grosir ${below.map(t => '≥' + t.min).join(', ')} lebih rendah dari harga modal ${formatWon(costVal)} (rugi). Tetap simpan?`, 'Konfirmasi'))) return;
         }
         // Multi Level Harga: harga dasar produk otomatis = harga sub produk termurah (dipakai promo & label "Mulai").
         if (variantList.length) document.getElementById('prodPrice').value = Math.min(...variantList.map(v => v.price));
@@ -5290,12 +5691,14 @@ measurementId: "G-ZVZ3QHEPKC"
             barcode: barcodeVal !== null ? barcodeVal : (oldProduct ? (oldProduct.barcode || '') : ''),
             // Harga Tunggal -> sub produk dikosongkan. Saat fitur OFF, sub produk yang sudah tersimpan tidak dihapus.
             variants: window.isMultiPriceOn() ? variantList : (oldProduct ? (oldProduct.variants || []) : []),
-            cost: Math.max(0, Math.round(Number(document.getElementById('prodCost').value) || 0))
+            cost: Math.max(0, Math.round(Number(document.getElementById('prodCost').value) || 0)),
+            // Fitur grosir OFF / mode multi -> tingkat yang sudah ada tidak dihapus.
+            wholesale: (window.isWholesaleOn() && priceMode === 'single') ? wsList : (oldProduct ? (oldProduct.wholesale || []) : [])
         };
         const localProduct = {
             id: payload.id, name: payload.name, cat: payload.cat, price: payload.price, img: payload.img,
             info: payload.info, availFlag: availFlag, available: availFlag, stockMode: prodSystem, barcode: payload.barcode,
-            stock: stock, minStock: minStock, expDates: uniqExp, variants: payload.variants, cost: payload.cost
+            stock: stock, minStock: minStock, expDates: uniqExp, variants: payload.variants, cost: payload.cost, wholesale: payload.wholesale
         };
         try {
             if(!IS_PREVIEW && db) {
@@ -5600,12 +6003,9 @@ measurementId: "G-ZVZ3QHEPKC"
     window.payDebtInstallment = async id => {
         const cust = STATE.data.customers.find(c => c.id === id);
         if (!cust || cust.debt <= 0) return await window.customAlert('Tidak ada hutang.', 'Info');
-        const raw = await window.customPrompt(`Sisa hutang ${cust.name}: ${formatWon(cust.debt)}\n\nMasukkan nominal cicilan yang dibayar:`, 'Bayar Cicilan', '');
-        if (raw === null || raw === undefined) return;
-        const amount = Math.round(Number(String(raw).replace(/[^0-9]/g, '')));
-        if (!isFinite(amount) || amount <= 0) return await window.customAlert('Nominal cicilan tidak valid.', 'Peringatan');
-        if (amount > cust.debt) return await window.customAlert(`Nominal cicilan melebihi sisa hutang (${formatWon(cust.debt)}). Gunakan tombol "Lunas" untuk melunasi semua.`, 'Peringatan');
-        if (!(await window.customConfirm(`Catat cicilan ${formatWon(amount)} untuk ${cust.name}?`, 'Konfirmasi Cicilan'))) return;
+        const res = await window.installmentDialog(cust);
+        if (!res) return;
+        const amount = res.amount;
 
         showLoad();
         try {
@@ -5624,7 +6024,8 @@ measurementId: "G-ZVZ3QHEPKC"
                 updates.push({ o, newPaid, done: newPaid >= Number(o.total || 0) });
             }
             const newDebt = Math.max(0, cust.debt - amount);
-            const payEntry = { date: new Date().toISOString(), amount };
+            const payEntry = { date: new Date().toISOString(), amount, method: res.method };
+            if (res.note) payEntry.note = res.note;
             const newPayments = newDebt <= 0 ? [] : [...(cust.payments || []), payEntry];
 
             if (!IS_PREVIEW && db) {
@@ -6145,6 +6546,9 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('setPromoEnabled').checked = Boolean(STATE.data.settings.promoEnabled);
         document.getElementById('setMultiPriceEnabled').checked = Boolean(STATE.data.settings.multiPriceEnabled);
         document.getElementById('setManualDiscEnabled').checked = Boolean(STATE.data.settings.manualDiscEnabled);
+        document.getElementById('setWholesaleEnabled').checked = Boolean(STATE.data.settings.wholesaleEnabled);
+        document.getElementById('setWholesaleCustMode').checked = Boolean(STATE.data.settings.wholesaleCustMode);
+        document.getElementById('setWholesaleShow').checked = STATE.data.settings.wholesaleShow !== false;
         document.getElementById('setManualDiscCashier').checked = Boolean(STATE.data.settings.manualDiscCashier);
         document.getElementById('setManualDiscMaxPct').value = Number(STATE.data.settings.manualDiscMaxPct) || 100;
         document.getElementById('setShiftEnabled').checked = Boolean(STATE.data.settings.shiftEnabled);
@@ -6229,6 +6633,9 @@ measurementId: "G-ZVZ3QHEPKC"
             promo_enabled: document.getElementById('setPromoEnabled').checked,
             multi_price_enabled: document.getElementById('setMultiPriceEnabled').checked,
             manual_disc_enabled: document.getElementById('setManualDiscEnabled').checked,
+            wholesale_enabled: document.getElementById('setWholesaleEnabled').checked,
+            wholesale_cust_mode: document.getElementById('setWholesaleCustMode').checked,
+            wholesale_show: document.getElementById('setWholesaleShow').checked,
             manual_disc_cashier: document.getElementById('setManualDiscCashier').checked,
             manual_disc_max_pct: Math.min(100, Math.max(1, parseInt(document.getElementById('setManualDiscMaxPct').value) || 100)),
             shift_enabled: document.getElementById('setShiftEnabled').checked,
@@ -6281,6 +6688,9 @@ measurementId: "G-ZVZ3QHEPKC"
                 promoEnabled: payload.promo_enabled,
                 multiPriceEnabled: payload.multi_price_enabled,
                 manualDiscEnabled: payload.manual_disc_enabled,
+                wholesaleEnabled: payload.wholesale_enabled,
+                wholesaleCustMode: payload.wholesale_cust_mode,
+                wholesaleShow: payload.wholesale_show,
                 manualDiscCashier: payload.manual_disc_cashier,
                 manualDiscMaxPct: payload.manual_disc_max_pct,
                 shiftEnabled: payload.shift_enabled,
@@ -6709,7 +7119,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 <div class="pt-body">
                     <div class="pt-name">${escapeHTML(p.name)}</div>
                     <div class="pt-price${window.getActiveVariants(p).length && /–/.test(window.productPriceLabel(p, true)) ? ' is-range' : ''}">${window.productPriceLabel(p, true)}</div>
-                    <div class="pt-promo">${escapeHTML(window.promoTextForProduct ? window.promoTextForProduct(p) : '')}</div>
+                    <div class="pt-promo">${escapeHTML([window.promoTextForProduct ? window.promoTextForProduct(p) : '', window.wholesaleTextForProduct ? window.wholesaleTextForProduct(p, true) : ''].filter(Boolean).join(' · '))}</div>
                 </div>
             </div>`;
 
@@ -6805,7 +7215,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
     // EXPORT & IMPORT CSV PRODUK
     // ======================================================= //
-    const CSV_HEADERS = ['id', 'name', 'cat', 'price', 'cost', 'system', 'available', 'stock', 'min_stock', 'exp_dates', 'barcode', 'variants', 'info'];
+    const CSV_HEADERS = ['id', 'name', 'cat', 'price', 'cost', 'wholesale', 'system', 'available', 'stock', 'min_stock', 'exp_dates', 'barcode', 'variants', 'info'];
     const csvCell = v => {
         const s = String(v === undefined || v === null ? '' : v);
         return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
@@ -6814,7 +7224,7 @@ measurementId: "G-ZVZ3QHEPKC"
     window.exportProductsCSV = async () => {
         if (!STATE.data.products.length) return await window.customAlert('Belum ada produk untuk di-export.', 'Info');
         const rows = [CSV_HEADERS.join(',')].concat(STATE.data.products.map(p => [
-            p.id, p.name, p.cat, Number(p.price || 0), Number(p.cost || 0) || '', p.stockMode === 'stock' ? 'STOK' : 'ONOFF', p.availFlag ? 'ON' : 'OFF',
+            p.id, p.name, p.cat, Number(p.price || 0), Number(p.cost || 0) || '', (p.wholesale || []).map(t => `${t.min}:${t.price}`).join('|'), p.stockMode === 'stock' ? 'STOK' : 'ONOFF', p.availFlag ? 'ON' : 'OFF',
             Number(p.stock || 0), Number(p.minStock || 0), (p.expDates || []).join('|'), p.barcode || '', (p.variants || []).map(v => `${v.name}:${v.price}`).join('|'), p.info || ''
         ].map(csvCell).join(',')));
         // BOM supaya huruf non-latin tetap terbaca rapi saat dibuka di Excel.
@@ -6917,6 +7327,7 @@ measurementId: "G-ZVZ3QHEPKC"
             items.push({
                 id: get(r, 'id'), name, cat, price: Math.round(Number(priceRaw)), system,
                 cost: col('cost') > -1 ? Math.max(0, Math.round(Number(get(r, 'cost').replace(/[^\d.]/g, '')) || 0)) : null,
+                wholesale: col('wholesale') > -1 ? window.normWholesale(get(r, 'wholesale').split('|').map(x => { const [m, v] = x.split(':'); return { min: m, price: String(v || '').replace(/[^\d]/g, '') }; })) : null,
                 available: col('available') > -1 && availRaw !== '' ? ['on', '1', 'true', 'ya', 'yes', 'tersedia'].includes(availRaw) : null,
                 stock: stockRaw === '' ? null : Math.round(Number(stockRaw)),
                 minStock: minRaw === '' ? null : Math.round(Number(minRaw)),
@@ -6951,7 +7362,8 @@ measurementId: "G-ZVZ3QHEPKC"
                     expDates: it.expDates !== null ? it.expDates : (old ? (old.expDates || []) : []),
                     barcode: it.barcode !== null ? it.barcode : (old ? (old.barcode || '') : ''),
                     variants: it.variants !== null ? it.variants : (old ? (old.variants || []) : []),
-                    cost: it.cost !== null && it.cost !== undefined ? it.cost : (old ? Number(old.cost || 0) : 0)
+                    cost: it.cost !== null && it.cost !== undefined ? it.cost : (old ? Number(old.cost || 0) : 0),
+                    wholesale: it.wholesale !== null && it.wholesale !== undefined ? it.wholesale : (old ? (old.wholesale || []) : [])
                 };
                 writes.push(prod);
             });
@@ -6959,7 +7371,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 // Firestore membatasi 500 operasi per batch -> dikirim bertahap.
                 const ops = [
                     ...newCats.map(c => ({ ref: db.collection('categories').doc(c), data: { id: c, name: c } })),
-                    ...writes.map(p => ({ ref: db.collection('products').doc(p.id), data: { id: p.id, name: p.name, cat: p.cat, price: p.price, available: p.availFlag, availability_system: p.stockMode, info: p.info, stock: p.stock, min_stock: p.minStock, exp_dates: p.expDates, barcode: p.barcode, variants: p.variants, cost: Number(p.cost || 0) } }))
+                    ...writes.map(p => ({ ref: db.collection('products').doc(p.id), data: { id: p.id, name: p.name, cat: p.cat, price: p.price, available: p.availFlag, availability_system: p.stockMode, info: p.info, stock: p.stock, min_stock: p.minStock, exp_dates: p.expDates, barcode: p.barcode, variants: p.variants, cost: Number(p.cost || 0), wholesale: p.wholesale || [] } }))
                 ];
                 for (let i = 0; i < ops.length; i += 450) {
                     const batch = db.batch();
@@ -8944,16 +9356,38 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
     window.isAppOnline = () => navigator.onLine !== false;
     STATE.netPending = 0;
+    // Catatan sinkron yang ditolak server (mis. permission-denied) untuk ditampilkan di popup status.
+    STATE.syncErrors = [];
+    // Penulisan latar belakang yang sudah punya penanganan sendiri -> tidak perlu notifikasi ke pengguna.
+    const QUIET_SYNC = ['shifts/', 'settings/shifts_log', 'settings/best_sellers', 'settings/finance_auto', 'shared_receipts/', 'sales_archive/'];
+    const syncGroupName = (path) => {
+        const col = String(path || '').split('/')[0];
+        return ({ orders: 'Transaksi', products: 'Produk', customers: 'Pelanggan', settings: 'Pengaturan', finance_notes: 'Catatan Keuangan', categories: 'Kategori', promos: 'Promo', shifts: 'Shift Kasir' })[col] || col || 'data';
+    };
     (function installOfflineWrites() {
         if (typeof firebase === 'undefined' || !firebase.firestore || IS_PREVIEW || !db) return;
         const F = firebase.firestore;
-        const track = (real, label) => {
+        const notified = new Set();
+        const track = (real, label, path, state) => {
             STATE.netPending++; window.syncNetBadge();
             const settle = () => { STATE.netPending = Math.max(0, STATE.netPending - 1); window.syncNetBadge(); };
             real.then(settle, err => {
                 settle();
-                console.warn('Sinkron gagal (' + label + '):', err);
-                window.showNetToast('⚠️ Gagal sinkron ke server: ' + ((err && (err.code || err.message)) || 'tidak diketahui'), 'warn');
+                const code = (err && err.code) || '';
+                console.warn('Sinkron gagal (' + label + ' ' + (path || '') + '):', err);
+                // Kalau pemanggil masih menunggu hasilnya, error ditangani pemanggil sendiri (tidak dobel notifikasi).
+                if (!state.detached) return;
+                STATE.syncErrors.unshift({ at: new Date().toISOString(), path: path || label, code: code || (err && err.message) || 'error' });
+                STATE.syncErrors = STATE.syncErrors.slice(0, 30);
+                if (QUIET_SYNC.some(q => String(path || '').startsWith(q))) return;
+                const key = syncGroupName(path) + code;
+                if (notified.has(key)) return;
+                notified.add(key);
+                const msg = /permission/i.test(code)
+                    ? `⚠️ Server menolak menyimpan ${syncGroupName(path)} (izin Firestore). Ketuk status koneksi untuk detail.`
+                    : `⚠️ Gagal sinkron ${syncGroupName(path)}: ${code || 'tidak diketahui'}`;
+                window.showNetToast(msg, 'warn');
+                window.syncNetBadge();
             });
         };
         const wrapWrite = (proto, name) => {
@@ -8961,11 +9395,15 @@ measurementId: "G-ZVZ3QHEPKC"
             if (!orig || orig.__offlineWrapped) return;
             const w = function (...args) {
                 const real = orig.apply(this, args);
-                track(real, name);
+                const state = { detached: false };
+                track(real, name, this && this.path, state);
+                let ret;
                 // Offline: perubahan sudah tersimpan di cache perangkat -> lanjutkan tanpa menunggu server.
-                if (!window.isAppOnline()) return new Promise(r => setTimeout(r, 30));
+                if (!window.isAppOnline()) { state.detached = true; ret = new Promise(r => setTimeout(r, 30)); }
                 // Online tapi koneksi lambat/putus-sambung: jangan biarkan layar "loading" menggantung.
-                return Promise.race([real, new Promise(r => setTimeout(r, 7000))]);
+                else ret = Promise.race([real, new Promise(r => setTimeout(() => { state.detached = true; r(); }, 7000))]);
+                ret.__real = real;
+                return ret;
             };
             w.__offlineWrapped = true;
             proto[name] = w;
@@ -8980,19 +9418,34 @@ measurementId: "G-ZVZ3QHEPKC"
             addW.__offlineWrapped = true;
             F.CollectionReference.prototype.add = addW;
         }
-        // get(): saat offline langsung ambil dari cache perangkat (lebih cepat, tidak menunggu timeout jaringan).
-        const wrapGet = (proto) => {
+        // get(): offline -> langsung dari cache perangkat. Online tapi lambat (>4,5 dtk) -> pakai cache
+        // dulu (kalau ada) supaya aplikasi tidak macet; data server tetap dipakai kalau datang lebih cepat.
+        const wrapGet = (proto, isQuery) => {
             const orig = proto && proto.get;
             if (!orig || orig.__offlineWrapped) return;
+            const hasData = (snap) => isQuery ? (snap && !snap.empty) : Boolean(snap);
             const g = function (opts) {
-                if (opts || window.isAppOnline()) return orig.call(this, opts);
-                return orig.call(this, { source: 'cache' }).catch(() => orig.call(this));
+                if (opts) return orig.call(this, opts);
+                if (!window.isAppOnline()) return orig.call(this, { source: 'cache' }).then(snap => hasData(snap) ? snap : orig.call(this)).catch(() => orig.call(this));
+                const self = this;
+                return new Promise((resolve, reject) => {
+                    let done = false;
+                    const finish = (fn, v) => { if (!done) { done = true; fn(v); } };
+                    const fromCache = () => orig.call(self, { source: 'cache' });
+                    orig.call(self).then(v => finish(resolve, v), err => {
+                        fromCache().then(snap => hasData(snap) ? finish(resolve, snap) : finish(reject, err), () => finish(reject, err));
+                    });
+                    setTimeout(() => {
+                        if (done) return;
+                        fromCache().then(snap => { if (hasData(snap)) finish(resolve, snap); }, () => {});
+                    }, 4500);
+                });
             };
             g.__offlineWrapped = true;
             proto.get = g;
         };
-        wrapGet(F.DocumentReference.prototype);
-        wrapGet(F.Query.prototype);
+        wrapGet(F.DocumentReference.prototype, false);
+        wrapGet(F.Query.prototype, true);
     })();
 
     window.showNetToast = (msg, kind) => {
@@ -9016,16 +9469,32 @@ measurementId: "G-ZVZ3QHEPKC"
             el.id = 'netStatus';
             el.type = 'button';
             el.className = 'net-pill d-none';
-            el.onclick = () => window.customAlert(window.isAppOnline()
-                ? (STATE.netPending ? `Sedang mengirim ${STATE.netPending} perubahan ke server…` : 'Online. Semua data sudah tersinkron.')
-                : 'Mode OFFLINE.\n\nAplikasi tetap bisa dipakai: transaksi, perubahan stok & data lain disimpan di perangkat ini dan otomatis terkirim ke server saat internet tersambung lagi.\n\nJangan hapus data browser / cache aplikasi selama masih ada data yang belum tersinkron.', 'Status Koneksi');
+            el.onclick = () => window.showNetStatus();
             nav.parentElement.insertBefore(el, nav);
         }
         if (!el) return;
         const online = window.isAppOnline();
         if (!online) { el.innerHTML = '<span class="net-dot"></span>Offline'; el.className = 'net-pill is-offline'; }
         else if (STATE.netPending > 0) { el.innerHTML = '<span class="net-dot"></span>Sinkron…'; el.className = 'net-pill is-sync'; }
+        else if (STATE.syncErrors.some(e => !QUIET_SYNC.some(q => String(e.path).startsWith(q)))) { el.innerHTML = '<span class="net-dot"></span>Cek sinkron'; el.className = 'net-pill is-offline'; }
         else el.className = 'net-pill d-none';
+    };
+    window.showNetStatus = () => {
+        const online = window.isAppOnline();
+        const lines = [];
+        lines.push(online ? (STATE.netPending ? `🔄 Online — mengirim ${STATE.netPending} perubahan ke server…` : '🟢 Online — semua data tersinkron.')
+            : '📴 OFFLINE — aplikasi tetap bisa dipakai. Transaksi, stok & data lain disimpan di perangkat ini dan otomatis terkirim saat internet tersambung lagi.');
+        lines.push('');
+        lines.push(`Versi aplikasi: ${window.APP_VERSION}`);
+        lines.push(`Penyimpanan offline: ${window.__persistOK === false ? 'TERBATAS (browser tidak mendukung / ada tab lain). Data cadangan dari localStorage.' : 'aktif'}`);
+        if (STATE.syncErrors.length) {
+            lines.push('');
+            lines.push('Ditolak server (periksa Firestore Rules):');
+            const seen = new Set();
+            STATE.syncErrors.forEach(e => { const k = e.path.split('/')[0] + ' ' + e.code; if (seen.has(k)) return; seen.add(k); lines.push(`• ${e.path.split('/')[0]} — ${e.code}`); });
+        }
+        if (!online) { lines.push(''); lines.push('Jangan hapus data browser / cache aplikasi selama masih ada data yang belum tersinkron.'); }
+        return window.customAlert(lines.join('\n'), 'Status Koneksi');
     };
     window.addEventListener('offline', () => {
         window.syncNetBadge();
@@ -9082,14 +9551,46 @@ measurementId: "G-ZVZ3QHEPKC"
     const fmtTime = iso => { const d = new Date(iso); return isNaN(d) ? '-' : d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }); };
     const fmtDateTime = iso => { const d = new Date(iso); return isNaN(d) ? '-' : d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
 
+    const shiftLogRef = () => db.collection('settings').doc('shifts_log');
+    const shiftLocalUpsert = (sh) => { const l = shiftLocalList().filter(x => x.id !== sh.id); l.push(sh); shiftLocalSave(l); };
+    // Data shift selalu disimpan di perangkat. Ke server: koleksi 'shifts'; kalau Firestore Rules belum
+    // mengizinkan koleksi itu (permission-denied), otomatis pindah ke dokumen settings/shifts_log.
+    window.saveShiftRemote = (sh) => {
+        shiftLocalUpsert(sh);
+        if (IS_PREVIEW || !db) return;
+        const viaLog = () => { try { const p = shiftLogRef().set({ [sh.id]: sh }, { merge: true }); (p.__real || p).catch(e => console.warn('Shift log gagal:', e)); } catch (e) {} };
+        if (localStorage.getItem('wi_shift_store') === 'log') return viaLog();
+        try {
+            const p = db.collection('shifts').doc(sh.id).set(sh);
+            (p.__real || p).catch(err => {
+                if (/permission/i.test((err && err.code) || '')) { localStorage.setItem('wi_shift_store', 'log'); viaLog(); }
+            });
+        } catch (e) { viaLog(); }
+    };
+    window.fetchRemoteShifts = async () => {
+        let out = [];
+        if (IS_PREVIEW || !db) return out;
+        try {
+            const q = STATE.user.role === 'admin'
+                ? db.collection('shifts').orderBy('opened_at', 'desc').limit(60)
+                : db.collection('shifts').where('user_id', '==', STATE.user.id).limit(60);
+            out = (await q.get()).docs.map(d => d.data());
+        } catch (e) {}
+        try {
+            const d = await shiftLogRef().get();
+            if (d.exists) out = out.concat(Object.values(d.data() || {}).filter(x => x && x.id && (STATE.user.role === 'admin' || x.user_id === STATE.user.id)));
+        } catch (e) {}
+        return out;
+    };
     window.loadCurrentShift = async () => {
         STATE.shift = null;
         if (!STATE.user || !STATE.data.settings.shiftEnabled) return window.syncShiftButton();
         try { STATE.shift = JSON.parse(localStorage.getItem(shiftKey()) || 'null'); } catch (e) {}
-        if (!STATE.shift && !IS_PREVIEW && db) {
+        if (!STATE.shift && !IS_PREVIEW && db && !STATE.__shiftChecked) {
+            STATE.__shiftChecked = STATE.user.id;
             try {
-                const snap = await db.collection('shifts').where('user_id', '==', STATE.user.id).where('status', '==', 'open').limit(1).get();
-                if (!snap.empty) { STATE.shift = snap.docs[0].data(); localStorage.setItem(shiftKey(), JSON.stringify(STATE.shift)); }
+                const open = (await window.fetchRemoteShifts()).find(x => x.user_id === STATE.user.id && x.status === 'open');
+                if (open) { STATE.shift = open; localStorage.setItem(shiftKey(), JSON.stringify(open)); }
             } catch (e) { console.warn('Gagal memuat shift aktif:', e); }
         }
         window.syncShiftButton();
@@ -9185,8 +9686,7 @@ measurementId: "G-ZVZ3QHEPKC"
         };
         showLoad();
         try {
-            if (!IS_PREVIEW && db) await db.collection('shifts').doc(sh.id).set(sh);
-            else { const l = shiftLocalList(); l.push(sh); shiftLocalSave(l); }
+            window.saveShiftRemote(sh);
             STATE.shift = sh;
             localStorage.setItem(shiftKey(), JSON.stringify(sh));
             hideLoad();
@@ -9213,8 +9713,7 @@ measurementId: "G-ZVZ3QHEPKC"
         };
         showLoad();
         try {
-            if (!IS_PREVIEW && db) await db.collection('shifts').doc(sh.id).set(closed);
-            else { const l = shiftLocalList().filter(x => x.id !== sh.id); l.push(closed); shiftLocalSave(l); }
+            window.saveShiftRemote(closed);
             STATE.shift = null;
             localStorage.removeItem(shiftKey());
             hideLoad();
@@ -9265,16 +9764,12 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('shiftModalTitle').textContent = 'Riwayat Shift';
         body.innerHTML = '<p class="text-sm text-gray-500">Memuat…</p>';
         window.openModal('modalShift');
-        let list = [];
-        try {
-            if (!IS_PREVIEW && db) {
-                const q = STATE.user.role === 'admin'
-                    ? db.collection('shifts').orderBy('opened_at', 'desc').limit(40)
-                    : db.collection('shifts').where('user_id', '==', STATE.user.id).limit(60);
-                const snap = await q.get();
-                list = snap.docs.map(d => d.data());
-            } else list = shiftLocalList();
-        } catch (e) { body.innerHTML = `<p class="text-sm text-danger">Gagal memuat riwayat: ${escapeHTML(e.message)}</p>`; return; }
+        // Gabungan: data di perangkat + server (versi terbaru per shift, tutup > buka).
+        const merged = {};
+        const add = (x) => { if (!x || !x.id) return; const cur = merged[x.id]; if (!cur || (x.status === 'closed' && cur.status !== 'closed')) merged[x.id] = x; };
+        shiftLocalList().filter(x => STATE.user.role === 'admin' || x.user_id === STATE.user.id).forEach(add);
+        (await window.fetchRemoteShifts()).forEach(add);
+        let list = Object.values(merged).slice(0, 80);
         list.sort((a, b) => String(b.opened_at).localeCompare(String(a.opened_at)));
         STATE.shiftHistory = list;
         body.innerHTML = (list.length ? list.map((sh, i) => {
@@ -9349,6 +9844,7 @@ measurementId: "G-ZVZ3QHEPKC"
         h.style.color = m < 0 ? 'var(--c-danger)' : '';
     };
     ['prodPrice', 'prodCost'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', window.syncMarginHint); });
+    { const pe = document.getElementById('prodPrice'); if (pe) pe.addEventListener('input', () => window.syncWholesaleHints && window.syncWholesaleHints()); }
 
     // ======================================================= //
     // RIWAYAT: EXPORT LAPORAN TRANSAKSI (CSV, bisa dibuka di Excel / Google Sheets)
@@ -9426,6 +9922,399 @@ measurementId: "G-ZVZ3QHEPKC"
             const inp = document.getElementById('posInlineSearch');
             if (inp && !inp.classList.contains('d-none') && document.activeElement === inp && !inp.value) { e.preventDefault(); window.togglePosSearch(); }
         }
+    });
+
+    // ======================================================= //
+    // POPUP BAYAR CICILAN HUTANG: const r = await window.installmentDialog(cust) -> {amount, method, note} | null
+    // ======================================================= //
+    window.installmentDialog = (cust) => new Promise(resolve => {
+        const debt = Math.max(0, Math.round(Number(cust.debt) || 0));
+        const $ = id => document.getElementById(id);
+        $('instCustName').textContent = cust.name || '-';
+        $('instDebt').textContent = formatWon(debt);
+        const amt = $('instAmount');
+        amt.value = '';
+        $('instNote').value = '';
+        let method = 'Cash';
+        // Pilihan cepat: ±25%, 50%, 75% dari sisa hutang (dibulatkan ke ribuan) + "Semua"
+        const step = debt >= 10000 ? 1000 : (debt >= 1000 ? 100 : 1);
+        const quick = [...new Set([0.25, 0.5, 0.75].map(f => Math.round(debt * f / step) * step).filter(v => v > 0 && v < debt))];
+        $('instChips').innerHTML = quick.map(v => `<button type="button" data-v="${v}" class="inst-chip">${formatWon(v)}</button>`).join('')
+            + `<button type="button" data-v="${debt}" class="inst-chip is-all" style="grid-column: span ${Math.max(1, 4 - quick.length)}">Semua</button>`;
+        const sync = () => {
+            const v = Math.round(Number(amt.value) || 0);
+            const over = v > debt;
+            $('instRemain').textContent = formatWon(Math.max(0, debt - v));
+            $('instRemainBox').classList.toggle('is-paid', v > 0 && v === debt);
+            const w = $('instWarn');
+            w.textContent = over ? `Melebihi sisa hutang ${formatWon(debt)}.` : '';
+            w.classList.toggle('d-none', !over);
+            $('instSave').disabled = !(v > 0 && !over);
+            $('instSave').textContent = v > 0 && v === debt ? 'Simpan & Lunasi' : 'Simpan Cicilan';
+            document.querySelectorAll('#instChips .inst-chip').forEach(c => c.classList.toggle('is-active', Number(c.dataset.v) === v && v > 0));
+            document.querySelectorAll('#instMethods .inst-seg').forEach(b => b.classList.toggle('is-active', b.dataset.m === method));
+        };
+        amt.oninput = sync;
+        $('instChips').onclick = (e) => { const c = e.target.closest('.inst-chip'); if (!c) return; amt.value = c.dataset.v; sync(); if (window.playSfx) window.playSfx('coin'); };
+        $('instMethods').onclick = (e) => { const b = e.target.closest('.inst-seg'); if (!b) return; method = b.dataset.m; sync(); if (window.playSfx) window.playSfx('select'); };
+        let done = false;
+        const finish = (v) => { if (done) return; done = true; window.closeModal('modalInstallment'); resolve(v); };
+        $('instCancel').onclick = () => finish(null);
+        $('instClose').onclick = () => finish(null);
+        $('modalInstallment').onclick = (e) => { if (e.target.id === 'modalInstallment') finish(null); };
+        $('instSave').onclick = () => {
+            const v = Math.round(Number(amt.value) || 0);
+            if (!(v > 0 && v <= debt)) return;
+            finish({ amount: v, method, note: ($('instNote').value || '').trim() });
+        };
+        amt.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); $('instSave').click(); } };
+        sync();
+        window.openModal('modalInstallment');
+        setTimeout(() => amt.focus(), 80);
+    });
+
+    // ======================================================= //
+    // KERANJANG TIDAK HILANG SAAT REFRESH
+    // Isi keranjang (produk, tambahan, diskon, mode grosir, catatan) disimpan di perangkat per akun
+    // & dipulihkan otomatis. Dihapus setelah transaksi selesai. Berlaku 24 jam.
+    // ======================================================= //
+    const cartStoreKey = () => 'wi_cart_' + (STATE.user ? STATE.user.id : 'public');
+    let cartRestoredFor = null;
+    window.persistCart = () => {
+        if (cartRestoredFor !== cartStoreKey()) return; // belum dipulihkan -> jangan timpa simpanan lama
+        try {
+            const hasData = STATE.cart.length || (STATE.cartExtras || []).length;
+            if (!hasData) { localStorage.removeItem(cartStoreKey()); return; }
+            localStorage.setItem(cartStoreKey(), JSON.stringify({
+                at: Date.now(), cart: STATE.cart, extras: STATE.cartExtras || [],
+                discount: STATE.cartDiscount, wsMode: Boolean(STATE.cartWholesaleMode),
+                note: (document.getElementById('cartNote') || {}).value || ''
+            }));
+        } catch (e) {}
+    };
+    window.restoreCart = () => {
+        const key = cartStoreKey();
+        if (cartRestoredFor === key) return;
+        if (!STATE.data.products.length) return; // data produk belum siap -> coba lagi nanti
+        cartRestoredFor = key;
+        if (STATE.cart.length) { window.persistCart(); return; }
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+        if (!saved || !Array.isArray(saved.cart) || Date.now() - Number(saved.at || 0) > 24 * 3600 * 1000) { try { localStorage.removeItem(key); } catch (e) {} return; }
+        // Hanya produk yang masih ada & tersedia
+        const items = saved.cart.filter(i => i && i.id && i.qty > 0 && STATE.data.products.some(p => p.id === i.id && p.available !== false));
+        if (!items.length && !(saved.extras || []).length) return;
+        STATE.cart = items;
+        STATE.cartExtras = Array.isArray(saved.extras) ? saved.extras : [];
+        if (saved.discount && typeof saved.discount === 'object') STATE.cartDiscount = { type: saved.discount.type === 'amt' ? 'amt' : 'pct', value: Number(saved.discount.value) || 0 };
+        STATE.cartWholesaleMode = Boolean(saved.wsMode);
+        const noteEl = document.getElementById('cartNote');
+        if (noteEl && saved.note) noteEl.value = saved.note;
+        try { if (window.renderCartExtras) window.renderCartExtras(); } catch (e) {}
+        try { window.renderCartModal(); } catch (e) {}
+        window.updateCartUI();
+        try { if (window.updateCustCartUI) window.updateCustCartUI(); } catch (e) {}
+        const n = items.reduce((s, i) => s + i.qty, 0);
+        if (n) window.showNetToast(`🛒 Keranjang dipulihkan (${n} item)`, 'info');
+    };
+    (() => {
+        const wrapSave = (name) => {
+            const orig = window[name];
+            if (typeof orig !== 'function') return;
+            window[name] = function (...a) { const r = orig.apply(this, a); try { window.persistCart(); } catch (e) {} return r; };
+        };
+        wrapSave('updateCartUI');
+        wrapSave('calculateTotal');
+        const noteEl = document.getElementById('cartNote');
+        if (noteEl) noteEl.addEventListener('input', () => window.persistCart());
+        // Pulihkan setiap kali halaman (POS / katalog) ditampilkan — juga setelah ganti akun.
+        const origShow = window.showPage;
+        window.showPage = async (pageId) => {
+            const r = await origShow(pageId);
+            if (['pageAdminPOS', 'pagePublic', 'pageCustomer'].includes(pageId)) setTimeout(() => window.restoreCart(), 0);
+            return r;
+        };
+        window.addEventListener('pagehide', () => window.persistCart());
+    })();
+
+    // ======================================================= //
+    // PRINTER NOTA (pengaturan per perangkat): kertas 58/80 mm, koneksi dialog cetak / Bluetooth / USB-Serial / RawBT
+    // ======================================================= //
+    const PRN_KEY = 'wi_printer';
+    const prnDefaults = { paper: '58', mode: 'browser', autoPrint: false, drawer: false, copies: 1, feed: 4, cut: true };
+    window.getPrinterCfg = () => { try { return { ...prnDefaults, ...(JSON.parse(localStorage.getItem(PRN_KEY) || '{}')) }; } catch (e) { return { ...prnDefaults }; } };
+    window.setPrinterCfg = (patch) => { const c = { ...window.getPrinterCfg(), ...patch }; try { localStorage.setItem(PRN_KEY, JSON.stringify(c)); } catch (e) {} window.applyPaperStyle(); return c; };
+    STATE.printer = { device: null, characteristic: null, port: null, name: '' };
+
+    // Ukuran kertas untuk mode dialog cetak
+    window.applyPaperStyle = () => {
+        const c = window.getPrinterCfg();
+        const w = c.paper === '80' ? { paper: '80mm', body: '72mm', fs: '12px' } : { paper: '58mm', body: '48mm', fs: '10.5px' };
+        let st = document.getElementById('printPaperStyle');
+        if (!st) { st = document.createElement('style'); st.id = 'printPaperStyle'; document.head.appendChild(st); }
+        st.textContent = `@media print { @page { size: ${w.paper} auto; margin: 0; }
+            #printArea .receipt-88mm { width: ${w.body} !important; max-width: ${w.body} !important; padding: 1mm 0 !important; margin: 0 auto !important; font-size: ${w.fs} !important; }
+            #printArea .receipt-88mm div, #printArea .receipt-88mm span { font-size: inherit; } }`;
+    };
+    window.applyPaperStyle();
+
+    // --- Ubah nota HTML menjadi perintah ESC/POS (teks) ---
+    const escText = (t) => String(t || '')
+        .replace(/₩/g, 'W').replace(/[–—]/g, '-').replace(/[•·]/g, '*').replace(/[✓✔]/g, 'v').replace(/ /g, ' ')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x0A\x20-\x7E]/g, '');
+    window.receiptToEscPos = (root, cfg) => {
+        const W = cfg.paper === '80' ? 48 : 32;
+        const out = [];
+        const push = (...b) => out.push(...b);
+        const text = (s) => { for (const ch of escText(s)) out.push(ch.charCodeAt(0)); };
+        const line = (s) => { text(s); push(0x0A); };
+        const wrap = (s, width) => {
+            const words = escText(s).split(/\s+/).filter(Boolean); const lines = []; let cur = '';
+            words.forEach(w => { while (w.length > width) { if (cur) { lines.push(cur); cur = ''; } lines.push(w.slice(0, width)); w = w.slice(width); } if ((cur + ' ' + w).trim().length > width) { lines.push(cur); cur = w; } else cur = (cur ? cur + ' ' : '') + w; });
+            if (cur) lines.push(cur); return lines.length ? lines : [''];
+        };
+        const row = (l, r) => {
+            l = escText(l).trim(); r = escText(r).trim();
+            const room = W - r.length - 1;
+            if (room < 6) { wrap(l, W).forEach(x => line(x)); line(' '.repeat(Math.max(0, W - r.length)) + r); return; }
+            const ls = wrap(l, room);
+            ls.forEach((x, i) => i === ls.length - 1 ? line(x + ' '.repeat(Math.max(1, W - x.length - r.length)) + r) : line(x));
+        };
+        const sep = () => line('-'.repeat(W));
+        const align = (a) => push(0x1B, 0x61, a === 'center' ? 1 : a === 'right' ? 2 : 0);
+        const bold = (on) => push(0x1B, 0x45, on ? 1 : 0);
+        const size = (big) => push(0x1D, 0x21, big ? 0x01 : 0x00);
+        push(0x1B, 0x40);
+        const isBlock = (el) => { const d = getComputedStyle(el).display; return d === 'block' || d === 'flex' || d === 'grid' || d === 'list-item' || d === 'table'; };
+        const walk = (el) => {
+            Array.from(el.children).forEach(ch => {
+                const cs = getComputedStyle(ch);
+                if (cs.display === 'none' || ch.tagName === 'IMG' || ch.tagName === 'svg' || ch.tagName === 'SCRIPT') return;
+                if (parseFloat(cs.borderTopWidth) > 0 && cs.borderTopStyle !== 'none') sep();
+                const kids = Array.from(ch.children).filter(k => getComputedStyle(k).display !== 'none' && k.tagName !== 'BR');
+                // Baris kiri-kanan = flex mendatar dengan ≥2 anak (anak flex otomatis "block", jadi tidak dicek).
+                const isRow = cs.display.includes('flex') && cs.flexDirection.indexOf('column') === -1 && kids.length >= 2;
+                if (isRow) {
+                    const b = parseInt(cs.fontWeight) >= 600; bold(b);
+                    const parts = kids.map(k => k.innerText.replace(/\s*\n\s*/g, '\n').trim());
+                    const left = parts.slice(0, -1).join(' '), right = parts[parts.length - 1];
+                    const [first, ...rest] = left.split('\n');
+                    row(first, right); rest.forEach(x => line('  ' + x.trim()));
+                    bold(false);
+                } else if (kids.some(isBlock)) {
+                    walk(ch);
+                } else {
+                    const t = ch.innerText.trim();
+                    if (t) {
+                        align(cs.textAlign === 'center' ? 'center' : cs.textAlign === 'right' ? 'right' : 'left');
+                        const big = parseFloat(cs.fontSize) >= 16; size(big); bold(parseInt(cs.fontWeight) >= 600 || big);
+                        t.split('\n').forEach(x => wrap(x, W).forEach(y => line(y)));
+                        bold(false); size(false); align('left');
+                    }
+                }
+                if (parseFloat(cs.borderBottomWidth) > 0 && cs.borderBottomStyle !== 'none') sep();
+            });
+        };
+        walk(root);
+        push(0x0A);
+        for (let i = 0; i < Number(cfg.feed || 4); i++) push(0x0A);
+        if (cfg.cut) push(0x1D, 0x56, 0x42, 0x00);
+        return new Uint8Array(out);
+    };
+    const DRAWER_CMD = [0x1B, 0x70, 0x00, 0x19, 0xFA];
+
+    // --- Koneksi ---
+    const BT_SERVICES = ['000018f0-0000-1000-8000-00805f9b34fb', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2', '49535343-fe7d-4ae5-8fa9-9fafd205e455', '0000ff00-0000-1000-8000-00805f9b34fb', '0000ffe0-0000-1000-8000-00805f9b34fb', '0000fee7-0000-1000-8000-00805f9b34fb'];
+    const findWritable = async (server) => {
+        const services = await server.getPrimaryServices();
+        for (const sv of services) {
+            for (const ch of await sv.getCharacteristics()) {
+                if (ch.properties.writeWithoutResponse || ch.properties.write) return ch;
+            }
+        }
+        throw new Error('Printer tidak menyediakan jalur tulis (pastikan printer mendukung Bluetooth LE / ESC-POS).');
+    };
+    window.connectPrinter = async () => {
+        const c = window.getPrinterCfg();
+        try {
+            if (c.mode === 'bluetooth') {
+                if (!navigator.bluetooth) throw new Error('Browser ini tidak mendukung Bluetooth web. Gunakan Chrome di Android/PC, atau pilih mode "RawBT".');
+                const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: BT_SERVICES });
+                const server = await device.gatt.connect();
+                STATE.printer = { device, characteristic: await findWritable(server), port: null, name: device.name || 'Printer Bluetooth' };
+                device.addEventListener('gattserverdisconnected', () => { STATE.printer.characteristic = null; window.renderPrinterStatus && window.renderPrinterStatus(); });
+            } else if (c.mode === 'serial') {
+                if (!navigator.serial) throw new Error('Browser ini tidak mendukung USB/Serial web. Gunakan Chrome / Edge di komputer.');
+                const port = await navigator.serial.requestPort();
+                await port.open({ baudRate: Number(c.baud) || 9600 });
+                STATE.printer = { device: null, characteristic: null, port, name: 'Printer USB/Serial' };
+            }
+            window.setPrinterCfg({ lastName: STATE.printer.name });
+            window.showNetToast(`🖨️ Terhubung: ${STATE.printer.name}`, 'ok');
+        } catch (e) {
+            if (e && e.name === 'NotFoundError') return; // dibatalkan pengguna
+            await window.customAlert('Gagal menghubungkan printer: ' + (e.message || e), 'Printer');
+        }
+        if (window.renderPrinterStatus) window.renderPrinterStatus();
+    };
+    // Sambung ulang otomatis (tanpa memilih perangkat lagi) bila browser mengizinkan.
+    const reconnectPrinter = async () => {
+        const c = window.getPrinterCfg();
+        try {
+            if (c.mode === 'serial' && navigator.serial && !STATE.printer.port) {
+                const ports = await navigator.serial.getPorts();
+                if (ports[0]) { await ports[0].open({ baudRate: Number(c.baud) || 9600 }).catch(() => {}); STATE.printer = { device: null, characteristic: null, port: ports[0], name: c.lastName || 'Printer USB/Serial' }; }
+            }
+            if (c.mode === 'bluetooth' && navigator.bluetooth) {
+                let dev = STATE.printer.device;
+                if (!dev && navigator.bluetooth.getDevices) dev = (await navigator.bluetooth.getDevices()).find(d => !c.lastName || d.name === c.lastName);
+                if (dev && !STATE.printer.characteristic) {
+                    const server = await dev.gatt.connect();
+                    STATE.printer = { device: dev, characteristic: await findWritable(server), port: null, name: dev.name || 'Printer Bluetooth' };
+                }
+            }
+        } catch (e) { console.warn('Sambung ulang printer gagal:', e); }
+        return Boolean(STATE.printer.characteristic || STATE.printer.port);
+    };
+    const sendBytes = async (bytes) => {
+        const c = window.getPrinterCfg();
+        if (c.mode === 'rawbt') {
+            let bin = ''; bytes.forEach(b => { bin += String.fromCharCode(b); });
+            window.location.href = 'rawbt:base64,' + btoa(bin);
+            return;
+        }
+        if (!(await reconnectPrinter())) throw new Error('Printer belum terhubung. Buka Pengaturan Printer lalu tekan "Hubungkan".');
+        if (c.mode === 'serial') {
+            const w = STATE.printer.port.writable.getWriter();
+            try { await w.write(bytes); } finally { w.releaseLock(); }
+            return;
+        }
+        const ch = STATE.printer.characteristic;
+        const chunk = 180;
+        for (let i = 0; i < bytes.length; i += chunk) {
+            const part = bytes.slice(i, i + chunk);
+            if (ch.properties.writeWithoutResponse && ch.writeValueWithoutResponse) await ch.writeValueWithoutResponse(part);
+            else await ch.writeValue(part);
+            await new Promise(r => setTimeout(r, 25));
+        }
+    };
+    // Cetak elemen nota sesuai pengaturan printer perangkat ini.
+    window.printReceiptElement = async (el, opts = {}) => {
+        const c = window.getPrinterCfg();
+        if (!el) return;
+        if (c.mode === 'browser') {
+            window.applyPaperStyle();
+            const pa = document.getElementById('printArea');
+            pa.innerHTML = el.outerHTML;
+            pa.classList.remove('d-none');
+            window.print();
+            setTimeout(() => pa.classList.add('d-none'), 800);
+            return;
+        }
+        try {
+            let bytes = window.receiptToEscPos(el, c);
+            if (opts.drawer && c.drawer) bytes = new Uint8Array([...DRAWER_CMD, ...bytes]);
+            const copies = Math.min(3, Math.max(1, Number(c.copies) || 1));
+            for (let i = 0; i < copies; i++) await sendBytes(bytes);
+            if (c.mode !== 'rawbt') window.showNetToast('🖨️ Nota terkirim ke printer', 'ok');
+        } catch (e) {
+            await window.customAlert((e.message || e) + '\n\nTips: pilih mode "Dialog Cetak" bila printer terpasang lewat sistem (USB/WiFi/driver).', 'Printer');
+        }
+    };
+    window.printReceiptPopup = () => {
+        const el = document.getElementById('printReceiptCore');
+        const src = STATE.user ? STATE.data.orders : (STATE.publicOrders || []);
+        const o = STATE.currentReceiptId ? src.find(x => x.id === STATE.currentReceiptId) : null;
+        STATE.__drawerOpened = STATE.__drawerOpened || {};
+        const drawer = Boolean(o && o.type === 'Cash' && !STATE.__drawerOpened[o.id]);
+        if (drawer) STATE.__drawerOpened[o.id] = true;
+        return window.printReceiptElement(el, { drawer });
+    };
+    window.printShiftReport = (sh) => {
+        sh = sh || STATE.shift;
+        if (!sh) return;
+        const tmp = document.createElement('div');
+        tmp.style.cssText = 'position:fixed;left:-9999px;top:0;';
+        tmp.innerHTML = window.shiftReportHtml(sh);
+        document.body.appendChild(tmp);
+        Promise.resolve(window.printReceiptElement(tmp.firstElementChild)).finally(() => setTimeout(() => tmp.remove(), 1500));
+    };
+    // Cetak otomatis setelah "Nota" ditekan (tanpa harus menekan Print di pratinjau)
+    (() => {
+        const origShowReceipt = window.showReceiptPopup;
+        window.showReceiptPopup = (id) => {
+            const r = origShowReceipt(id);
+            if (STATE.__autoPrintNext) { STATE.__autoPrintNext = false; setTimeout(() => window.printReceiptPopup(), 250); }
+            return r;
+        };
+        const origCheckout = window.processCheckout;
+        window.processCheckout = async (isPrint) => {
+            STATE.__autoPrintNext = Boolean(isPrint && window.getPrinterCfg().autoPrint);
+            try { return await origCheckout(isPrint); } finally { STATE.__autoPrintNext = false; }
+        };
+    })();
+
+    // --- Popup pengaturan printer ---
+    window.renderPrinterStatus = () => {
+        const el = document.getElementById('prnStatus');
+        if (!el) return;
+        const c = window.getPrinterCfg();
+        if (c.mode === 'browser') el.innerHTML = 'Memakai dialog cetak sistem (printer USB/WiFi yang terpasang di perangkat, atau "Simpan sebagai PDF").';
+        else if (c.mode === 'rawbt') el.innerHTML = 'Nota dikirim ke aplikasi <b>RawBT</b> (Android). Pasang RawBT dari Play Store & pasangkan printer Bluetooth di aplikasi itu.';
+        else {
+            const ok = Boolean(STATE.printer.characteristic || STATE.printer.port);
+            el.innerHTML = ok ? `🟢 Terhubung: <b>${escapeHTML(STATE.printer.name)}</b>` : `⚪ Belum terhubung${c.lastName ? ` (terakhir: ${escapeHTML(c.lastName)})` : ''}. Tekan "Hubungkan".`;
+        }
+        document.getElementById('prnConnectBtn').classList.toggle('d-none', !['bluetooth', 'serial'].includes(c.mode));
+    };
+    window.openPrinterSettings = () => {
+        const c = window.getPrinterCfg();
+        const seg = (name, val, label, sub) => `<button type="button" data-k="${name}" data-v="${val}" class="prn-opt ${String(c[name]) === String(val) ? 'is-active' : ''}"><span class="font-bold">${label}</span>${sub ? `<span class="prn-sub">${sub}</span>` : ''}</button>`;
+        const bt = Boolean(navigator.bluetooth), se = Boolean(navigator.serial);
+        document.getElementById('shiftModalTitle').textContent = 'Pengaturan Printer';
+        document.getElementById('shiftBody').innerHTML = `
+            <p class="text-xs text-gray-500 mb-3">Disimpan di perangkat ini saja (tiap kasir bisa beda printer).</p>
+            <div class="inst-label">Ukuran Kertas</div>
+            <div class="grid grid-cols-2 gap-2 mb-4">${seg('paper', '58', '58 mm', '32 karakter/baris')}${seg('paper', '80', '80 mm', '48 karakter/baris')}</div>
+            <div class="inst-label">Koneksi Printer</div>
+            <div class="grid grid-cols-1 gap-2 mb-3">
+                ${seg('mode', 'browser', '🖨️ Dialog Cetak Sistem', 'USB / WiFi / driver printer, AirPrint, atau simpan PDF')}
+                ${seg('mode', 'bluetooth', '🔵 Bluetooth (ESC/POS)', bt ? 'Printer thermal Bluetooth LE — Chrome Android / PC' : 'Tidak didukung browser ini')}
+                ${seg('mode', 'rawbt', '📱 Bluetooth via RawBT (Android)', 'Untuk printer Bluetooth klasik — butuh aplikasi RawBT')}
+                ${seg('mode', 'serial', '🔌 USB / Serial (ESC/POS)', se ? 'Kabel USB langsung — Chrome / Edge komputer' : 'Tidak didukung browser ini')}
+            </div>
+            <div id="prnStatus" class="text-xs bg-gray-50 border-2 border-black p-2 mb-2"></div>
+            <button type="button" id="prnConnectBtn" onclick="window.connectPrinter()" class="brutal-btn bg-accent w-full py-2 text-sm mb-3">Hubungkan Printer</button>
+            <label class="flex items-center justify-between gap-2 py-2 text-sm cursor-pointer"><span>Langsung cetak saat tombol <b>Nota</b> ditekan</span><input type="checkbox" id="prnAuto" class="w-5 h-5" ${c.autoPrint ? 'checked' : ''}></label>
+            <label class="flex items-center justify-between gap-2 py-2 text-sm cursor-pointer"><span>Buka laci kas otomatis (transaksi Cash, ESC/POS)</span><input type="checkbox" id="prnDrawer" class="w-5 h-5" ${c.drawer ? 'checked' : ''}></label>
+            <label class="flex items-center justify-between gap-2 py-2 text-sm cursor-pointer"><span>Potong kertas otomatis (ESC/POS)</span><input type="checkbox" id="prnCut" class="w-5 h-5" ${c.cut ? 'checked' : ''}></label>
+            <div class="flex items-center justify-between gap-2 py-2 text-sm"><span>Jumlah salinan</span><input type="number" id="prnCopies" min="1" max="3" value="${c.copies}" class="brutal-input bg-white text-sm text-center !w-20"></div>
+            <button type="button" onclick="window.testPrint()" class="brutal-btn bg-main w-full py-2.5 mt-3">Cetak Tes</button>`;
+        const body = document.getElementById('shiftBody');
+        body.querySelectorAll('.prn-opt').forEach(b => b.onclick = () => { window.setPrinterCfg({ [b.dataset.k]: b.dataset.v }); window.openPrinterSettings(); });
+        body.querySelector('#prnAuto').onchange = (e) => window.setPrinterCfg({ autoPrint: e.target.checked });
+        body.querySelector('#prnDrawer').onchange = (e) => window.setPrinterCfg({ drawer: e.target.checked });
+        body.querySelector('#prnCut').onchange = (e) => window.setPrinterCfg({ cut: e.target.checked });
+        body.querySelector('#prnCopies').onchange = (e) => window.setPrinterCfg({ copies: Math.min(3, Math.max(1, parseInt(e.target.value) || 1)) });
+        window.renderPrinterStatus();
+        window.openModal('modalShift');
+    };
+    window.testPrint = () => {
+        const c = window.getPrinterCfg();
+        const tmp = document.createElement('div');
+        tmp.style.cssText = 'position:fixed;left:-9999px;top:0;';
+        tmp.innerHTML = `<div class="receipt-88mm"><div style="text-align:center;border-bottom:2px dashed black;padding-bottom:8px;margin-bottom:8px;"><h2 style="margin:0;font-size:18px;font-weight:bold;">${escapeHTML(STATE.data.settings.storeName || 'WARUNG')}</h2><div style="font-size:12px;">TES PRINTER ${c.paper} mm</div></div>
+            <div style="font-size:12px;"><div style="display:flex;justify-content:space-between;"><span>1x Produk contoh nama panjang sekali</span><span>${formatWon(12500)}</span></div><div style="display:flex;justify-content:space-between;font-weight:bold;border-top:2px dashed black;margin-top:6px;padding-top:6px;"><span>TOTAL</span><span>${formatWon(12500)}</span></div></div>
+            <div style="text-align:center;margin-top:10px;font-size:11px;">Printer siap digunakan ✓</div></div>`;
+        document.body.appendChild(tmp);
+        Promise.resolve(window.printReceiptElement(tmp.firstElementChild)).finally(() => setTimeout(() => tmp.remove(), 1500));
+    };
+
+    // Coba pulihkan keranjang juga saat grid produk dirender (data produk baru tersedia setelah dimuat).
+    ['renderAdminPOS', 'renderPublicCatalog'].forEach(fn => {
+        const orig = window[fn];
+        if (typeof orig !== 'function') return;
+        window[fn] = function (...a) { const r = orig.apply(this, a); try { window.restoreCart(); } catch (e) {} return r; };
     });
 
     setInterval(window.updateStoreStatusDisplay, 30000);
