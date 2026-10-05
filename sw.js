@@ -1,8 +1,16 @@
-/* Service worker SBMART Changwon.
+/* Service worker SBMART Changwon — mode OFFLINE + ONLINE.
    Naikkan angka VERSION setiap kali index.html diperbarui di hosting,
-   supaya semua perangkat otomatis memakai versi terbaru. */
+   supaya semua perangkat otomatis memakai versi terbaru.
+
+   Strategi:
+   - Halaman (index.html): ambil dari jaringan dulu, kalau offline pakai salinan terakhir.
+   - Library dari CDN (Tailwind, Firebase SDK, font, html2canvas, jsPDF): disimpan di perangkat
+     supaya aplikasi tetap bisa dibuka lengkap tanpa internet; diperbarui di belakang saat online.
+   - Data Firestore TIDAK lewat cache ini (sudah disimpan sendiri oleh Firestore di perangkat).
+*/
 const VERSION = 'v14';
 const CACHE = 'sbmart-' + VERSION;
+const CDN_CACHE = 'sbmart-cdn-v1';   // terpisah, tidak perlu diunduh ulang tiap ganti versi aplikasi
 const CORE = [
   './',
   './index.html',
@@ -15,21 +23,44 @@ const CORE = [
   './favicon-32.png',
   './favicon-16.png'
 ];
+const CDN = [
+  'https://cdn.tailwindcss.com',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js',
+  'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js'
+];
+// Domain API (data, login) yang tidak boleh dicache.
+const NO_CACHE_HOSTS = [
+  'firestore.googleapis.com', 'firebase.googleapis.com', 'identitytoolkit.googleapis.com',
+  'securetoken.googleapis.com', 'www.googleapis.com', 'firebaseinstallations.googleapis.com',
+  'wa.me', 'api.whatsapp.com'
+];
+const CDN_HOSTS = ['cdn.tailwindcss.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'cdnjs.cloudflare.com', 'www.gstatic.com', 'cdn.jsdelivr.net', 'unpkg.com'];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) =>
-      // Satu file yang tidak ada tidak boleh menggagalkan seluruh instalasi SW.
-      Promise.all(CORE.map((url) => cache.add(new Request(url, { cache: 'reload' })).catch(() => {})))
-    )
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    // Satu file yang tidak ada tidak boleh menggagalkan seluruh instalasi SW.
+    await Promise.all(CORE.map((url) => cache.add(new Request(url, { cache: 'reload' })).catch(() => {})));
+    const cdn = await caches.open(CDN_CACHE);
+    await Promise.all(CDN.map(async (url) => {
+      try {
+        if (await cdn.match(url)) return;
+        const res = await fetch(new Request(url, { mode: 'no-cors' }));
+        if (res && (res.ok || res.type === 'opaque')) await cdn.put(url, res);
+      } catch (e) {}
+    }));
+  })());
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('sbmart-') && k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('sbmart-') && k !== CACHE && k !== CDN_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -41,11 +72,29 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  // Firebase, CDN, Google Fonts, dll dibiarkan langsung ke jaringan (tidak dicache oleh SW).
-  if (url.origin !== self.location.origin) return;
+  let url;
+  try { url = new URL(req.url); } catch (e) { return; }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
 
-  // Halaman (termasuk link nota ?receipt=...): ambil dari jaringan dulu, kalau offline pakai salinan cache.
+  // ---- Luar domain aplikasi ----
+  if (url.origin !== self.location.origin) {
+    if (NO_CACHE_HOSTS.includes(url.hostname)) return;           // data & login: langsung ke jaringan
+    if (!CDN_HOSTS.includes(url.hostname) && req.destination !== 'image') return;
+    // Library/font/gambar: pakai salinan di perangkat, perbarui di belakang saat online.
+    event.respondWith((async () => {
+      const cache = await caches.open(CDN_CACHE);
+      const cached = await cache.match(req, { ignoreVary: true }) || await cache.match(req.url, { ignoreVary: true });
+      const net = fetch(req).then((res) => {
+        if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone()).catch(() => {});
+        return res;
+      }).catch(() => cached);
+      if (cached) { event.waitUntil(net.then(() => {}).catch(() => {})); return cached; }
+      return net;
+    })());
+    return;
+  }
+
+  // ---- Halaman aplikasi (termasuk link nota ?receipt=...) ----
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req)
@@ -61,7 +110,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // File statis satu folder (ikon, manifest): cache dulu, sambil diperbarui di belakang.
+  // ---- File statis satu folder (ikon, manifest) ----
   event.respondWith(
     caches.match(req).then((cached) => {
       const net = fetch(req).then((res) => {
