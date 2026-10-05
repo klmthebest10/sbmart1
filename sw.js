@@ -1,7 +1,7 @@
 /* Service worker SBMART Changwon.
    Naikkan angka VERSION setiap kali index.html diperbarui di hosting,
    supaya semua perangkat otomatis memakai versi terbaru. */
-const VERSION = 'v13';
+const VERSION = 'v14';
 const CACHE = 'sbmart-' + VERSION;
 const CORE = [
   './',
