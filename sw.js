@@ -8,7 +8,7 @@
      supaya aplikasi tetap bisa dibuka lengkap tanpa internet; diperbarui di belakang saat online.
    - Data Firestore TIDAK lewat cache ini (sudah disimpan sendiri oleh Firestore di perangkat).
 */
-const VERSION = 'v14';
+const VERSION = 'v16';   // samakan dengan APP_VERSION di index.html
 const CACHE = 'sbmart-' + VERSION;
 const CDN_CACHE = 'sbmart-cdn-v1';   // terpisah, tidak perlu diunduh ulang tiap ganti versi aplikasi
 const CORE = [
@@ -44,7 +44,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
     // Satu file yang tidak ada tidak boleh menggagalkan seluruh instalasi SW.
-    await Promise.all(CORE.map((url) => cache.add(new Request(url, { cache: 'reload' })).catch(() => {})));
+    await Promise.all(CORE.map((url) => cache.add(new Request(url, { cache: 'no-store' })).catch(() => {})));
     const cdn = await caches.open(CDN_CACHE);
     await Promise.all(CDN.map(async (url) => {
       try {
@@ -95,18 +95,26 @@ self.addEventListener('fetch', (event) => {
   }
 
   // ---- Halaman aplikasi (termasuk link nota ?receipt=...) ----
+  // Online: SELALU ambil versi terbaru dari server (lewati cache HTTP browser supaya tidak dapat versi/tema lama).
+  // Koneksi lambat (>4 dtk) atau offline: tampilkan salinan terakhir dari perangkat, sambil tetap
+  // mengunduh versi terbaru di belakang untuk kunjungan berikutnya.
   if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (res && res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put('./index.html', copy));
-          }
-          return res;
-        })
-        .catch(() => caches.match('./index.html').then((r) => r || caches.match('./')))
-    );
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const cached = await cache.match('./index.html') || await caches.match('./index.html') || await caches.match('./');
+      const network = fetch(req.url, { cache: 'no-store', credentials: 'same-origin' }).then(async (res) => {
+        if (res && res.ok && (res.headers.get('content-type') || '').includes('text/html')) {
+          await cache.put('./index.html', res.clone());
+        }
+        return res;
+      });
+      if (!cached) return network.catch(() => new Response('<h3 style="font-family:sans-serif;padding:24px">Aplikasi belum tersimpan di perangkat. Buka sekali saat online.</h3>', { headers: { 'Content-Type': 'text/html; charset=utf-8' } }));
+      const timeout = new Promise((r) => setTimeout(() => r(null), 4000));
+      const res = await Promise.race([network.catch(() => null), timeout]);
+      if (res && res.ok) return res;
+      event.waitUntil(network.catch(() => {}));
+      return cached;
+    })());
     return;
   }
 
