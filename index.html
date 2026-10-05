@@ -1370,7 +1370,6 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
                     <div class="flex items-center gap-2 flex-wrap">
                         <h2 class="text-2xl md:text-3xl font-bold uppercase bg-main px-2 border-2 border-black border-l-8 border-l-dark">KASIR</h2>
                         <button onclick="window.openShiftModal()" id="btnShift" class="d-none brutal-btn bg-white px-3 py-1 text-xs md:text-sm flex items-center gap-1.5" title="Shift kasir"><span id="shiftDot" class="shift-dot"></span><span id="shiftLabel">Buka Shift</span></button>
-                        <button onclick="window.openPrinterSettings()" id="btnPrinterSet" class="brutal-btn bg-white px-2.5 py-1 text-xs inline-flex items-center gap-1" title="Pengaturan printer nota">🖨️ <span class="hidden sm:inline">Printer</span></button>
                         <button onclick="window.showShortcutHelp()" id="btnShortcutHelp" class="hidden lg:inline-flex brutal-btn bg-white px-2.5 py-1 text-xs items-center gap-1" title="Pintasan keyboard">⌨️ Pintasan</button>
                         <button onclick="window.openLowStockModal()" id="btnLowStock" class="d-none brutal-btn bg-danger text-white px-3 py-1 text-xs md:text-sm flex items-center gap-1 pulse-call">⚠️ Stok Menipis (<span id="lowStockCount">0</span>)</button>
                         <button onclick="window.openExpiryModal()" id="btnExpWarn" class="d-none brutal-btn bg-danger text-white px-3 py-1 text-xs md:text-sm flex items-center gap-1 pulse-call">⏰ Dekat Expired (<span id="expWarnCount">0</span>)</button>
@@ -2950,7 +2949,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
 
     // Versi aplikasi: SAMAKAN dengan VERSION di sw.js setiap kali update.
-    const APP_VERSION = 'v16';
+    const APP_VERSION = 'v17';
     window.APP_VERSION = APP_VERSION;
     let db = null;
     let auth = null;
@@ -8150,6 +8149,10 @@ measurementId: "G-ZVZ3QHEPKC"
         const editing = document.activeElement && document.activeElement.closest && document.activeElement.closest('#cashierSelfSettingsWrap form');
         if (editing) return; // jangan menimpa isian yang sedang diketik
         wrap.innerHTML = `
+            <div class="brutal-box bg-white p-4 md:p-5 mb-4 flex items-center justify-between gap-3">
+                <div class="min-w-0"><div class="font-bold">Printer Nota</div><div class="text-[11px] text-gray-500 leading-tight">Ukuran kertas 58/80 mm &amp; koneksi printer di perangkat ini</div></div>
+                <button type="button" onclick="window.openPrinterSettings()" class="brutal-btn bg-white px-3 py-2 text-sm shrink-0">🖨️ Atur Printer</button>
+            </div>
             <div class="brutal-box bg-white p-4 md:p-6">
                 <h3 class="text-xl font-bold uppercase mb-4 border-b-4 border-black pb-2">Pengaturan Akun</h3>
                 <div class="flex items-center gap-4 p-3 border-2 border-black bg-yellow-50 mb-4">
