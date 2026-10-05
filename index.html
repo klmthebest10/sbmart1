@@ -16,7 +16,7 @@
     <title>SBMART Changwon</title>
     
     <!-- PWA Settings & Standalone Mode -->
-    <meta name="theme-color" content="#FFD500">
+    <meta name="theme-color" content="#F4F6F8" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -52,7 +52,7 @@
                 var m = {
                     id: base, name: 'SBMART Changwon', short_name: 'SBMART',
                     start_url: base, scope: base, display: 'standalone',
-                    background_color: '#f4f4f0', theme_color: '#FFD500',
+                    background_color: '#F4F6F8', theme_color: '#F4F6F8',
                     icons: [
                         { src: base + 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
                         { src: base + 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
@@ -72,7 +72,7 @@
 
     <!-- Tailwind CSS & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
@@ -85,9 +85,9 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Space Grotesk', 'sans-serif'] },
-                    colors: { bg: '#f4f4f0', main: '#FFD500', accent: '#00F0FF', danger: '#FF003C', success: '#00FF66', dark: '#000000' },
-                    boxShadow: { 'brutal': '4px 4px 0px 0px rgba(0,0,0,1)', 'brutal-sm': '2px 2px 0px 0px rgba(0,0,0,1)' }
+                    fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Roboto', 'Segoe UI', 'sans-serif'] },
+                    colors: { bg: '#F4F6F8', main: '#FFC83D', accent: '#2563EB', danger: '#E5484D', success: '#16A34A', dark: '#111827' },
+                    boxShadow: { 'brutal': '0 1px 2px rgba(16,24,40,.06), 0 4px 12px rgba(16,24,40,.08)', 'brutal-sm': '0 1px 2px rgba(16,24,40,.08)' }
                 }
             }
         }
@@ -97,7 +97,7 @@
         #gasapp-root {
             position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh;
             z-index: 999999; background: #f4f4f0; color: #000000;
-            overflow-y: auto; overflow-x: hidden; margin: 0; padding: 0; font-family: 'Space Grotesk', sans-serif;
+            overflow-y: auto; overflow-x: hidden; margin: 0; padding: 0; font-family: 'Inter', sans-serif;
         }
         .brutal-box { border: 3px solid black; box-shadow: 4px 4px 0px 0px black; background-color: white; transition: all 0.1s ease; }
         .brutal-btn { border: 3px solid black; box-shadow: 4px 4px 0px 0px black; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: all 0.1s ease; }
@@ -358,7 +358,7 @@
         .poster-slide-float {
             position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
             padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-            background: linear-gradient(to top, #f4f4f0 55%, transparent);
+            background: linear-gradient(to top, var(--c-bg, #F4F6F8) 55%, transparent);
         }
         .poster-slide-track {
             position: relative; max-width: 420px; margin: 0 auto; height: 64px; border-radius: 9999px;
@@ -388,7 +388,7 @@
     #posProductsCol > div:nth-child(3) {
         position: sticky;
         z-index: 20;
-        background-color: #f4f4f0;
+        background-color: var(--c-bg, #F4F6F8);
     }
     [data-theme="dark"] #posProductsCol > div:nth-child(2),
     [data-theme="dark"] #posProductsCol > div:nth-child(3),
@@ -425,7 +425,7 @@
         #custCatalogArea #custSearchWrap {
             position: sticky;
             z-index: 20;
-            background-color: #f4f4f0;
+            background-color: var(--c-bg, #F4F6F8);
         }
         #pagePublic > div:first-of-type + div,
         #custCatalogArea > div:first-child {
@@ -630,7 +630,7 @@
 .dash-bar { fill: #1F2937; }
 .dash-grid { stroke: #E5E7EB; stroke-width: 1; }
 .dash-baseline { stroke: #111111; stroke-width: 1.5; }
-.dash-axis { fill: #6B7280; font-size: 10px; font-family: 'Space Grotesk', sans-serif; }
+.dash-axis { fill: #6B7280; font-size: 10px; font-family: 'Inter', sans-serif; }
 .dash-hit { cursor: pointer; }
 .dash-hit.is-active { fill: rgba(0,0,0,0.06); }
 .dash-tip { position: absolute; z-index: 5; pointer-events: none; background: #111111; color: #FFFFFF; border: 2px solid #000; padding: 4px 8px; font-size: 11px; line-height: 1.3; white-space: nowrap; box-shadow: 2px 2px 0 0 rgba(0,0,0,0.3); }
@@ -652,7 +652,7 @@
 
 /* ===== Cetak Tag Harga (A4, 3 kolom, proporsi tag 3:1) ===== */
 .tag-sheet { display: grid; grid-template-columns: repeat(3, 64.66mm); width: 194mm; margin: 0 auto; background: #fff; }
-.price-tag { position: relative; box-sizing: border-box; width: 64.66mm; height: 21.55mm; aspect-ratio: 3 / 1; border: 0.25mm dashed #9ca3af; background: #fff; color: #111; display: flex; align-items: stretch; overflow: hidden; break-inside: avoid; page-break-inside: avoid; font-family: 'Space Grotesk', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.price-tag { position: relative; box-sizing: border-box; width: 64.66mm; height: 21.55mm; aspect-ratio: 3 / 1; border: 0.25mm dashed #9ca3af; background: #fff; color: #111; display: flex; align-items: stretch; overflow: hidden; break-inside: avoid; page-break-inside: avoid; font-family: 'Inter', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .price-tag .pt-accent { width: 2mm; flex-shrink: 0; background: var(--tag-color, #FFD500); }
 .price-tag .pt-logo { width: 12mm; height: 12mm; flex-shrink: 0; align-self: center; margin: 0 1.8mm; object-fit: cover; border: 0.4mm solid var(--tag-color, #FFD500); border-radius: 1mm; background: #fff; }
 .price-tag .pt-body { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 0.8mm 2mm 0.8mm 0; }
@@ -718,6 +718,331 @@ select.cs-native, input.cd-native { pointer-events: none; cursor: pointer; }
 [data-theme="dark"] .fin-note-hint { color: #C4B5FD; }
 [data-theme="dark"] .fin-desc { color: var(--dk-text-muted); }
 [data-theme="dark"] .fin-recap-badge { background: var(--dk-surface); color: var(--dk-text); }
+    </style>
+    <!-- ============================================================
+         TEMA: CLEAN MINIMALIST / FLAT 2.0 (semi-flat)
+         Mengikuti prinsip Material Design 3 & Apple HIG:
+         sudut membulat, garis tipis, bayangan lembut, warna tonal,
+         tipografi Inter/SF/Roboto, target sentuh >= 44px.
+         Layer ini menimpa gaya brutalism lama tanpa mengubah logika aplikasi.
+         Semua warna diatur lewat token di bawah (mode terang & gelap).
+         ============================================================ -->
+    <style id="theme-clean">
+        :root {
+            --c-bg: #F4F6F8;            /* latar halaman */
+            --c-surface: #FFFFFF;       /* kartu, modal */
+            --c-surface-2: #F1F3F6;     /* isian, tombol sekunder */
+            --c-surface-3: #E7EAEF;     /* hover */
+            --c-line: #E3E7ED;          /* garis/border */
+            --c-line-strong: #CBD2DC;
+            --c-text: #111827;
+            --c-text-2: #4B5563;
+            --c-text-3: #6B7280;
+            --c-primary: #FFC83D;       /* kuning brand */
+            --c-primary-strong: #F5B400;
+            --c-on-primary: #1F1600;
+            --c-primary-soft: #FFF4D1;
+            --c-accent: #2563EB;        /* biru aksi */
+            --c-accent-soft: #E6EEFE;
+            --c-success: #16A34A;
+            --c-success-soft: #E3F6EA;
+            --c-danger: #E5484D;
+            --c-danger-soft: #FDECEC;
+            --c-focus: rgba(37, 99, 235, .28);
+            --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px;
+            --sh-1: 0 1px 2px rgba(16,24,40,.06);
+            --sh-2: 0 1px 2px rgba(16,24,40,.05), 0 4px 14px rgba(16,24,40,.07);
+            --sh-3: 0 10px 30px rgba(16,24,40,.16), 0 2px 6px rgba(16,24,40,.06);
+            color-scheme: light;
+        }
+        html[data-theme="dark"] {
+            --c-bg: #0E1116;
+            --c-surface: #161A21;
+            --c-surface-2: #1E232C;
+            --c-surface-3: #272D38;
+            --c-line: #2A303B;
+            --c-line-strong: #3A4250;
+            --c-text: #ECEEF2;
+            --c-text-2: #B8BEC9;
+            --c-text-3: #8C93A0;
+            --c-primary: #F2B833;
+            --c-primary-strong: #FFCB52;
+            --c-on-primary: #1F1600;
+            --c-primary-soft: #3A2E0E;
+            --c-accent: #5B8DEF;
+            --c-accent-soft: #1C2A47;
+            --c-success: #34C266;
+            --c-success-soft: #143222;
+            --c-danger: #F06A6E;
+            --c-danger-soft: #3A1A1D;
+            --c-focus: rgba(91, 141, 239, .35);
+            --sh-1: 0 1px 2px rgba(0,0,0,.4);
+            --sh-2: 0 1px 2px rgba(0,0,0,.35), 0 6px 16px rgba(0,0,0,.28);
+            --sh-3: 0 14px 36px rgba(0,0,0,.55);
+            color-scheme: dark;
+            /* token dark mode lama dialihkan ke palet baru */
+            --dk-bg: #0E1116; --dk-surface: #161A21; --dk-surface-2: #1E232C;
+            --dk-border: #2A303B; --dk-text: #ECEEF2; --dk-text-muted: #8C93A0;
+            --dk-main: #F2B833; --dk-danger: #F06A6E;
+        }
+
+        html, body { background: var(--c-bg); }
+        #gasapp-root {
+            background: var(--c-bg) !important; color: var(--c-text) !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', Roboto, 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+            letter-spacing: -0.006em;
+        }
+        #gasapp-root h1, #gasapp-root h2, #gasapp-root h3 { letter-spacing: -0.02em; }
+
+        /* ---------- Garis: tebal hitam -> tipis halus ---------- */
+        #gasapp-root .border-2, #gasapp-root .border-4, #gasapp-root .border,
+        #gasapp-root .border-\[3px\] { border-width: 1px !important; }
+        #gasapp-root .border-b-2, #gasapp-root .border-b-4 { border-bottom-width: 1px !important; }
+        #gasapp-root .border-t-2, #gasapp-root .border-t-4 { border-top-width: 1px !important; }
+        #gasapp-root .border-r-2, #gasapp-root .border-r-4 { border-right-width: 1px !important; }
+        #gasapp-root .border-l-2 { border-left-width: 1px !important; }
+        #gasapp-root .border-l-8 { border-left-width: 4px !important; }
+        #gasapp-root .border-black, #gasapp-root .border-dark, #gasapp-root .border-b-black, #gasapp-root .border-t-black,
+        #gasapp-root .border-l-dark { border-color: var(--c-line) !important; }
+        #gasapp-root .border-dashed.border-black { border-color: var(--c-line-strong) !important; }
+
+        /* ---------- Kartu & panel ---------- */
+        #gasapp-root .brutal-box {
+            background-color: var(--c-surface);
+            border: 1px solid var(--c-line) !important;
+            border-radius: var(--r-lg) !important;
+            box-shadow: var(--sh-2) !important;
+            transition: box-shadow .2s ease, transform .15s ease, background-color .2s ease;
+        }
+        /* Bagian atas/bawah kartu (judul, baris tombol) ikut melengkung */
+        #gasapp-root .brutal-box > :first-child { border-top-left-radius: inherit; border-top-right-radius: inherit; }
+        #gasapp-root .brutal-box > :last-child { border-bottom-left-radius: inherit; border-bottom-right-radius: inherit; }
+
+        /* Modal / dialog: sudut lebih besar, bayangan dalam, judul bersih */
+        #gasapp-root .modal-backdrop { background: rgba(15, 23, 42, .42) !important; backdrop-filter: blur(6px) saturate(120%); -webkit-backdrop-filter: blur(6px) saturate(120%); }
+        html[data-theme="dark"] #gasapp-root .modal-backdrop { background: rgba(0, 0, 0, .6) !important; }
+        #gasapp-root .modal-backdrop > .brutal-box { border-radius: var(--r-xl) !important; box-shadow: var(--sh-3) !important; border-color: transparent !important; }
+        #gasapp-root .modal-backdrop > .brutal-box > .bg-main:first-child,
+        #gasapp-root .modal-backdrop > .brutal-box > .bg-accent:first-child,
+        #gasapp-root .modal-backdrop > .brutal-box > .bg-danger:first-child {
+            background: transparent !important; color: var(--c-text) !important;
+            font-size: 1rem; padding-top: 1.1rem !important; padding-bottom: .6rem !important;
+            border-bottom: 1px solid var(--c-line) !important;
+        }
+        html[data-theme="dark"] #gasapp-root .modal-backdrop > .brutal-box > .bg-main:first-child,
+        html[data-theme="dark"] #gasapp-root .modal-backdrop > .brutal-box > .bg-main:first-child * { color: var(--c-text) !important; }
+        /* Baris tombol di bagian bawah dialog: gaya "dialog actions" */
+        #gasapp-root .brutal-box > .border-t-4:last-child,
+        #gasapp-root .brutal-box > .border-t-2:last-child { padding: 10px 12px !important; gap: 8px; }
+        #gasapp-root .brutal-box > .border-t-4:last-child > .brutal-btn,
+        #gasapp-root .brutal-box > .border-t-2:last-child > .brutal-btn { border-radius: var(--r-md) !important; border: none !important; }
+        #gasapp-root .brutal-box > .border-t-4:last-child > .brutal-btn.bg-white,
+        #gasapp-root .brutal-box > .border-t-2:last-child > .brutal-btn.bg-white { background: var(--c-surface-2) !important; }
+
+        /* ---------- Tombol ---------- */
+        #gasapp-root .brutal-btn {
+            border: 1px solid var(--c-line) !important;
+            border-radius: var(--r-md) !important;
+            box-shadow: var(--sh-1) !important;
+            text-transform: none !important;
+            font-weight: 600;
+            letter-spacing: -0.005em;
+            transition: background-color .15s ease, box-shadow .15s ease, transform .1s ease, filter .15s ease, color .15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #gasapp-root .brutal-btn:hover:not(:disabled) { filter: brightness(.97); }
+        #gasapp-root .brutal-btn:active:not(:disabled) { transform: scale(.97) !important; box-shadow: none !important; }
+        #gasapp-root .brutal-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--c-focus) !important; }
+        #gasapp-root .brutal-btn.shadow-none, #gasapp-root .brutal-btn.border-none { box-shadow: none !important; }
+        #gasapp-root .brutal-btn.border-none { border-color: transparent !important; }
+        #gasapp-root .brutal-btn.bg-white { background-color: var(--c-surface) !important; color: var(--c-text); }
+        #gasapp-root .brutal-btn.bg-main, #gasapp-root .brutal-btn.bg-accent, #gasapp-root .brutal-btn.bg-danger,
+        #gasapp-root .brutal-btn.bg-success, #gasapp-root .brutal-btn.bg-black, #gasapp-root .brutal-btn.bg-dark { border-color: transparent !important; }
+
+        /* ---------- Warna isian utama ---------- */
+        #gasapp-root .bg-main { background-color: var(--c-primary) !important; color: var(--c-on-primary) !important; }
+        #gasapp-root .hover\:bg-yellow-400:hover, #gasapp-root .hover\:bg-yellow-300:hover { background-color: var(--c-primary-strong) !important; }
+        #gasapp-root .bg-accent { background-color: var(--c-accent) !important; color: #fff !important; }
+        #gasapp-root .bg-danger { background-color: var(--c-danger) !important; color: #fff !important; }
+        #gasapp-root .bg-success { background-color: var(--c-success) !important; color: #fff !important; }
+        #gasapp-root .bg-black, #gasapp-root .bg-dark { background-color: #1F2937 !important; color: #fff !important; }
+        html[data-theme="dark"] #gasapp-root .bg-black:not(.cook-icon-circle), html[data-theme="dark"] #gasapp-root .bg-dark { background-color: var(--c-surface-3) !important; color: var(--c-text) !important; }
+        #gasapp-root .text-danger { color: var(--c-danger) !important; }
+        #gasapp-root .text-success { color: var(--c-success) !important; }
+        #gasapp-root .text-accent { color: var(--c-accent) !important; }
+        #gasapp-root .bg-main .text-danger, #gasapp-root .bg-danger .text-white { color: inherit; }
+        #gasapp-root .border-main, #gasapp-root .border-l-main { border-color: var(--c-primary) !important; }
+        #gasapp-root .border-danger, #gasapp-root .border-l-danger { border-color: var(--c-danger) !important; }
+        #gasapp-root .border-success, #gasapp-root .border-l-success { border-color: var(--c-success) !important; }
+        #gasapp-root .border-accent, #gasapp-root .border-l-accent { border-color: var(--c-accent) !important; }
+
+        /* Pilihan (radio/checkbox bergaya tombol) saat dicentang -> warna tonal + garis berwarna */
+        #gasapp-root .has-\[\:checked\]\:bg-main:has(:checked) { background-color: var(--c-primary-soft) !important; color: var(--c-text) !important; border-color: var(--c-primary-strong) !important; box-shadow: inset 0 0 0 1px var(--c-primary-strong) !important; }
+        #gasapp-root .has-\[\:checked\]\:bg-danger:has(:checked) { background-color: var(--c-danger-soft) !important; color: var(--c-danger) !important; border-color: var(--c-danger) !important; box-shadow: inset 0 0 0 1px var(--c-danger) !important; }
+        #gasapp-root .has-\[\:checked\]\:bg-success:has(:checked) { background-color: var(--c-success-soft) !important; color: var(--c-success) !important; border-color: var(--c-success) !important; box-shadow: inset 0 0 0 1px var(--c-success) !important; }
+        #gasapp-root .has-\[\:checked\]\:bg-accent:has(:checked) { background-color: var(--c-accent-soft) !important; color: var(--c-accent) !important; border-color: var(--c-accent) !important; box-shadow: inset 0 0 0 1px var(--c-accent) !important; }
+        #gasapp-root .has-\[\:checked\]\:bg-violet-300:has(:checked) { background-color: #EFE9FE !important; color: #6D28D9 !important; border-color: #8B5CF6 !important; box-shadow: inset 0 0 0 1px #8B5CF6 !important; }
+        html[data-theme="dark"] #gasapp-root .has-\[\:checked\]\:bg-violet-300:has(:checked) { background-color: #2B2148 !important; color: #C4B5FD !important; }
+
+        /* Permukaan putih & abu-abu */
+        #gasapp-root .bg-white { background-color: var(--c-surface) !important; }
+        #gasapp-root .bg-white\/90 { background-color: color-mix(in srgb, var(--c-surface) 86%, transparent) !important; }
+        #gasapp-root .bg-gray-50, #gasapp-root .bg-gray-100 { background-color: var(--c-surface-2) !important; }
+        #gasapp-root .bg-gray-200, #gasapp-root .bg-gray-300 { background-color: var(--c-surface-3) !important; }
+        #gasapp-root .hover\:bg-gray-200:hover, #gasapp-root .hover\:bg-gray-100:hover, #gasapp-root .hover\:bg-yellow-100:hover { background-color: var(--c-surface-3) !important; }
+        #gasapp-root .bg-bg { background-color: var(--c-bg) !important; }
+        #gasapp-root .text-gray-400, #gasapp-root .text-gray-500 { color: var(--c-text-3) !important; }
+        #gasapp-root .text-gray-600, #gasapp-root .text-gray-700, #gasapp-root .text-gray-800 { color: var(--c-text-2) !important; }
+
+        /* Kotak pastel (highlight di Pengaturan, dll) -> tonal lembut */
+        #gasapp-root .bg-yellow-50, #gasapp-root .bg-yellow-100, #gasapp-root .bg-yellow-200 { background-color: var(--c-primary-soft) !important; }
+        #gasapp-root .bg-blue-50, #gasapp-root .bg-cyan-50, #gasapp-root .bg-sky-50 { background-color: var(--c-accent-soft) !important; }
+        #gasapp-root .bg-green-50, #gasapp-root .bg-green-100 { background-color: var(--c-success-soft) !important; }
+        #gasapp-root .bg-red-50, #gasapp-root .bg-red-100 { background-color: var(--c-danger-soft) !important; }
+
+        /* ---------- Isian form ---------- */
+        #gasapp-root .brutal-input {
+            border: 1px solid var(--c-line-strong) !important;
+            border-radius: var(--r-md) !important;
+            box-shadow: none !important;
+            background-color: var(--c-surface) !important;
+            color: var(--c-text) !important;
+            padding: .6rem .8rem;
+            min-height: 44px;
+            transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+        }
+        #gasapp-root .brutal-input:hover { border-color: var(--c-text-3) !important; }
+        #gasapp-root .brutal-input:focus { background-color: var(--c-surface) !important; border-color: var(--c-accent) !important; box-shadow: 0 0 0 3px var(--c-focus) !important; }
+        #gasapp-root select.brutal-input, #gasapp-root input.cd-native.brutal-input {
+            appearance: none; -webkit-appearance: none; padding-right: 2.2rem;
+            background-repeat: no-repeat !important; background-position: right .8rem center !important;
+        }
+        #gasapp-root select.brutal-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important; }
+        #gasapp-root input.cd-native.brutal-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E") !important; }
+        #gasapp-root input.cd-native::-webkit-calendar-picker-indicator { opacity: 0; }
+        #gasapp-root ::placeholder { color: var(--c-text-3); opacity: .8; }
+        #gasapp-root input[type="checkbox"], #gasapp-root input[type="radio"] { accent-color: var(--c-accent); }
+        #gasapp-root .accent-black { accent-color: var(--c-accent) !important; }
+
+        /* ---------- Huruf kapital: judul & tombol jadi "sentence case" (Material/HIG);
+                      label kecil tetap kapital bergaya overline ---------- */
+        #gasapp-root .uppercase { text-transform: none !important; }
+        #gasapp-root .text-\[9px\].uppercase, #gasapp-root .text-\[10px\].uppercase, #gasapp-root .text-\[11px\].uppercase,
+        #gasapp-root .text-xs.uppercase { text-transform: uppercase !important; letter-spacing: .06em; font-weight: 600; }
+
+        /* ---------- Header & tab menu admin ---------- */
+        #gasapp-root header.sticky {
+            background: color-mix(in srgb, var(--c-surface) 82%, transparent) !important;
+            backdrop-filter: saturate(180%) blur(16px); -webkit-backdrop-filter: saturate(180%) blur(16px);
+            border-bottom: 1px solid var(--c-line) !important; box-shadow: none !important;
+        }
+        #gasapp-root #adminTabBar { border-bottom: 1px solid var(--c-line) !important; background: var(--c-bg) !important; }
+        #gasapp-root #adminTabBar .brutal-btn { border-radius: 999px !important; box-shadow: none !important; border-color: var(--c-line) !important; }
+        #gasapp-root #adminTabBar .brutal-btn.bg-main, #gasapp-root #adminTabBar .brutal-btn.bg-black, #gasapp-root #adminTabBar .brutal-btn.bg-dark {
+            background-color: var(--c-text) !important; color: var(--c-surface) !important; border-color: transparent !important;
+        }
+        html[data-theme="dark"] #gasapp-root #adminTabBar .brutal-btn.bg-main, html[data-theme="dark"] #gasapp-root #adminTabBar .brutal-btn.bg-main * { color: var(--c-surface) !important; }
+        /* Chip filter kategori */
+        #gasapp-root #publicCategoryFilter button, #gasapp-root #custCategoryFilter button, #gasapp-root #adminPosCategoryFilter button {
+            border-radius: 999px !important; box-shadow: none !important;
+        }
+
+        /* ---------- Kartu produk ---------- */
+        #gasapp-root .product-card { overflow: hidden; }
+        #gasapp-root .product-card:hover { box-shadow: var(--sh-3) !important; }
+        #gasapp-root .product-card:active { transform: scale(.98); }
+        #gasapp-root .product-card-img { border-bottom: none !important; background: var(--c-surface-2); }
+        #gasapp-root .product-card-price {
+            border: none !important; border-radius: 999px !important; padding: 2px 9px !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,.18) !important; font-weight: 700; font-variant-numeric: tabular-nums;
+        }
+
+        /* ---------- Badge/label kecil & chip ---------- */
+        #gasapp-root span.border-2, #gasapp-root span.border { border-radius: 999px !important; }
+        #gasapp-root .rounded-full { border-radius: 999px !important; }
+        #gasapp-root [class*="shadow-[1px_1px_0px_0px"] { box-shadow: var(--sh-1) !important; }
+        #gasapp-root .shadow-brutal { box-shadow: var(--sh-2) !important; }
+        #gasapp-root .shadow-brutal-sm { box-shadow: var(--sh-1) !important; }
+
+        /* ---------- Tabel ---------- */
+        #gasapp-root thead tr, #gasapp-root thead th { background: var(--c-surface-2) !important; color: var(--c-text-2) !important; }
+        #gasapp-root tbody tr:hover { background: color-mix(in srgb, var(--c-surface-2) 60%, transparent); }
+
+        /* ---------- Loader & scrollbar ---------- */
+        #globalLoader { background: color-mix(in srgb, var(--c-bg) 88%, transparent) !important; backdrop-filter: blur(4px); color: var(--c-text); }
+        .spinner { border: 4px solid var(--c-line) !important; border-top-color: var(--c-accent) !important; width: 42px !important; height: 42px !important; }
+        #gasapp-root ::-webkit-scrollbar { width: 10px; height: 10px; }
+        #gasapp-root ::-webkit-scrollbar-thumb { background: var(--c-line-strong); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; }
+        #gasapp-root ::-webkit-scrollbar-track { background: transparent; }
+
+        /* ---------- Popup pilihan & kalender aplikasi ---------- */
+        #gasapp-root .cs-opt { border-radius: var(--r-md) !important; }
+        #gasapp-root .cs-opt.is-active { background-color: var(--c-primary-soft) !important; border-color: var(--c-primary-strong) !important; }
+        #gasapp-root .cd-day { border-radius: 999px; border-width: 1px !important; color: var(--c-text); }
+        #gasapp-root .cd-day:hover { border-color: var(--c-line-strong) !important; background: var(--c-surface-2); }
+        #gasapp-root .cd-day.is-today { border-color: var(--c-accent) !important; border-style: solid !important; color: var(--c-accent); }
+        #gasapp-root .cd-day.is-sel { background: var(--c-accent) !important; color: #fff !important; border-color: var(--c-accent) !important; }
+        #gasapp-root .cd-day.is-sun:not(.is-sel) { color: var(--c-danger); }
+        #gasapp-root #variantPopover { border-radius: var(--r-lg) !important; box-shadow: var(--sh-3) !important; border-color: var(--c-line) !important; }
+
+        /* ---------- Catatan Keuangan ---------- */
+        #gasapp-root .fin-row { border: 1px solid var(--c-line) !important; border-left-width: 4px !important; border-radius: var(--r-lg) !important; box-shadow: var(--sh-1) !important; background: var(--c-surface) !important; }
+        #gasapp-root .fin-row.is-note { border-style: dashed !important; border-left-style: solid !important; }
+        #gasapp-root .fin-pemasukan { border-left-color: var(--c-success) !important; }
+        #gasapp-root .fin-pengeluaran { border-left-color: var(--c-danger) !important; }
+        #gasapp-root .fin-badge, #gasapp-root .fin-recap-badge { border: none !important; border-radius: 999px !important; }
+        #gasapp-root .fin-recap-badge { background: var(--c-surface-2) !important; color: var(--c-text-2) !important; }
+        #gasapp-root .fin-pemasukan .fin-badge { background: var(--c-success-soft) !important; color: var(--c-success) !important; }
+        #gasapp-root .fin-pengeluaran .fin-badge { background: var(--c-danger-soft) !important; color: var(--c-danger) !important; }
+        #gasapp-root .fin-pemasukan .fin-amt { color: var(--c-success) !important; }
+        #gasapp-root .fin-pengeluaran .fin-amt { color: var(--c-danger) !important; }
+
+        /* ---------- Dark mode: teks mengikuti token baru ---------- */
+        html[data-theme="dark"] #gasapp-root .text-black { color: var(--c-text) !important; }
+        html[data-theme="dark"] #gasapp-root .bg-main, html[data-theme="dark"] #gasapp-root .bg-main span,
+        html[data-theme="dark"] #gasapp-root .bg-main div, html[data-theme="dark"] #gasapp-root .bg-main p { color: var(--c-on-primary) !important; }
+        html[data-theme="dark"] #gasapp-root .bg-accent, html[data-theme="dark"] #gasapp-root .bg-accent span,
+        html[data-theme="dark"] #gasapp-root .bg-danger, html[data-theme="dark"] #gasapp-root .bg-danger span,
+        html[data-theme="dark"] #gasapp-root .bg-success, html[data-theme="dark"] #gasapp-root .bg-success span { color: #fff !important; }
+        html[data-theme="dark"] #gasapp-root .brutal-box .brutal-btn.bg-white { background-color: var(--c-surface-2) !important; }
+        html[data-theme="dark"] #gasapp-root .poster-slide-float { background: linear-gradient(to top, var(--c-bg) 55%, transparent) !important; }
+        #gasapp-root #adminSettingsBox form > button[type="submit"],
+        #gasapp-root #cashierSelfSettingsWrap form button[type="submit"] { box-shadow: var(--sh-3) !important; }
+
+        /* ---------- Struk & tag harga tetap seperti kertas (tidak mengikuti tema) ---------- */
+        #gasapp-root .receipt-88mm, #gasapp-root .receipt-88mm * { border-radius: 0 !important; box-shadow: none !important; }
+        html[data-theme="dark"] #gasapp-root .receipt-88mm, html[data-theme="dark"] #gasapp-root .receipt-88mm * { background: #fff !important; color: #000 !important; }
+
+        @media print {
+            #gasapp-root .brutal-box { border-radius: 0 !important; box-shadow: none !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #gasapp-root * { transition: none !important; }
+        }
+        /* Chip kategori aktif: warna terbalik (teks gelap di terang, terang di gelap) */
+        #gasapp-root .brutal-btn.is-chip-active { background-color: var(--c-text) !important; color: var(--c-bg) !important; border-color: transparent !important; }
+        /* Judul bagian dengan garis aksen kiri */
+        #gasapp-root h2.border-l-8 { border-left-width: 4px !important; border-radius: 2px; }
+        /* Logo toko di header */
+        #gasapp-root header img, #gasapp-root header .brutal-box { border-radius: var(--r-md) !important; }
+        /* Chip kategori aktif (menang atas aturan bg-black) */
+        #gasapp-root .brutal-btn.bg-black.is-chip-active, html[data-theme="dark"] #gasapp-root .brutal-btn.bg-black.is-chip-active { background-color: var(--c-text) !important; color: var(--c-bg) !important; }
+        /* Tombol: teks apa adanya (sentence case), termasuk tombol kecil */
+        #gasapp-root .brutal-btn.uppercase, #gasapp-root .brutal-btn .uppercase { text-transform: none !important; letter-spacing: -0.005em !important; }
+        /* Teks di atas kuning (header keranjang, badge) selalu gelap agar terbaca */
+        html[data-theme="dark"] #gasapp-root .bg-main h1, html[data-theme="dark"] #gasapp-root .bg-main h2, html[data-theme="dark"] #gasapp-root .bg-main h3,
+        html[data-theme="dark"] #gasapp-root .bg-main h4, html[data-theme="dark"] #gasapp-root .bg-main label { color: var(--c-on-primary) !important; }
+        #gasapp-root h1.bg-main, #gasapp-root h2.bg-main, #gasapp-root h3.bg-main, #gasapp-root span.bg-main, #gasapp-root div.bg-main.inline-block { border-radius: var(--r-sm) !important; }
+        /* Kotak berbingkai (panel di Pengaturan, ringkasan, dsb) ikut membulat */
+        #gasapp-root div.border-2:not(.receipt-88mm *):not(.price-tag *), #gasapp-root div.border-4:not(.receipt-88mm *),
+        #gasapp-root label.border-2, #gasapp-root div.border:not(.receipt-88mm *) { border-radius: var(--r-md); }
+        #gasapp-root .set-card { background: var(--c-surface) !important; border: 1px solid var(--c-line) !important; border-radius: var(--r-lg) !important; box-shadow: var(--sh-1); }
+        #gasapp-root .set-title { text-transform: none !important; font-size: .95rem; letter-spacing: -0.01em; border-bottom: 1px solid var(--c-line) !important; }
+        #gasapp-root .set-hint { color: var(--c-text-3) !important; font-style: normal; }
+        /* Baris item keranjang */
+        #gasapp-root .cart-item-row { background: var(--c-surface-2) !important; border: 1px solid var(--c-line) !important; border-left: 3px solid var(--c-primary) !important; border-radius: var(--r-md) !important; }
+        #gasapp-root .cart-item-row .brutal-btn { border-radius: var(--r-sm) !important; box-shadow: none !important; }
     </style>
 </head>
 <body>
@@ -3361,7 +3686,7 @@ measurementId: "G-ZVZ3QHEPKC"
     function buildCategoryFilter(containerId, activeStateKey, onSelectCallback) {
         const container = document.getElementById(containerId);
         container.innerHTML = STATE.data.categories.map(c => {
-            const activeClass = STATE[activeStateKey] === c ? 'bg-black text-white shadow-none translate-x-[2px] translate-y-[2px]' : 'bg-white text-black';
+            const activeClass = STATE[activeStateKey] === c ? 'bg-black text-white shadow-none is-chip-active' : 'bg-white text-black';
             return `<button onclick="window.${onSelectCallback}('${c}')" class="brutal-btn ${activeClass} px-3 py-1 md:px-4 md:py-2 whitespace-nowrap text-xs md:text-sm">${escapeHTML(c)}</button>`;
         }).join('');
     }
@@ -7752,7 +8077,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const store = escapeHTML(STATE.data.settings.storeName || 'Warung Indonesia');
         const title = finReportTitle();
         const tot = finTotals(items);
-        const font = "'Space Grotesk', Arial, sans-serif";
+        const font = "'Inter', Arial, sans-serif";
 
         const cell = 'padding:7px 8px;border-bottom:1px solid #cbd5e1;vertical-align:top;font-size:12px;line-height:1.35;word-break:break-word;overflow-wrap:anywhere;';
         const thCell = 'padding:8px;font-size:11px;font-weight:700;text-align:left;border-top:2px solid #000;border-bottom:2px solid #000;background:#e5e7eb;';
@@ -7799,7 +8124,7 @@ measurementId: "G-ZVZ3QHEPKC"
         showLoad();
         try {
             if (document.fonts && document.fonts.load) {
-                try { await Promise.all([document.fonts.load('400 12px "Space Grotesk"'), document.fonts.load('700 12px "Space Grotesk"')]); } catch (e) {}
+                try { await Promise.all([document.fonts.load('400 12px "Inter"'), document.fonts.load('700 12px "Inter"')]); } catch (e) {}
             }
 
             const pages = [];
