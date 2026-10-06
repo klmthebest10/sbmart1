@@ -8,7 +8,7 @@
      supaya aplikasi tetap bisa dibuka lengkap tanpa internet; diperbarui di belakang saat online.
    - Data Firestore TIDAK lewat cache ini (sudah disimpan sendiri oleh Firestore di perangkat).
 */
-const VERSION = 'v17';   // samakan dengan APP_VERSION di index.html
+const VERSION = 'v18';   // samakan dengan APP_VERSION di index.html
 const CACHE = 'sbmart-' + VERSION;
 const CDN_CACHE = 'sbmart-cdn-v1';   // terpisah, tidak perlu diunduh ulang tiap ganti versi aplikasi
 const CORE = [
