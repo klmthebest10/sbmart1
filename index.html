@@ -196,7 +196,7 @@
             #pageAdminMgmt #adminSettingsBox { width: 100%; max-width: none !important; }
             #pageAdminMgmt #adminSettingsBox form { max-width: none !important; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
             #pageAdminMgmt #adminSettingsBox form > .set-card { margin: 0; height: 100%; }
-            #pageAdminMgmt #adminSettingsBox form > .set-card:nth-child(3),
+            #pageAdminMgmt #adminSettingsBox form > .set-card.set-wide,
             #pageAdminMgmt #adminSettingsBox form > button[type="submit"] { grid-column: 1 / -1; }
             #pageAdminMgmt #admin_finance .grid { width: 100%; }
             #pageAdminMgmt .ui-card:has(> table) { width: 100%; }
@@ -216,16 +216,14 @@
 
         /* Baris KASIR & kategori di POS, serta header katalog umum, menempel saat di-scroll */
         #posProductsCol > div:nth-child(2), #posProductsCol > div:nth-child(3),
-        #pagePublic > div:first-of-type + div, #pagePublic #publicSearchWrap { position: sticky; z-index: 20; background-color: var(--c-bg); }
+        #pagePublic #publicSearchWrap { position: sticky; z-index: 20; background-color: var(--c-bg); }
         #posProductsCol > div:nth-child(2) { top: 59px; padding-top: 0.5rem; padding-bottom: 0.5rem; }
         #posProductsCol > div:nth-child(3) { top: 118px; padding-bottom: 0.5rem; }
-        #pagePublic > div:first-of-type + div { top: 59px; padding-top: 0.5rem; padding-bottom: 0.5rem; }
-        #pagePublic #publicSearchWrap { top: 112px; padding-bottom: 0.5rem; }
+        #pagePublic #publicSearchWrap { top: 59px; padding-top: 0.25rem; padding-bottom: 0.5rem; }
         @media (min-width: 768px) {
             #posProductsCol > div:nth-child(2) { top: 70px; }
             #posProductsCol > div:nth-child(3) { top: 130px; }
-            #pagePublic > div:first-of-type + div { top: 70px; }
-            #pagePublic #publicSearchWrap { top: 126px; }
+            #pagePublic #publicSearchWrap { top: 70px; }
         }
 
         .pulse-call { animation: pulseWarning 1s infinite alternate; }
@@ -758,7 +756,7 @@
 
         /* ===== Sakelar "Harga sama" (multi level harga) ===== */
         #gasapp-root .var-same-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 4px; border-radius: 999px; background: var(--c-surface); border: 1px solid var(--c-line); }
-        #gasapp-root #prodVariantList.var-same-on .prod-var-price, #gasapp-root #prodVariantList.var-same-on .prod-var-cost { display: none; }
+        #gasapp-root #prodVariantList.var-same-on .pv-f-price, #gasapp-root #prodVariantList.var-same-on .pv-f-cost { display: none; }
 
         /* ===== Pengaturan printer ===== */
         #gasapp-root .prn-opt { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--c-line-strong); background: var(--c-surface); color: var(--c-text); font-size: .9rem; }
@@ -810,6 +808,89 @@
         html[data-theme="dark"] #gasapp-root :is(.bg-purple-50, .bg-purple-100, .bg-violet-50, .bg-violet-100) { background-color: #241C3A !important; }
         html[data-theme="dark"] #gasapp-root :is(.bg-orange-50, .bg-orange-100, .bg-amber-50, .bg-amber-100) { background-color: var(--c-primary-soft) !important; }
         html[data-theme="dark"] #gasapp-root .bg-amber-200 { background-color: #5C4300 !important; color: #FFE7A3 !important; }
+        /* ===== Slide teks halaman umum ===== */
+        .slide-banner { position: relative; width: 100%; height: var(--sb-h, 76px); overflow: hidden; border-radius: var(--r-lg); background: var(--sb-bg-l); box-shadow: var(--sh-1); isolation: isolate; }
+        html[data-theme="dark"] .slide-banner:not(.sb-force-light), .slide-banner.sb-force-dark { background: var(--sb-bg-d); }
+        .sb-slide { position: absolute; inset: 0; display: flex; align-items: center; gap: .55em; padding: 6px 18px; line-height: 1.15; white-space: pre-line; overflow: hidden;
+            color: var(--sb-c-l); opacity: 0; pointer-events: none;
+            transition: opacity var(--sb-speed) ease, transform var(--sb-speed) cubic-bezier(.22,.61,.36,1), filter var(--sb-speed) ease;
+            will-change: opacity, transform; }
+        html[data-theme="dark"] .slide-banner:not(.sb-force-light) .sb-slide, .slide-banner.sb-force-dark .sb-slide { color: var(--sb-c-d); }
+        .sb-slide.is-active { opacity: 1; transform: none; filter: none; pointer-events: auto; }
+        .sb-t-slide .sb-slide { transform: translateX(60%); } .sb-t-slide .sb-slide.is-leaving { transform: translateX(-60%); }
+        .sb-t-up .sb-slide { transform: translateY(100%); } .sb-t-up .sb-slide.is-leaving { transform: translateY(-100%); }
+        .sb-t-zoom .sb-slide { transform: scale(.82); } .sb-t-zoom .sb-slide.is-leaving { transform: scale(1.15); }
+        .sb-t-blur .sb-slide { filter: blur(10px); } .sb-t-blur .sb-slide.is-leaving { filter: blur(10px); }
+        .sb-t-slide .sb-slide.is-active, .sb-t-up .sb-slide.is-active, .sb-t-zoom .sb-slide.is-active { transform: none; }
+        .sb-t-blur .sb-slide.is-active { filter: none; }
+        /* Host slide: logo melayang boleh keluar dari layout & tidak bergantung tinggi layout */
+        .sb-host { position: relative; z-index: 4; overflow: visible; }
+        .sb-stage { position: relative; }
+        .sb-flogo { position: absolute; top: 50%; height: var(--sb-lg-h, 56px); width: auto; max-width: none; object-fit: contain; z-index: 2; pointer-events: none;
+            opacity: 0; transition: opacity var(--sb-speed, 600ms) ease; filter: drop-shadow(0 2px 6px rgba(0,0,0,.18)); }
+        .sb-flogo.is-visible { opacity: 1; }
+        .sb-flogo-left { left: var(--sb-lg-x, 12px); transform: translateY(calc(-50% + var(--sb-lg-y, 0px))); }
+        .sb-flogo-right { right: var(--sb-lg-x, 12px); transform: translateY(calc(-50% + var(--sb-lg-y, 0px))); }
+        .sb-slide.sb-pad-left { padding-left: min(var(--sb-logo-pad, 0px), 60%); }
+        .sb-slide.sb-pad-right { padding-right: min(var(--sb-logo-pad, 0px), 60%); }
+        .sb-text { min-width: 0; overflow-wrap: anywhere; }
+        /* Editor slide di Pengaturan */
+        #gasapp-root .sb-lbl { display: block; font-size: 11px; font-weight: 700; margin-bottom: 3px; color: var(--c-text-2); }
+        #gasapp-root .sb-item { border: 1px solid var(--c-line); border-radius: var(--r-md); padding: 10px; background: var(--c-surface); }
+        #gasapp-root .sb-tog { min-width: 36px; height: 34px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--c-line-strong); background: var(--c-surface); color: var(--c-text); font-size: 13px; }
+        #gasapp-root .sb-tog.is-on { background: var(--c-accent-soft); border-color: var(--c-accent); color: var(--c-accent); font-weight: 700; }
+        #gasapp-root .sb-mini { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--c-line); background: var(--c-surface); color: var(--c-text-2); font-size: 11px; }
+        #gasapp-root .sb-mini:disabled { opacity: .35; }
+        #gasapp-root .sb-mini.is-danger { color: var(--c-danger); }
+        #gasapp-root .sb-swatch { display: inline-flex; align-items: center; gap: 4px; height: 34px; padding: 0 4px 0 8px; border-radius: 10px; border: 1px solid var(--c-line-strong); font-size: 13px; cursor: pointer; }
+        #gasapp-root .sb-swatch input[type=color], #gasapp-root .sb-color { width: 34px; height: 26px; border: none; background: none; padding: 0; cursor: pointer; }
+        #gasapp-root .sb-color { width: 100%; height: 40px; border: 1px solid var(--c-line-strong); border-radius: 10px; padding: 3px; }
+        #gasapp-root .sb-seg { display: inline-flex; border: 1px solid var(--c-line-strong); border-radius: 10px; overflow: hidden; }
+        #gasapp-root .sb-seg button { padding: 4px 10px; font-size: 11px; font-weight: 600; background: var(--c-surface); color: var(--c-text-2); }
+        #gasapp-root .sb-seg button.is-on { background: var(--c-text); color: var(--c-bg); }
+        #gasapp-root .sb-range { accent-color: var(--c-accent); }
+        /* Label varian di daftar kedaluwarsa */
+        #gasapp-root .exp-var-tag { display: inline-block; margin-left: 4px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--c-accent-soft); color: var(--c-accent); vertical-align: middle; }
+        /* Tombol geser poster: selalu kuning dengan teks gelap (terbaca di mode terang & gelap) */
+        #gasapp-root .poster-slide-track, html[data-theme="dark"] #gasapp-root .poster-slide-track { background: var(--c-primary) !important; border-color: transparent !important; box-shadow: 0 10px 28px rgba(0,0,0,.22) !important; }
+        #gasapp-root .poster-slide-label, html[data-theme="dark"] #gasapp-root .poster-slide-label { color: #1F1600 !important; padding: 0 16px 0 64px; text-align: center; line-height: 1.2; }
+        #gasapp-root .poster-slide-thumb { background: #1F2937 !important; color: #fff !important; border-radius: 9999px !important; }
+        #gasapp-root .poster-slide-track { border-radius: 9999px !important; }
+
+        /* ===== Form Edit Produk: bagian-bagian rapi ===== */
+        #gasapp-root #formProduct .pf-sec { border: 1px solid var(--c-line); border-radius: var(--r-lg); background: var(--c-surface); padding: 12px; margin-bottom: 12px; }
+        #gasapp-root #formProduct .pf-sec-title { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--c-text-2); margin-bottom: 10px; }
+        #gasapp-root #formProduct .pf-sec-no { width: 20px; height: 20px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: var(--c-primary); color: var(--c-on-primary); font-size: 11px; }
+        #gasapp-root #formProduct .pf-stock-total { min-height: 42px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; padding: 8px 12px; border-radius: var(--r-md); background: var(--c-surface-2); border: 1px dashed var(--c-line-strong); font-size: 18px; font-weight: 800; color: var(--c-text); }
+        #gasapp-root #formProduct .pf-stock-total span { font-size: 10px; font-weight: 600; color: var(--c-text-3); }
+        #gasapp-root #formProduct .pf-stock-total em { flex-basis: 100%; font-size: 10px; font-style: normal; font-weight: 600; color: var(--c-danger); line-height: 1.25; }
+        #gasapp-root #formProduct .pv-wrap { margin-top: 2px; }
+        #gasapp-root #formProduct .pv-same { padding: 8px; border-radius: var(--r-md); background: var(--c-surface-2); }
+        #gasapp-root #prodVariantList { counter-reset: pv; }
+        #gasapp-root .pv-card { counter-increment: pv; border: 1px solid var(--c-line); border-radius: var(--r-md); background: var(--c-surface-2); padding: 8px; display: flex; flex-direction: column; gap: 8px; transition: opacity .2s, border-color .2s; }
+        #gasapp-root .pv-card .ui-input { background: var(--c-surface) !important; }
+        #gasapp-root .pv-head { display: flex; align-items: center; gap: 6px; }
+        #gasapp-root .pv-no { flex-shrink: 0; min-width: 22px; height: 22px; padding: 0 4px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; background: var(--c-surface); border: 1px solid var(--c-line-strong); color: var(--c-text-2); }
+        #gasapp-root .pv-no::before { content: counter(pv); }
+        #gasapp-root .pv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 6px; }
+        #gasapp-root .pv-f label { display: block; font-size: 10px; font-weight: 700; color: var(--c-text-3); margin-bottom: 2px; white-space: nowrap; }
+        #gasapp-root .pv-f label i { font-style: normal; font-weight: 500; }
+        #gasapp-root .pv-f .pv-on { height: 40px; width: 100%; justify-content: center; border-radius: var(--r-md); }
+        #gasapp-root .pv-f-avail, #gasapp-root .pv-f-stock { display: none; }
+        #gasapp-root #prodVariantList.pv-sys-toggle .pv-f-avail, #gasapp-root #prodVariantList.pv-sys-stock .pv-f-stock { display: block; }
+        #gasapp-root #prodVariantList.pv-sys-toggle .pv-card.is-off { border-color: var(--c-danger); }
+        #gasapp-root #prodVariantList.pv-sys-toggle .pv-card.is-off .pv-head .prod-var-name, #gasapp-root #prodVariantList.pv-sys-toggle .pv-card.is-off .pv-f-price, #gasapp-root #prodVariantList.pv-sys-toggle .pv-card.is-off .pv-f-cost { opacity: .55; }
+        #gasapp-root #prodVariantList.pv-sys-toggle .pv-card.is-off .pv-on-lbl { color: var(--c-danger); }
+        /* Popup varian: sub produk OFF / habis tetap tampil tetapi tidak bisa dipilih */
+        #gasapp-root .variant-btn-off, .variant-btn-off { opacity: .55; cursor: not-allowed !important; box-shadow: none !important; transform: none !important; }
+        .variant-off-tag { font-size: 9px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; padding: 2px 6px; border-radius: 999px; background: var(--c-danger-soft); color: var(--c-danger); white-space: nowrap; }
+        .variant-stock-tag { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 999px; background: var(--c-surface-2); color: var(--c-text-2); border: 1px solid var(--c-line); white-space: nowrap; }
+        /* Logo slide di Pengaturan */
+        #gasapp-root .sb-logo-thumb { width: 84px; height: 84px; flex-shrink: 0; border-radius: var(--r-md); border: 1px solid var(--c-line-strong); display: flex; align-items: center; justify-content: center; padding: 6px; overflow: hidden;
+            background-color: var(--c-surface); background-image: linear-gradient(45deg, var(--c-surface-3) 25%, transparent 25%, transparent 75%, var(--c-surface-3) 75%), linear-gradient(45deg, var(--c-surface-3) 25%, transparent 25%, transparent 75%, var(--c-surface-3) 75%); background-size: 12px 12px; background-position: 0 0, 6px 6px; }
+        #gasapp-root .sb-logo-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        #gasapp-root .sb-logo-thumb span { font-size: 10px; color: var(--c-text-3); text-align: center; }
+        #gasapp-root #slidePreview { padding: 6px 0; }
     </style>
 </head>
 <body>
@@ -896,9 +977,7 @@
                         <button onclick="window.toggleTheme()" class="theme-toggle-btn ui-btn bg-white w-8 h-8 md:w-9 md:h-9 flex-shrink-0 flex items-center justify-center p-0" title="Ganti Mode Terang/Gelap" aria-label="Ganti Mode Terang/Gelap">🌙</button>
                     </div>
                 </div>
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl md:text-3xl font-bold uppercase border-l-4 border-main pl-3">Menu Tersedia</h2>
-                </div>
+                <div id="publicSlideWrap" class="mb-4"><div id="publicSlideBanner" class="d-none"></div></div>
 
                 <div class="flex items-center gap-2 mb-4 transition-all" id="publicSearchWrap">
                     <div class="flex-1 flex overflow-x-auto gap-3 py-2 no-scrollbar" id="publicCategoryFilter"></div>
@@ -1344,6 +1423,16 @@
                                 </div>
                             </div>
 
+                            <!-- Slide Teks Halaman Umum -->
+                            <div class="set-card set-wide">
+                                <h4 class="set-title">Slide Teks Halaman Umum</h4>
+                                <label class="flex items-center gap-2 font-bold cursor-pointer bg-yellow-50 p-3 border border-line w-full">
+                                    <input type="checkbox" id="setSlideEnabled" class="w-5 h-5 accent-black" onchange="window.onSlideEnabledChange()"> Aktifkan Slide Teks (pengganti judul "Menu Tersedia")
+                                </label>
+                                <p class="set-hint">Teks berganti otomatis di bagian atas katalog umum. Bisa banyak slide, masing-masing dengan huruf, ukuran, gaya &amp; warna sendiri (mode terang/gelap), plus logo toko.</p>
+                                <div id="slideEditorWrap" class="d-none mt-3"></div>
+                            </div>
+
                             <!-- 2. Informasi Produk -->
                             <div class="set-card">
                                 <h4 class="set-title">Informasi Produk</h4>
@@ -1354,7 +1443,7 @@
                             </div>
 
                             <!-- 3. Jadwal & Waktu Buka Warung -->
-                            <div class="set-card">
+                            <div class="set-card set-wide">
                                 <h4 class="set-title">Jadwal &amp; Waktu Buka Warung</h4>
 
                                 <p class="text-xs font-bold mb-2">Status Instan (berlaku hari ini)</p>
@@ -1812,6 +1901,8 @@
             <h2 class="text-2xl font-bold mb-4 uppercase border-b border-line pb-2" id="modalProductTitle">Tambah Produk</h2>
             <form id="formProduct" onsubmit="window.saveProduct(event)">
                 <input type="hidden" id="prodId">
+                <div class="pf-sec">
+                    <div class="pf-sec-title"><span class="pf-sec-no">1</span>Info Produk</div>
                 <div class="mb-3">
                     <label class="block font-bold mb-1">Nama Produk</label>
                     <input type="text" id="prodName" maxlength="150" autocapitalize="words" class="ui-input bg-white" required>
@@ -1820,6 +1911,57 @@
                     <label class="block font-bold mb-1">Kategori <span class="text-danger">*</span></label>
                     <select id="prodCat" class="ui-input bg-white" required></select>
                 </div>
+                <div>
+                    <label class="block font-bold mb-1">Gambar Produk <span class="font-normal text-[10px] text-gray-500">(otomatis dikompres)</span></label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="document.getElementById('prodImgFile').click()" class="ui-btn bg-white py-2 px-1 text-xs flex items-center justify-center gap-1.5">🖼️ Galeri / File</button>
+                        <button type="button" onclick="window.openProductCamera()" class="ui-btn bg-accent py-2 px-1 text-xs flex items-center justify-center gap-1.5">📷 Kamera</button>
+                    </div>
+                    <!-- Input tersembunyi: galeri/file perangkat & kamera bawaan HP (cadangan jika kamera langsung tidak tersedia) -->
+                    <input type="file" id="prodImgFile" class="hidden" accept="image/*" onchange="window.handleProdImgSelect(event)">
+                    <input type="file" id="prodImgCapture" class="hidden" accept="image/*" capture="environment" onchange="window.handleProdImgSelect(event)">
+                    <div id="prodImgPreview" class="text-xs text-gray-500 mt-2 break-all">Gambar belum dipilih.</div>
+                </div>
+                </div>
+                <div class="pf-sec">
+                    <div class="pf-sec-title"><span class="pf-sec-no">2</span>Ketersediaan</div>
+                <div class="mb-3">
+                    <label class="block font-bold mb-1">Sistem Ketersediaan Produk <span class="text-danger">*</span></label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="ui-btn bg-white text-center py-2 px-1 cursor-pointer has-[:checked]:bg-main text-[11px] sm:text-xs leading-tight">
+                            <input type="radio" name="prodSystem" value="toggle" class="hidden" onchange="window.onProdSystemChange()">ON/OFF Tersedia
+                        </label>
+                        <label class="ui-btn bg-white text-center py-2 px-1 cursor-pointer has-[:checked]:bg-main text-[11px] sm:text-xs leading-tight">
+                            <input type="radio" name="prodSystem" value="stock" class="hidden" onchange="window.onProdSystemChange()">Stok Produk
+                        </label>
+                    </div>
+                </div>
+                <div id="prodAvailWrapper">
+                    <label class="flex items-center gap-2 font-bold cursor-pointer">
+                        <input type="checkbox" id="prodAvail" class="w-5 h-5 accent-black" checked> <span id="prodAvailLabel">Tersedia (ON)</span>
+                    </label>
+                    <p id="prodAvailVarHint" class="text-[10px] text-gray-500 mt-1 d-none">Saklar utama produk. ON/OFF tiap sub produk diatur di bagian Harga → Multi Level Harga.</p>
+                </div>
+                <div id="prodStockWrapper" class="d-none">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div id="prodStockField">
+                            <label class="block font-bold mb-1 text-sm">Sisa Stok</label>
+                            <input type="number" id="prodStock" min="0" step="1" inputmode="numeric" class="ui-input bg-white">
+                        </div>
+                        <div id="prodStockTotalField" class="d-none">
+                            <label class="block font-bold mb-1 text-sm">Total Stok</label>
+                            <div id="prodStockTotal" class="pf-stock-total">0</div>
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1 text-sm"><span id="prodMinStockLabel">Batas Minimal / Warning Stok</span> <span class="text-danger">*</span></label>
+                            <input type="number" id="prodMinStock" min="0" step="1" inputmode="numeric" class="ui-input bg-white">
+                        </div>
+                    </div>
+                    <p id="prodStockHint" class="text-[10px] text-gray-500 mt-1">Peringatan "Stok Menipis" muncul jika sisa stok ≤ batas minimal.</p>
+                </div>
+                </div>
+                <div class="pf-sec">
+                    <div class="pf-sec-title"><span class="pf-sec-no">3</span>Harga</div>
                 <div id="prodPriceModeWrap" class="mb-3 d-none">
                     <label class="block font-bold mb-1">Sistem Harga <span class="text-danger">*</span></label>
                     <div class="grid grid-cols-2 gap-2">
@@ -1831,7 +1973,7 @@
                         </label>
                     </div>
                 </div>
-                <div id="prodPriceWrapper" class="mb-3 grid grid-cols-2 gap-2">
+                <div id="prodPriceWrapper" class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block font-bold mb-1">Harga Jual (Won)</label>
                         <input type="number" id="prodPrice" min="0" inputmode="numeric" class="ui-input bg-white">
@@ -1842,7 +1984,7 @@
                     </div>
                     <p id="prodMarginHint" class="col-span-2 text-[11px] text-gray-500 -mt-1"></p>
                 </div>
-                <div id="prodWholesaleWrapper" class="mb-3 d-none border border-line p-2 bg-blue-50">
+                <div id="prodWholesaleWrapper" class="mt-3 d-none border border-line p-2 bg-blue-50">
                     <div class="flex items-center justify-between gap-2 mb-1">
                         <label class="font-bold text-sm">Harga Grosir <span class="font-normal text-[10px] text-gray-500">(opsional, per item)</span></label>
                         <button type="button" onclick="window.addWholesaleRow()" class="ui-btn bg-white px-3 py-1 text-xs shrink-0">+ Tingkat</button>
@@ -1851,74 +1993,38 @@
                     <div id="prodWholesaleList" class="space-y-2"></div>
                     <p id="prodWholesaleHint" class="text-[10px] text-gray-500 mt-1 leading-tight">Contoh: ≥10 → ₩1.300, ≥40 → ₩1.200. Harga harus lebih murah dari harga jual dan makin murah untuk jumlah yang lebih banyak.</p>
                 </div>
-                <div id="prodVariantWrapper" class="mb-3 d-none border border-line p-2 bg-yellow-50">
-                    <div class="flex items-center justify-between gap-2 mb-1">
-                        <label class="font-bold text-sm">Multi Level Harga <span class="font-normal text-[10px] text-gray-500">(sub nama produk &amp; harganya)</span></label>
+                <div id="prodVariantWrapper" class="d-none pv-wrap">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="min-w-0">
+                            <div class="font-bold text-sm">Sub Produk</div>
+                            <div class="text-[10px] text-gray-500 leading-tight">Nama, ketersediaan, harga &amp; barcode tiap varian</div>
+                        </div>
                         <button type="button" id="prodVarSameBtn" onclick="window.toggleVarSamePrice()" class="var-same-toggle shrink-0" aria-pressed="false" title="Semua sub produk memakai harga yang sama (varian rasa/warna)">
                             <span class="ws-switch"></span><span class="text-[11px] font-bold">Harga sama</span>
                         </button>
                     </div>
-                    <div id="prodVarSameWrap" class="d-none grid grid-cols-2 gap-2 mb-2">
+                    <div id="prodVarSameWrap" class="d-none grid grid-cols-2 gap-2 mb-2 pv-same">
                         <div><label class="block text-[11px] font-bold mb-0.5">Harga semua varian</label><input type="number" id="prodVarSamePrice" min="0" inputmode="numeric" class="ui-input bg-white text-sm" placeholder="₩ harga"></div>
                         <div><label class="block text-[11px] font-bold mb-0.5">Modal <span class="font-normal text-gray-500">(opsional)</span></label><input type="number" id="prodVarSameCost" min="0" inputmode="numeric" class="ui-input bg-white text-sm" placeholder="₩ modal"></div>
                     </div>
                     <div id="prodVariantList" class="space-y-2"></div>
-                    <button type="button" onclick="window.addProdVariantRow()" class="ui-btn bg-white px-3 py-1 text-xs mt-2">+ Tambah Sub Produk</button>
-                    <p class="text-[10px] text-gray-500 mt-1 leading-tight">Contoh Gula: "1/2kg" ₩8.000, "1kg" ₩15.000. Harga boleh sama (untuk varian rasa/warna). Stok tetap dihitung per produk.</p>
+                    <button type="button" onclick="window.addProdVariantRow()" class="ui-btn bg-white px-3 py-2 text-xs mt-2 w-full">+ Tambah Sub Produk</button>
+                    <p id="prodVarHint" class="text-[10px] text-gray-500 mt-1 leading-tight">Contoh Gula: "1/2kg" ₩8.000, "1kg" ₩15.000. Sub produk yang OFF / stoknya habis tetap tampil di POS &amp; katalog, tetapi tidak bisa dipilih.</p>
                 </div>
-                <div id="prodBarcodeWrapper" class="mb-3 d-none">
+                </div>
+                <div id="prodBarcodeWrapper" class="pf-sec d-none">
                     <label class="block font-bold mb-1">Barcode <span class="font-normal text-[10px] text-gray-500">(opsional — ketik, tembak dengan scanner, atau scan kamera)</span></label>
                     <div class="flex gap-2">
                         <input type="text" id="prodBarcode" maxlength="64" autocomplete="off" inputmode="numeric" class="ui-input bg-white flex-1 min-w-0" placeholder="Contoh: 8991234567890" onkeydown="if(event.key==='Enter'){event.preventDefault();}">
                         <button type="button" onclick="window.openBarcodeScanner('field')" class="ui-btn bg-white px-3 shrink-0 text-lg" title="Scan dengan kamera">📷</button>
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label class="block font-bold mb-1">Gambar Produk <span class="font-normal text-[10px] text-gray-500">(otomatis dikompres)</span></label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="document.getElementById('prodImgFile').click()" class="ui-btn bg-white py-2 px-1 text-xs flex items-center justify-center gap-1.5">🖼️ Galeri / File</button>
-                        <button type="button" onclick="window.openProductCamera()" class="ui-btn bg-accent py-2 px-1 text-xs flex items-center justify-center gap-1.5">📷 Kamera</button>
-                    </div>
-                    <!-- Input tersembunyi: galeri/file perangkat & kamera bawaan HP (cadangan jika kamera langsung tidak tersedia) -->
-                    <input type="file" id="prodImgFile" class="hidden" accept="image/*" onchange="window.handleProdImgSelect(event)">
-                    <input type="file" id="prodImgCapture" class="hidden" accept="image/*" capture="environment" onchange="window.handleProdImgSelect(event)">
-                    <div id="prodImgPreview" class="text-xs text-gray-500 mt-2 break-all">Gambar belum dipilih.</div>
-                </div>
-                <div class="mb-3 border-t border-line pt-3">
-                    <label class="block font-bold mb-1">Sistem Ketersediaan Produk <span class="text-danger">*</span></label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="ui-btn bg-white text-center py-2 px-1 cursor-pointer has-[:checked]:bg-main text-[11px] sm:text-xs leading-tight">
-                            <input type="radio" name="prodSystem" value="toggle" class="hidden" onchange="window.onProdSystemChange()">ON/OFF Tersedia
-                        </label>
-                        <label class="ui-btn bg-white text-center py-2 px-1 cursor-pointer has-[:checked]:bg-main text-[11px] sm:text-xs leading-tight">
-                            <input type="radio" name="prodSystem" value="stock" class="hidden" onchange="window.onProdSystemChange()">Stok Produk
-                        </label>
-                    </div>
-                </div>
-                <div id="prodAvailWrapper" class="mb-4">
-                    <label class="flex items-center gap-2 font-bold cursor-pointer">
-                        <input type="checkbox" id="prodAvail" class="w-5 h-5 accent-black" checked> Tersedia (ON)
-                    </label>
-                </div>
-                <div id="prodStockWrapper" class="mb-4 d-none">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block font-bold mb-1 text-sm">Sisa Stok</label>
-                            <input type="number" id="prodStock" min="0" step="1" inputmode="numeric" class="ui-input bg-white">
-                        </div>
-                        <div>
-                            <label class="block font-bold mb-1 text-sm">Batas Minimal / Warning Stok <span class="text-danger">*</span></label>
-                            <input type="number" id="prodMinStock" min="0" step="1" inputmode="numeric" class="ui-input bg-white">
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-gray-500 mt-1">Peringatan "Stok Menipis" muncul jika sisa stok ≤ batas minimal.</p>
-                </div>
-                <div class="mb-4 border-t border-line pt-3">
+                <div class="pf-sec">
                     <label class="block font-bold mb-1">Tanggal Kedaluwarsa <span class="font-normal text-[10px] text-gray-500">(opsional, bisa lebih dari 1)</span></label>
                     <div id="prodExpList" class="space-y-2"></div>
                     <button type="button" onclick="window.addProdExpRow('')" class="ui-btn bg-white px-3 py-1 text-xs mt-2">+ Tambah Tanggal</button>
                 </div>
-                <div id="prodInfoWrapper" class="mb-4 d-none">
+                <div id="prodInfoWrapper" class="pf-sec d-none">
                     <label class="block font-bold mb-1">Informasi Produk <span class="font-normal text-[10px] text-gray-500">(opsional — tampil lewat ikon ⓘ di samping nama produk)</span></label>
                     <textarea id="prodInfo" maxlength="2000" rows="3" class="ui-input bg-white text-sm" placeholder="Contoh: Pedas level 3, mengandung kacang, dsb."></textarea>
                 </div>
@@ -2125,7 +2231,7 @@
             <div class="p-3 border-b border-line font-bold uppercase bg-accent">Import CSV Produk</div>
             <div class="p-4 bg-gray-50 text-sm">
                 <p class="font-bold mb-2">Pilih file .csv hasil "Export CSV" (atau dengan kolom yang sama):</p>
-                <p class="text-[11px] italic mb-3 leading-tight">Kolom wajib: <b>name</b>, <b>cat</b>, <b>price</b>. Kolom opsional: id, system (STOK / ONOFF), available, stock, min_stock (wajib untuk STOK), exp_dates (pisahkan dengan |), cost (harga modal), wholesale (harga grosir, contoh: 10:1300|40:1200), variants (sub produk, contoh: 1/2kg:8000|1kg:15000:8991234567890 — barcode varian opsional), info. Baris dengan id yang sudah ada akan di-update, selain itu ditambahkan sebagai produk baru.</p>
+                <p class="text-[11px] italic mb-3 leading-tight">Kolom wajib: <b>name</b>, <b>cat</b>, <b>price</b>. Kolom opsional: id, system (STOK / ONOFF), available, stock, min_stock (wajib untuk STOK), exp_dates (pisahkan dengan |, tandai varian: 2026-12-31@Melati), cost (harga modal), wholesale (harga grosir, contoh: 10:1300|40:1200), variants (sub produk, contoh: 1/2kg:8000|1kg:15000:8991234567890 — barcode varian opsional), info. Baris dengan id yang sudah ada akan di-update, selain itu ditambahkan sebagai produk baru.</p>
                 <input type="file" id="csvImportFile" accept=".csv,text/csv" class="ui-input bg-white text-xs">
             </div>
             <div class="p-0 flex border-t border-line">
@@ -2590,7 +2696,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
 
     // Versi aplikasi: SAMAKAN dengan VERSION di sw.js setiap kali update.
-    const APP_VERSION = 'v18';
+    const APP_VERSION = 'v20';
     window.APP_VERSION = APP_VERSION;
     let db = null;
     let auth = null;
@@ -2646,6 +2752,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 multiPriceEnabled: false,
                 manualDiscEnabled: false, manualDiscCashier: false, manualDiscMaxPct: 100,
                 wholesaleEnabled: false, wholesaleCustMode: false, wholesaleShow: true,
+                slideBanner: null,
                 shiftEnabled: false, shiftRequired: false,
                 publicHistoryEnabled: false,
                 barcodeEnabled: false,
@@ -2674,6 +2781,16 @@ measurementId: "G-ZVZ3QHEPKC"
     // ===== Helper: huruf kapital tiap kata & multi level harga (varian) =====
     // "gula pasir" -> "Gula Pasir"; huruf yang sudah besar dibiarkan (mis. "ABC"), angka tidak diubah ("1/2kg").
     window.toTitleCase = (str) => String(str || '').replace(/(^|[\s\-\/(.,&+])(\p{L})/gu, (m, a, b) => a + b.toLocaleUpperCase('id'));
+    // Tanggal kedaluwarsa bisa ditandai nama varian: [{ d: 'YYYY-MM-DD', v: 'Nama varian' | '' }]
+    window.normExpItems = (items, dates) => {
+        const isD = x => /^\d{4}-\d{2}-\d{2}$/.test(String(x || ''));
+        const src = Array.isArray(items) && items.length ? items : (Array.isArray(dates) ? dates.map(d => ({ d, v: '' })) : []);
+        const seen = new Set();
+        return src.map(x => (typeof x === 'string' ? { d: x.split('@')[0], v: x.split('@').slice(1).join('@') } : { d: x && x.d, v: (x && x.v) || '' }))
+            .map(x => ({ d: String(x.d || '').trim(), v: String(x.v || '').trim().slice(0, 40) }))
+            .filter(x => isD(x.d) && !seen.has(x.d + '|' + x.v) && seen.add(x.d + '|' + x.v))
+            .sort((a, b) => a.d.localeCompare(b.d) || a.v.localeCompare(b.v));
+    };
     window.normVariants = (arr) => Array.isArray(arr)
         ? arr.map(v => {
             const o = { name: String((v && v.name) || '').trim().slice(0, 40), price: Math.max(0, Math.round(Number(v && v.price) || 0)) };
@@ -2681,6 +2798,8 @@ measurementId: "G-ZVZ3QHEPKC"
             if (bc) o.barcode = bc.slice(0, 64);
             const c = Math.round(Number(v && v.cost) || 0);
             if (c > 0) o.cost = c;
+            if (v && v.on === false) o.on = false;
+            if (v && v.stock !== undefined && v.stock !== null && v.stock !== '' && isFinite(Number(v.stock))) o.stock = Math.max(0, parseInt(v.stock) || 0);
             return o;
         }).filter(v => v.name)
         : [];
@@ -2703,6 +2822,27 @@ measurementId: "G-ZVZ3QHEPKC"
         return 'Grosir ' + t.map(x => `≥${x.min} ${formatWon(x.price)}`).join(' • ');
     };
     window.getActiveVariants = (p) => (window.isMultiPriceOn() && p && Array.isArray(p.variants)) ? p.variants : [];
+    // Sistem Stok + sub produk yang punya stok sendiri -> stok dihitung per sub produk.
+    window.hasVarStock = (p) => Boolean(p && p.stockMode === 'stock' && window.getActiveVariants(p).some(v => typeof v.stock === 'number'));
+    // Status satu sub produk: { ok, reason: ''|'off'|'habis', stock }
+    window.variantStatus = (p, v) => {
+        if (!p || !v) return { ok: false, reason: 'off', stock: 0 };
+        if (p.stockMode === 'stock') {
+            const st = window.hasVarStock(p) ? Math.max(0, Number(v.stock) || 0) : Math.max(0, Number(p.stock) || 0);
+            return { ok: st > 0, reason: st > 0 ? '' : 'habis', stock: st };
+        }
+        const on = p.availFlag !== false && v.on !== false;
+        return { ok: on, reason: on ? '' : 'off', stock: null };
+    };
+    // Sisa stok yang berlaku untuk item keranjang (per sub produk bila stoknya per varian).
+    window.stockFor = (p, variantName) => {
+        if (!p || p.stockMode !== 'stock') return Infinity;
+        if (window.hasVarStock(p) && variantName) {
+            const v = (p.variants || []).find(x => x.name === variantName);
+            return v ? Math.max(0, Number(v.stock) || 0) : 0;
+        }
+        return Math.max(0, Number(p.stock) || 0);
+    };
     // Label harga: produk bervarian menampilkan harga termurah ("Mulai ₩x" jika harganya berbeda-beda).
     window.productPriceLabel = (p, short) => {
         const vars = window.getActiveVariants(p);
@@ -3050,6 +3190,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     multiPriceEnabled: Boolean(s.multi_price_enabled),
                     manualDiscEnabled: Boolean(s.manual_disc_enabled),
                     wholesaleEnabled: Boolean(s.wholesale_enabled),
+                    slideBanner: s.slide_banner || null,
                     wholesaleCustMode: Boolean(s.wholesale_cust_mode),
                     wholesaleShow: s.wholesale_show === undefined ? true : Boolean(s.wholesale_show),
                     manualDiscCashier: Boolean(s.manual_disc_cashier),
@@ -3106,6 +3247,7 @@ measurementId: "G-ZVZ3QHEPKC"
                         stock: Math.max(0, parseInt(prod.stock) || 0),
                         minStock: Math.max(0, parseInt(prod.min_stock) || 0),
                         expDates: Array.isArray(prod.exp_dates) ? prod.exp_dates.filter(Boolean) : [],
+                        expItems: window.normExpItems(prod.exp_items, prod.exp_dates),
                         barcode: prod.barcode || '',
                         variants: window.normVariants(prod.variants),
                         cost: Math.max(0, Number(prod.cost) || 0),
@@ -3932,10 +4074,16 @@ measurementId: "G-ZVZ3QHEPKC"
         const v = vars.length ? vars[Number(variantIdx)] : null;
         if (vars.length && !v) return;
         const vname = v ? v.name : '';
-        // Stok dihitung per produk (semua sub produk memakai stok yang sama).
-        const totalQty = STATE.cart.filter(x => x.id === productId).reduce((s, x) => s + x.qty, 0);
-        if (p.stockMode === 'stock' && totalQty >= Number(p.stock || 0)) {
-            await window.customAlert(`Stok "${p.name}" tinggal ${Number(p.stock || 0)}.`, 'Stok Terbatas');
+        if (v) {
+            const vs = window.variantStatus(p, v);
+            if (!vs.ok) { await window.customAlert(`"${p.name} (${v.name})" ${vs.reason === 'habis' ? 'stoknya habis' : 'sedang tidak tersedia (OFF)'}.`, 'Tidak Tersedia'); return; }
+        }
+        // Stok per sub produk (jika diatur per varian), selain itu per produk.
+        const perVar = Boolean(v) && window.hasVarStock(p);
+        const totalQty = STATE.cart.filter(x => x.id === productId && (!perVar || (x.variant || '') === vname)).reduce((s, x) => s + x.qty, 0);
+        const limit = window.stockFor(p, vname);
+        if (p.stockMode === 'stock' && totalQty >= limit) {
+            await window.customAlert(`Stok "${p.name}${perVar ? ` (${vname})` : ''}" tinggal ${limit}.`, 'Stok Terbatas');
             return;
         }
         const exist = STATE.cart.find(x => x.id === productId && (x.variant || '') === vname); 
@@ -4203,7 +4351,8 @@ measurementId: "G-ZVZ3QHEPKC"
         } else {
             list.innerHTML = STATE.cart.map((item, index) => {
                 const prod = STATE.data.products.find(p => p.id === item.id);
-                const stockInfo = (prod && prod.stockMode === 'stock') ? `<div class="text-[10px] ${item.qty > Number(prod.stock || 0) ? 'text-danger font-bold' : 'text-gray-500'}">Sisa stok: ${Number(prod.stock || 0)}</div>` : '';
+                const itemStock = prod ? window.stockFor(prod, item.variant) : 0;
+                const stockInfo = (prod && prod.stockMode === 'stock') ? `<div class="text-[10px] ${item.qty > itemStock ? 'text-danger font-bold' : 'text-gray-500'}">Sisa stok: ${itemStock}</div>` : '';
                 let wsInfo = '';
                 const wsTiers = item.variant ? [] : window.getWholesaleTiers(prod);
                 if (wsTiers.length) {
@@ -4442,26 +4591,66 @@ measurementId: "G-ZVZ3QHEPKC"
 
     // ===== Sistem Stok: ubah stok banyak produk sekaligus. deltaMap = { productId: +/-qty } =====
     window.adjustProductStocks = async (deltaMap) => {
-        // Hanya produk yang memakai Sistem Stok Produk yang stoknya diubah.
-        const ids = Object.keys(deltaMap || {}).filter(id => deltaMap[id] && STATE.data.products.some(p => p.id === id && p.stockMode === 'stock'));
+        // Kunci "id" = stok produk; "id::sub" = stok sub produk (bila stoknya per varian).
+        const byProd = {};
+        Object.keys(deltaMap || {}).forEach(k => {
+            const d = Number(deltaMap[k]) || 0;
+            if (!d) return;
+            const i = k.indexOf('::');
+            const id = i >= 0 ? k.slice(0, i) : k, vn = i >= 0 ? k.slice(i + 2) : '';
+            const p = STATE.data.products.find(x => x.id === id && x.stockMode === 'stock');
+            if (!p) return;
+            (byProd[id] = byProd[id] || { p, total: 0, vars: {} }).total += d;
+            if (vn) byProd[id].vars[vn] = (byProd[id].vars[vn] || 0) + d;
+        });
+        const ids = Object.keys(byProd);
         if (!ids.length) return;
+        const updates = ids.map(id => {
+            const { p, total, vars } = byProd[id];
+            if (window.hasVarStock(p)) {
+                const variants = (p.variants || []).map(v => {
+                    const d = vars[v.name] || 0;
+                    return (typeof v.stock === 'number' || d) ? { ...v, stock: Math.max(0, (Number(v.stock) || 0) + d) } : v;
+                });
+                const sum = variants.reduce((t, v) => t + (Number(v.stock) || 0), 0);
+                return { id, p, local: { variants, stock: sum }, remote: { variants, stock: sum } };
+            }
+            return { id, p, local: { stock: Math.max(0, Number(p.stock || 0) + total) }, remote: () => ({ stock: firebase.firestore.FieldValue.increment(total) }) };
+        });
         if (!IS_PREVIEW && db) {
             const batch = db.batch();
-            ids.forEach(id => batch.update(db.collection('products').doc(id), { stock: firebase.firestore.FieldValue.increment(deltaMap[id]) }));
+            updates.forEach(u => batch.update(db.collection('products').doc(u.id), typeof u.remote === 'function' ? u.remote() : u.remote));
             await batch.commit();
         }
-        ids.forEach(id => {
-            const p = STATE.data.products.find(x => x.id === id);
-            if (p) p.stock = Math.max(0, Number(p.stock || 0) + deltaMap[id]);
-        });
+        updates.forEach(u => Object.assign(u.p, u.local));
         window.recomputeAvailability();
         saveLocalDataCache();
         window.updateProductWarnings();
     };
     const itemsToQtyMap = (items, sign) => {
         const m = {};
-        (items || []).forEach(i => { if (i && i.id) m[i.id] = (m[i.id] || 0) + sign * (Number(i.qty) || 0); });
+        (items || []).forEach(i => {
+            if (!(i && i.id)) return;
+            const k = i.variant ? i.id + '::' + i.variant : i.id;
+            m[k] = (m[k] || 0) + sign * (Number(i.qty) || 0);
+        });
         return m;
+    };
+    // Cek kekurangan stok untuk peta jumlah { id | id::sub : qty } -> daftar baris pesan.
+    window.stockShortages = (need) => {
+        const agg = {};
+        Object.keys(need || {}).forEach(k => {
+            const i = k.indexOf('::');
+            const id = i >= 0 ? k.slice(0, i) : k, vn = i >= 0 ? k.slice(i + 2) : '';
+            const p = STATE.data.products.find(x => x.id === id);
+            if (!p || p.stockMode !== 'stock') return;
+            const key = window.hasVarStock(p) && vn ? k : id;
+            (agg[key] = agg[key] || { p, vn: key === id ? '' : vn, q: 0 }).q += need[k];
+        });
+        return Object.values(agg).map(x => {
+            const st = window.stockFor(x.p, x.vn);
+            return x.q > st ? `- ${x.p.name}${x.vn ? ` (${x.vn})` : ''}: butuh ${x.q}, sisa ${st}` : null;
+        }).filter(Boolean);
     };
     window.itemsToQtyMap = itemsToQtyMap;
 
@@ -4521,10 +4710,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const allItems = [...STATE.cart, ...totals.promo.bonus];
         {
             const need = itemsToQtyMap(allItems, 1);
-            const short = Object.keys(need).map(id => {
-                const p = STATE.data.products.find(x => x.id === id);
-                return (p && p.stockMode === 'stock' && need[id] > Number(p.stock || 0)) ? `- ${p.name}: butuh ${need[id]}, sisa ${Number(p.stock || 0)}` : null;
-            }).filter(Boolean);
+            const short = window.stockShortages(need);
             if (short.length) return await window.customAlert('Stok tidak mencukupi:\n' + short.join('\n'), 'Stok Kurang');
         }
 
@@ -5074,7 +5260,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const newVal = !currentVal;
 
         p.availFlag = newVal;
-        p.available = newVal;
+        window.recomputeAvailability();
         window.renderAdminProducts();
         if (document.getElementById('pageAdminPOS') && !document.getElementById('pageAdminPOS').classList.contains('d-none')) {
             window.renderAdminPOS();
@@ -5089,7 +5275,7 @@ measurementId: "G-ZVZ3QHEPKC"
             saveLocalDataCache();
         } catch(e) {
             p.availFlag = currentVal;
-            p.available = currentVal;
+            window.recomputeAvailability();
             saveLocalDataCache();
             window.renderAdminProducts();
             await window.customAlert(e.message, 'Gagal');
@@ -5099,22 +5285,67 @@ measurementId: "G-ZVZ3QHEPKC"
     };
 
     // ===== Form produk: sistem stok & daftar tanggal kedaluwarsa =====
-    window.addProdExpRow = (val) => {
+    window.addProdExpRow = (val, variant = '') => {
         const wrap = document.getElementById('prodExpList');
         if (!wrap) return;
         const row = document.createElement('div');
         row.className = 'flex items-center gap-2 prod-exp-row';
-        row.innerHTML = `<input type="date" class="prod-exp-input ui-input bg-white text-sm flex-1" value="${escapeHTML(val || '')}"><button type="button" onclick="this.parentElement.remove()" class="ui-btn bg-danger text-white px-2 py-1 text-xs inline-flex items-center justify-center" title="Hapus tanggal"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>`;
+        row.dataset.variant = variant || '';
+        row.innerHTML = `<input type="date" class="prod-exp-input ui-input bg-white text-sm flex-1 min-w-0" value="${escapeHTML(val || '')}"><select class="prod-exp-var ui-input bg-white text-sm flex-1 min-w-0 d-none" data-title="Varian yang kedaluwarsa"></select><button type="button" onclick="this.parentElement.remove()" class="ui-btn bg-danger text-white px-2 py-1 text-xs inline-flex items-center justify-center" title="Hapus tanggal"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>`;
         wrap.appendChild(row);
+        window.syncExpVariantOptions();
+    };
+    // Pilihan varian di baris tanggal kedaluwarsa mengikuti daftar sub produk yang sedang diisi di form.
+    window.syncExpVariantOptions = () => {
+        const multi = window.getProdPriceMode && window.getProdPriceMode() === 'multi';
+        const names = multi ? [...new Set(Array.from(document.querySelectorAll('#prodVariantList .prod-var-name')).map(i => i.value.trim()).filter(Boolean))] : [];
+        document.querySelectorAll('#prodExpList .prod-exp-row').forEach(row => {
+            const sel = row.querySelector('.prod-exp-var');
+            if (!sel) return;
+            const cur = sel.options.length ? sel.value : (row.dataset.variant || '');
+            const list = cur && !names.includes(cur) && names.length ? [...names, cur] : names;
+            sel.innerHTML = '<option value="">Semua varian</option>' + list.map(n => `<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('');
+            sel.value = list.includes(cur) ? cur : '';
+            sel.classList.toggle('d-none', !names.length);
+        });
     };
     // Admin wajib memilih salah satu sistem untuk tiap produk: ON/OFF Tersedia atau Stok Produk.
     window.onProdSystemChange = () => {
         const sys = document.querySelector('input[name="prodSystem"]:checked')?.value || '';
         const isStockMode = sys === 'stock';
+        const multi = window.getProdPriceMode() === 'multi';
+        const varStock = isStockMode && multi;
         document.getElementById('prodAvailWrapper').classList.toggle('d-none', sys !== 'toggle');
         document.getElementById('prodStockWrapper').classList.toggle('d-none', !isStockMode);
-        document.getElementById('prodStock').required = isStockMode;
+        document.getElementById('prodStock').required = isStockMode && !varStock;
         document.getElementById('prodMinStock').required = isStockMode;
+        // Multi Level Harga: kontrol ketersediaan tampil di tiap sub produk (ON/OFF atau stok).
+        const list = document.getElementById('prodVariantList');
+        list.classList.toggle('pv-sys-toggle', sys === 'toggle');
+        list.classList.toggle('pv-sys-stock', isStockMode);
+        document.getElementById('prodStockField').classList.toggle('d-none', varStock);
+        document.getElementById('prodStockTotalField').classList.toggle('d-none', !varStock);
+        document.getElementById('prodMinStockLabel').textContent = varStock ? 'Batas Minimal per Sub Produk' : 'Batas Minimal / Warning Stok';
+        document.getElementById('prodStockHint').textContent = varStock
+            ? 'Stok diisi di tiap sub produk (bagian Harga). Total stok dihitung otomatis. Peringatan "Stok Menipis" muncul per sub produk.'
+            : 'Peringatan "Stok Menipis" muncul jika sisa stok ≤ batas minimal.';
+        document.getElementById('prodAvailLabel').textContent = multi && sys === 'toggle' ? 'Produk tersedia (saklar utama)' : 'Tersedia (ON)';
+        document.getElementById('prodAvailVarHint').classList.toggle('d-none', !(multi && sys === 'toggle'));
+        window.syncPvStockTotal();
+    };
+    window.syncPvStockTotal = () => {
+        const el = document.getElementById('prodStockTotal');
+        if (!el) return;
+        const rows = Array.from(document.querySelectorAll('#prodVariantList .prod-var-row'));
+        const sum = rows.reduce((t, r) => t + Math.max(0, parseInt(r.querySelector('.prod-var-stock').value) || 0), 0);
+        el.innerHTML = `${sum}<span>dari ${rows.length} sub produk</span>${STATE.pvLegacyStock !== null && STATE.pvLegacyStock !== undefined ? `<em>Sebelumnya stok gabungan: ${STATE.pvLegacyStock}. Isi stok tiap sub produk.</em>` : ''}`;
+    };
+    window.togglePvOn = (btn) => {
+        const on = btn.getAttribute('aria-pressed') !== 'true';
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.querySelector('.ws-switch').classList.toggle('is-on', on);
+        btn.querySelector('.pv-on-lbl').textContent = on ? 'ON' : 'OFF';
+        btn.closest('.prod-var-row').classList.toggle('is-off', !on);
     };
     STATE.varSamePrice = false;
     window.syncVarSameUI = () => {
@@ -5137,14 +5368,24 @@ measurementId: "G-ZVZ3QHEPKC"
         }
         window.syncVarSameUI();
     };
-    window.addProdVariantRow = (name = '', price = '', cost = '', barcode = '') => {
+    window.addProdVariantRow = (name = '', price = '', cost = '', barcode = '', on = true, stock = '') => {
         const wrap = document.getElementById('prodVariantList');
         if (!wrap) return;
         const row = document.createElement('div');
-        row.className = 'flex flex-wrap items-center gap-2 prod-var-row';
-        row.innerHTML = `<input type="text" maxlength="40" autocomplete="off" class="prod-var-name ui-input bg-white text-sm flex-1 min-w-0" placeholder="Sub nama (cth: 1kg)" value="${escapeHTML(name)}"><input type="number" min="0" step="1" inputmode="numeric" class="prod-var-price ui-input bg-white text-sm text-right !w-24 shrink-0" placeholder="Harga" title="Harga jual" value="${price === '' ? '' : Number(price)}"><input type="number" min="0" step="1" inputmode="numeric" class="prod-var-cost ui-input bg-white text-sm text-right !w-20 shrink-0" placeholder="Modal" title="Harga modal (opsional)" value="${cost === '' || cost === undefined || cost === null || Number(cost) === 0 ? '' : Number(cost)}"><button type="button" onclick="this.parentElement.remove(); window.syncProdPriceHint()" class="ui-btn bg-danger text-white px-2 py-1 text-xs inline-flex items-center justify-center shrink-0" title="Hapus sub produk"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button><div class="prod-var-bc-wrap w-full flex gap-2${window.isBarcodeOn() ? '' : ' d-none'}"><input type="text" maxlength="64" autocomplete="off" inputmode="numeric" class="prod-var-barcode prod-bc-input ui-input bg-white text-xs flex-1 min-w-0" placeholder="Barcode varian (opsional)" value="${escapeHTML(barcode || '')}" onkeydown="if(event.key==='Enter'){event.preventDefault();}"><button type="button" onclick="window.openBarcodeScanner('field', this.previousElementSibling)" class="ui-btn bg-white px-2.5 shrink-0 text-sm" title="Scan barcode varian">📷</button></div>`;
+        row.className = 'prod-var-row pv-card' + (on === false ? ' is-off' : '');
+        const numVal = (x) => (x === '' || x === undefined || x === null) ? '' : Number(x);
+        row.innerHTML = `<div class="pv-head"><span class="pv-no"></span><input type="text" maxlength="40" autocomplete="off" class="prod-var-name ui-input bg-white text-sm flex-1 min-w-0" placeholder="Sub nama (cth: 1kg / Pedas)" value="${escapeHTML(name)}"><button type="button" onclick="this.closest('.prod-var-row').remove(); window.syncProdPriceHint(); window.syncExpVariantOptions(); window.syncPvStockTotal()" class="ui-btn bg-danger text-white px-2 py-1 text-xs inline-flex items-center justify-center shrink-0 self-stretch" title="Hapus sub produk"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button></div>`
+            + `<div class="pv-grid">`
+            + `<div class="pv-f pv-f-price"><label>Harga jual</label><input type="number" min="0" step="1" inputmode="numeric" class="prod-var-price ui-input bg-white text-sm text-right" placeholder="₩" value="${numVal(price)}"></div>`
+            + `<div class="pv-f pv-f-cost"><label>Modal <i>(opsional)</i></label><input type="number" min="0" step="1" inputmode="numeric" class="prod-var-cost ui-input bg-white text-sm text-right" placeholder="₩" value="${cost === '' || cost === undefined || cost === null || Number(cost) === 0 ? '' : Number(cost)}"></div>`
+            + `<div class="pv-f pv-f-avail"><label>Ketersediaan</label><button type="button" class="pv-on var-same-toggle" aria-pressed="${on === false ? 'false' : 'true'}" onclick="window.togglePvOn(this)" title="ON = bisa dipilih, OFF = tampil tetapi tidak bisa dipilih"><span class="ws-switch${on === false ? '' : ' is-on'}"></span><span class="pv-on-lbl text-[11px] font-bold">${on === false ? 'OFF' : 'ON'}</span></button></div>`
+            + `<div class="pv-f pv-f-stock"><label>Stok</label><input type="number" min="0" step="1" inputmode="numeric" class="prod-var-stock ui-input bg-white text-sm text-right" placeholder="0" value="${numVal(stock)}" oninput="window.syncPvStockTotal()"></div>`
+            + `</div>`
+            + `<div class="prod-var-bc-wrap w-full flex gap-2${window.isBarcodeOn() ? '' : ' d-none'}"><input type="text" maxlength="64" autocomplete="off" inputmode="numeric" class="prod-var-barcode prod-bc-input ui-input bg-white text-xs flex-1 min-w-0" placeholder="Barcode varian (opsional)" value="${escapeHTML(barcode || '')}" onkeydown="if(event.key==='Enter'){event.preventDefault();}"><button type="button" onclick="window.openBarcodeScanner('field', this.previousElementSibling)" class="ui-btn bg-white px-2.5 shrink-0 text-sm" title="Scan barcode varian">📷</button></div>`;
         wrap.appendChild(row);
         window.syncProdPriceHint();
+        if (window.syncExpVariantOptions) window.syncExpVariantOptions();
+        if (window.syncPvStockTotal) window.syncPvStockTotal();
     };
     window.syncProdPriceHint = () => {};
     window.getProdPriceMode = () => window.isMultiPriceOn() && document.querySelector('input[name="prodPriceMode"]:checked')?.value === 'multi' ? 'multi' : 'single';
@@ -5172,10 +5413,12 @@ measurementId: "G-ZVZ3QHEPKC"
     };
     window.onProdPriceModeChange = () => {
         const multi = window.getProdPriceMode() === 'multi';
+        setTimeout(() => window.syncExpVariantOptions && window.syncExpVariantOptions(), 0);
         document.getElementById('prodPriceWrapper').classList.toggle('d-none', multi);
         if (window.syncWholesaleSection) window.syncWholesaleSection();
         document.getElementById('prodVariantWrapper').classList.toggle('d-none', !multi);
         if (multi && !document.querySelector('#prodVariantList .prod-var-row')) window.addProdVariantRow();
+        window.onProdSystemChange();
     };
     window.prepareProductFormExtras = (p) => {
         window.syncBarcodeUI();
@@ -5183,7 +5426,10 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('prodPriceModeWrap').classList.toggle('d-none', !mp);
         document.getElementById('prodVariantList').innerHTML = '';
         const hasVars = Boolean(p && Array.isArray(p.variants) && p.variants.length);
-        if (mp && hasVars) p.variants.forEach(v => window.addProdVariantRow(v.name, v.price, v.cost, v.barcode));
+        // Produk lama (stok gabungan) -> stok per sub produk dikosongkan dan perlu diisi.
+        const legacyStock = Boolean(p && p.stockMode === 'stock' && hasVars && !p.variants.some(v => typeof v.stock === 'number'));
+        STATE.pvLegacyStock = legacyStock ? Number(p.stock || 0) : null;
+        if (mp && hasVars) p.variants.forEach(v => window.addProdVariantRow(v.name, v.price, v.cost, v.barcode, v.on !== false, typeof v.stock === 'number' ? v.stock : ''));
         // Semua sub produk berharga sama (>1 varian) -> sakelar "Harga sama" otomatis aktif
         STATE.varSamePrice = Boolean(hasVars && p.variants.length > 1 && p.variants.every(v => v.price === p.variants[0].price && Number(v.cost || 0) === Number(p.variants[0].cost || 0)));
         document.getElementById('prodVarSamePrice').value = STATE.varSamePrice ? p.variants[0].price : '';
@@ -5203,7 +5449,7 @@ measurementId: "G-ZVZ3QHEPKC"
         window.onProdSystemChange();
         const wrap = document.getElementById('prodExpList');
         wrap.innerHTML = '';
-        ((p && p.expDates) || []).forEach(d => window.addProdExpRow(d));
+        window.normExpItems(p && p.expItems, p && p.expDates).forEach(x => window.addProdExpRow(x.d, x.v));
     };
 
     window.editProduct = id => {
@@ -5227,6 +5473,8 @@ measurementId: "G-ZVZ3QHEPKC"
         e.preventDefault();
         document.getElementById('prodName').value = window.toTitleCase(document.getElementById('prodName').value.trim());
         const priceMode = window.getProdPriceMode();
+        const sysForVar = document.querySelector('input[name="prodSystem"]:checked')?.value || '';
+        const oldVarsForSave = ((STATE.data.products.find(x => x.id === document.getElementById('prodId').value) || {}).variants || []);
         const variantRows = priceMode === 'multi' ? Array.from(document.querySelectorAll('#prodVariantList .prod-var-row')) : [];
         const variantList = [];
         const samePriceOn = priceMode === 'multi' && STATE.varSamePrice;
@@ -5249,6 +5497,17 @@ measurementId: "G-ZVZ3QHEPKC"
             if (vbc) vItem.barcode = vbc;
             else if (!window.isBarcodeOn()) { const old = ((STATE.data.products.find(x => x.id === document.getElementById('prodId').value) || {}).variants || []).find(x => x.name === vItem.name); if (old && old.barcode) vItem.barcode = old.barcode; }
             if (vcRaw !== '' && Number(vcRaw) > 0) vItem.cost = Math.round(Number(vcRaw));
+            // Ketersediaan per sub produk: ON/OFF (Sistem ON/OFF) atau stok (Sistem Stok).
+            const onBtn = row.querySelector('.pv-on');
+            if (onBtn && onBtn.getAttribute('aria-pressed') === 'false') vItem.on = false;
+            const vsRaw = row.querySelector('.prod-var-stock') ? row.querySelector('.prod-var-stock').value : '';
+            if (sysForVar === 'stock') {
+                if (vsRaw === '' || isNaN(parseInt(vsRaw)) || parseInt(vsRaw) < 0) return await window.customAlert(`Stok sub produk "${vn}" wajib diisi (angka 0 atau lebih).`, 'Peringatan');
+                vItem.stock = Math.max(0, parseInt(vsRaw) || 0);
+            } else {
+                const ov = oldVarsForSave.find(x => x.name === vItem.name);
+                if (ov && typeof ov.stock === 'number') vItem.stock = ov.stock;
+            }
             variantList.push(vItem);
         }
         if (priceMode === 'multi' && !variantList.length) return await window.customAlert('Isi minimal 1 sub produk beserta harganya, atau pilih "Harga Tunggal".', 'Peringatan');
@@ -5292,7 +5551,8 @@ measurementId: "G-ZVZ3QHEPKC"
         if (isStockMode && (minStockRaw === '' || isNaN(parseInt(minStockRaw)) || parseInt(minStockRaw) < 0)) {
             return await window.customAlert('Batas Minimal / Warning Stok wajib diisi (angka 0 atau lebih).', 'Peringatan');
         }
-        if (isStockMode && (stockRaw === '' || isNaN(parseInt(stockRaw)) || parseInt(stockRaw) < 0)) {
+        const varStockMode = isStockMode && variantList.length > 0;
+        if (isStockMode && !varStockMode && (stockRaw === '' || isNaN(parseInt(stockRaw)) || parseInt(stockRaw) < 0)) {
             return await window.customAlert('Sisa stok wajib diisi (angka 0 atau lebih).', 'Peringatan');
         }
         const barcodeVal = window.isBarcodeOn() ? normBarcode(document.getElementById('prodBarcode').value) : null;
@@ -5315,14 +5575,17 @@ measurementId: "G-ZVZ3QHEPKC"
                 if (hit) return await window.customAlert(`Barcode ${m.code} (${m.label}) sudah dipakai ${hit.variant ? `varian "${hit.variant.name}" pada ` : ''}produk "${hit.p.name}".`, 'Barcode Ganda');
             }
         }
-        const expDates = Array.from(document.querySelectorAll('#prodExpList .prod-exp-input')).map(i => i.value).filter(Boolean);
-        const uniqExp = [...new Set(expDates)].sort();
+        const expItems = window.normExpItems(Array.from(document.querySelectorAll('#prodExpList .prod-exp-row')).map(r => ({
+            d: r.querySelector('.prod-exp-input').value,
+            v: (r.querySelector('.prod-exp-var') && !r.querySelector('.prod-exp-var').classList.contains('d-none')) ? r.querySelector('.prod-exp-var').value : ''
+        })));
+        const uniqExp = [...new Set(expItems.map(x => x.d))].sort();
         showLoad();
         const prodIdVal = document.getElementById('prodId').value;
         const oldProduct = prodIdVal ? STATE.data.products.find(x => x.id === prodIdVal) : null;
         const oldPrice = oldProduct ? Number(oldProduct.price || 0) : null;
         const availFlag = isStockMode ? (oldProduct ? Boolean(oldProduct.availFlag) : true) : Boolean(document.getElementById('prodAvail').checked);
-        const stock = isStockMode ? Math.max(0, parseInt(stockRaw) || 0) : (oldProduct ? Number(oldProduct.stock || 0) : 0);
+        const stock = varStockMode ? variantList.reduce((t, v) => t + (Number(v.stock) || 0), 0) : (isStockMode ? Math.max(0, parseInt(stockRaw) || 0) : (oldProduct ? Number(oldProduct.stock || 0) : 0));
         const minStock = isStockMode ? Math.max(0, parseInt(minStockRaw) || 0) : (oldProduct ? Number(oldProduct.minStock || 0) : 0);
         const payload = {
             id: prodIdVal ? prodIdVal : genId('prod_'),
@@ -5336,6 +5599,7 @@ measurementId: "G-ZVZ3QHEPKC"
             min_stock: minStock,
             availability_system: prodSystem,
             exp_dates: uniqExp,
+            exp_items: expItems,
             barcode: barcodeVal !== null ? barcodeVal : (oldProduct ? (oldProduct.barcode || '') : ''),
             // Harga Tunggal -> sub produk dikosongkan. Saat fitur OFF, sub produk yang sudah tersimpan tidak dihapus.
             variants: window.isMultiPriceOn() ? variantList : (oldProduct ? (oldProduct.variants || []) : []),
@@ -5346,7 +5610,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const localProduct = {
             id: payload.id, name: payload.name, cat: payload.cat, price: payload.price, img: payload.img,
             info: payload.info, availFlag: availFlag, available: availFlag, stockMode: prodSystem, barcode: payload.barcode,
-            stock: stock, minStock: minStock, expDates: uniqExp, variants: payload.variants, cost: payload.cost, wholesale: payload.wholesale
+            stock: stock, minStock: minStock, expDates: uniqExp, expItems, variants: payload.variants, cost: payload.cost, wholesale: payload.wholesale
         };
         try {
             if(!IS_PREVIEW && db) {
@@ -6174,6 +6438,7 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('setMultiPriceEnabled').checked = Boolean(STATE.data.settings.multiPriceEnabled);
         document.getElementById('setManualDiscEnabled').checked = Boolean(STATE.data.settings.manualDiscEnabled);
         document.getElementById('setWholesaleEnabled').checked = Boolean(STATE.data.settings.wholesaleEnabled);
+        if (window.loadSlideEditor) window.loadSlideEditor();
         document.getElementById('setWholesaleCustMode').checked = Boolean(STATE.data.settings.wholesaleCustMode);
         document.getElementById('setWholesaleShow').checked = STATE.data.settings.wholesaleShow !== false;
         document.getElementById('setManualDiscCashier').checked = Boolean(STATE.data.settings.manualDiscCashier);
@@ -6261,6 +6526,7 @@ measurementId: "G-ZVZ3QHEPKC"
             multi_price_enabled: document.getElementById('setMultiPriceEnabled').checked,
             manual_disc_enabled: document.getElementById('setManualDiscEnabled').checked,
             wholesale_enabled: document.getElementById('setWholesaleEnabled').checked,
+            slide_banner: window.getSlideDraftForSave(),
             wholesale_cust_mode: document.getElementById('setWholesaleCustMode').checked,
             wholesale_show: document.getElementById('setWholesaleShow').checked,
             manual_disc_cashier: document.getElementById('setManualDiscCashier').checked,
@@ -6316,6 +6582,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 multiPriceEnabled: payload.multi_price_enabled,
                 manualDiscEnabled: payload.manual_disc_enabled,
                 wholesaleEnabled: payload.wholesale_enabled,
+                slideBanner: payload.slide_banner,
                 wholesaleCustMode: payload.wholesale_cust_mode,
                 wholesaleShow: payload.wholesale_show,
                 manualDiscCashier: payload.manual_disc_cashier,
@@ -6470,14 +6737,24 @@ measurementId: "G-ZVZ3QHEPKC"
             p.stock = Math.max(0, parseInt(p.stock) || 0);
             p.minStock = Math.max(0, parseInt(p.minStock) || 0);
             if (!Array.isArray(p.expDates)) p.expDates = [];
-            p.available = isStockMode ? p.stock > 0 : Boolean(p.availFlag);
+            if (!Array.isArray(p.expItems)) p.expItems = window.normExpItems(null, p.expDates);
+            const vars = window.getActiveVariants(p);
+            if (isStockMode && window.hasVarStock(p)) p.stock = vars.reduce((t, v) => t + Math.max(0, Number(v.stock) || 0), 0);
+            // Produk bervarian: tersedia jika minimal 1 sub produk bisa dipilih.
+            p.available = isStockMode ? p.stock > 0 : (Boolean(p.availFlag) && (!vars.length || vars.some(v => v.on !== false)));
         });
     };
 
+    // Daftar stok menipis: { p, variant, stock, min } — produk ber-stok per sub produk dicek per varian.
     window.getLowStockProducts = () => {
-        return STATE.data.products
-            .filter(p => p.stockMode === 'stock' && Number(p.stock || 0) <= Number(p.minStock || 0))
-            .sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0));
+        const res = [];
+        STATE.data.products.filter(p => p.stockMode === 'stock').forEach(p => {
+            const min = Number(p.minStock || 0);
+            if (window.hasVarStock(p)) {
+                window.getActiveVariants(p).forEach(v => { const st = Math.max(0, Number(v.stock) || 0); if (st <= min) res.push({ p, variant: v.name, stock: st, min }); });
+            } else if (Number(p.stock || 0) <= min) res.push({ p, variant: '', stock: Number(p.stock || 0), min });
+        });
+        return res.sort((a, b) => a.stock - b.stock);
     };
 
     // Produk yang punya tanggal kedaluwarsa kurang dari X bulan dari hari ini (atau sudah lewat).
@@ -6487,11 +6764,10 @@ measurementId: "G-ZVZ3QHEPKC"
         const limit = new Date(today); limit.setMonth(limit.getMonth() + months);
         const res = [];
         STATE.data.products.forEach(p => {
-            (p.expDates || []).forEach(ds => {
-                const [y, m, d] = String(ds).split('-').map(Number);
-                if (!y || !m || !d) return;
+            window.normExpItems(p.expItems, p.expDates).forEach(x => {
+                const [y, m, d] = x.d.split('-').map(Number);
                 const dt = new Date(y, m - 1, d);
-                if (dt <= limit) res.push({ p, date: ds, days: Math.round((dt - today) / 86400000) });
+                if (dt <= limit) res.push({ p, date: x.d, variant: x.v, days: Math.round((dt - today) / 86400000) });
             });
         });
         return res.sort((a, b) => a.days - b.days);
@@ -6516,15 +6792,15 @@ measurementId: "G-ZVZ3QHEPKC"
 
     window.openLowStockModal = () => {
         const list = window.getLowStockProducts();
-        const html = list.length ? list.map(p => `
+        const html = list.length ? list.map(({ p, variant, stock, min }) => `
             <div class="ui-card bg-white p-3 flex items-center gap-3 border-l-4 border-l-danger">
                 <img src="${p.img || 'https://placehold.co/40x40/e2e8f0/000000?text=No+Img'}" class="w-10 h-10 object-cover border border-line shrink-0">
                 <div class="flex-1 min-w-0">
-                    <div class="font-bold text-sm break-words">${escapeHTML(p.name)}</div>
-                    <div class="text-[11px] text-gray-600">Batas minimal: ${Number(p.minStock || 0)}</div>
+                    <div class="font-bold text-sm break-words">${escapeHTML(p.name)}${variant ? ` <span class="exp-var-tag">${escapeHTML(variant)}</span>` : ''}</div>
+                    <div class="text-[11px] text-gray-600">Batas minimal: ${min}</div>
                 </div>
                 <div class="text-right shrink-0">
-                    <div class="font-bold text-lg ${Number(p.stock || 0) === 0 ? 'text-danger' : ''}">${Number(p.stock || 0)}</div>
+                    <div class="font-bold text-lg ${stock === 0 ? 'text-danger' : ''}">${stock}</div>
                     <div class="text-[10px] font-bold uppercase">sisa stok</div>
                 </div>
             </div>`).join('') : '<div class="p-6 text-center font-bold text-gray-500">Tidak ada stok yang menipis.</div>';
@@ -6537,7 +6813,7 @@ measurementId: "G-ZVZ3QHEPKC"
             <div class="ui-card bg-white p-3 flex items-center gap-3 border-l-4 ${x.days < 0 ? 'border-l-danger' : 'border-l-main'}">
                 <img src="${x.p.img || 'https://placehold.co/40x40/e2e8f0/000000?text=No+Img'}" class="w-10 h-10 object-cover border border-line shrink-0">
                 <div class="flex-1 min-w-0">
-                    <div class="font-bold text-sm break-words">${escapeHTML(x.p.name)}</div>
+                    <div class="font-bold text-sm break-words">${escapeHTML(x.p.name)}${x.variant ? ` <span class="exp-var-tag">${escapeHTML(x.variant)}</span>` : ''}</div>
                     <div class="text-[11px] text-gray-600">Expired: ${finDateLabel(x.date, false)}</div>
                 </div>
                 <div class="text-right shrink-0 font-bold text-xs ${x.days < 0 ? 'text-danger' : ''}">${x.days < 0 ? 'SUDAH EXPIRED' : (x.days === 0 ? 'HARI INI' : `${x.days} hari lagi`)}</div>
@@ -6847,7 +7123,7 @@ measurementId: "G-ZVZ3QHEPKC"
         if (!STATE.data.products.length) return await window.customAlert('Belum ada produk untuk di-export.', 'Info');
         const rows = [CSV_HEADERS.join(',')].concat(STATE.data.products.map(p => [
             p.id, p.name, p.cat, Number(p.price || 0), Number(p.cost || 0) || '', (p.wholesale || []).map(t => `${t.min}:${t.price}`).join('|'), p.stockMode === 'stock' ? 'STOK' : 'ONOFF', p.availFlag ? 'ON' : 'OFF',
-            Number(p.stock || 0), Number(p.minStock || 0), (p.expDates || []).join('|'), p.barcode || '', (p.variants || []).map(v => `${v.name}:${v.price}${v.barcode ? ':' + v.barcode : ''}`).join('|'), p.info || ''
+            Number(p.stock || 0), Number(p.minStock || 0), window.normExpItems(p.expItems, p.expDates).map(x => x.v ? `${x.d}@${x.v}` : x.d).join('|'), p.barcode || '', (p.variants || []).map(v => `${v.name}:${v.price}${v.barcode ? ':' + v.barcode : ''}`).join('|'), p.info || ''
         ].map(csvCell).join(',')));
         // BOM supaya huruf non-latin tetap terbaca rapi saat dibuka di Excel.
         const blob = new Blob(['﻿' + rows.join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -6944,7 +7220,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     csvVars.push(vbc ? { name: vn.slice(0, 40), price: Number(vp), barcode: vbc.replace(/\s+/g, '').slice(0, 64) } : { name: vn.slice(0, 40), price: Number(vp) });
                 }
             }
-            const badExp = exp.find(d => !isDate(d));
+            const badExp = exp.map(d => d.split('@')[0]).find(d => !isDate(d));
             if (badExp) return errors.push(`Baris ${line}: tanggal expired "${badExp}" harus berformat YYYY-MM-DD`);
             const oldP = get(r, 'id') ? STATE.data.products.find(p => p.id === get(r, 'id')) : null;
             if ((system || (oldP && oldP.stockMode)) === 'stock' && minRaw === '' && !(oldP && oldP.stockMode === 'stock')) return errors.push(`Baris ${line}: produk Sistem Stok wajib mengisi min_stock (batas minimal stok)`);
@@ -6955,7 +7231,8 @@ measurementId: "G-ZVZ3QHEPKC"
                 available: col('available') > -1 && availRaw !== '' ? ['on', '1', 'true', 'ya', 'yes', 'tersedia'].includes(availRaw) : null,
                 stock: stockRaw === '' ? null : Math.round(Number(stockRaw)),
                 minStock: minRaw === '' ? null : Math.round(Number(minRaw)),
-                expDates: col('exp_dates') > -1 ? [...new Set(exp)].sort() : null,
+                expDates: col('exp_dates') > -1 ? [...new Set(exp.map(d => d.split('@')[0]))].sort() : null,
+                expItems: col('exp_dates') > -1 ? window.normExpItems(exp) : null,
                 info: col('info') > -1 ? get(r, 'info') : null,
                 variants: csvVars,
                 barcode: col('barcode') > -1 ? normBarcode(get(r, 'barcode')) : null
@@ -6984,8 +7261,10 @@ measurementId: "G-ZVZ3QHEPKC"
                     stock: it.stock !== null ? it.stock : (old ? Number(old.stock || 0) : 0),
                     minStock: it.minStock !== null ? it.minStock : (old ? Number(old.minStock || 0) : 0),
                     expDates: it.expDates !== null ? it.expDates : (old ? (old.expDates || []) : []),
+                    expItems: it.expItems !== null && it.expItems !== undefined ? it.expItems : (old ? window.normExpItems(old.expItems, old.expDates) : []),
                     barcode: it.barcode !== null ? it.barcode : (old ? (old.barcode || '') : ''),
-                    variants: it.variants !== null ? it.variants : (old ? (old.variants || []) : []),
+                    // Impor CSV: status ON/OFF, stok & modal tiap sub produk lama dipertahankan berdasarkan namanya.
+                    variants: it.variants !== null ? it.variants.map(v => { const ov = ((old && old.variants) || []).find(x => x.name === v.name); if (!ov) return v; const o = { ...v }; if (ov.on === false) o.on = false; if (typeof ov.stock === 'number') o.stock = ov.stock; if (ov.cost) o.cost = ov.cost; return o; }) : (old ? (old.variants || []) : []),
                     cost: it.cost !== null && it.cost !== undefined ? it.cost : (old ? Number(old.cost || 0) : 0),
                     wholesale: it.wholesale !== null && it.wholesale !== undefined ? it.wholesale : (old ? (old.wholesale || []) : [])
                 };
@@ -6995,7 +7274,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 // Firestore membatasi 500 operasi per batch -> dikirim bertahap.
                 const ops = [
                     ...newCats.map(c => ({ ref: db.collection('categories').doc(c), data: { id: c, name: c } })),
-                    ...writes.map(p => ({ ref: db.collection('products').doc(p.id), data: { id: p.id, name: p.name, cat: p.cat, price: p.price, available: p.availFlag, availability_system: p.stockMode, info: p.info, stock: p.stock, min_stock: p.minStock, exp_dates: p.expDates, barcode: p.barcode, variants: p.variants, cost: Number(p.cost || 0), wholesale: p.wholesale || [] } }))
+                    ...writes.map(p => ({ ref: db.collection('products').doc(p.id), data: { id: p.id, name: p.name, cat: p.cat, price: p.price, available: p.availFlag, availability_system: p.stockMode, info: p.info, stock: p.stock, min_stock: p.minStock, exp_dates: p.expDates, exp_items: p.expItems || [], barcode: p.barcode, variants: p.variants, cost: Number(p.cost || 0), wholesale: p.wholesale || [] } }))
                 ];
                 for (let i = 0; i < ops.length; i += 450) {
                     const batch = db.batch();
@@ -7377,6 +7656,14 @@ measurementId: "G-ZVZ3QHEPKC"
         const activeVars = window.getActiveVariants(p);
         // Barcode milik varian tertentu -> langsung masuk keranjang tanpa memilih.
         if (activeVars.length && match.variant && activeVars[match.variantIdx] && activeVars[match.variantIdx].name === match.variant.name) {
+            const vst = window.variantStatus(p, match.variant);
+            if (!vst.ok) {
+                scanBeep(false);
+                const why = vst.reason === 'habis' ? 'stok habis' : 'OFF / tidak tersedia';
+                showScanToast(`${p.name} (${match.variant.name}): ${why}`, false);
+                if (source === 'camera') document.getElementById('scanStatus').textContent = `❌ ${p.name} (${match.variant.name}) ${why}`;
+                return false;
+            }
             const qtyOf = () => STATE.cart.filter(x => x.id === p.id && x.variant === match.variant.name).reduce((s, x) => s + x.qty, 0);
             const before = qtyOf();
             window.__sfxQuiet = true;
@@ -8873,7 +9160,15 @@ measurementId: "G-ZVZ3QHEPKC"
         // Semua varian berharga sama (mis. rasa/warna) -> harga tidak perlu ditampilkan per varian.
         const samePrice = vars.every(v => v.price === vars[0].price);
         document.getElementById('variantPopTitle').textContent = samePrice ? `${p.name} · ${formatWon(vars[0].price)}` : p.name;
-        document.getElementById('variantPopList').innerHTML = vars.map((v, i) => `<button type="button" onclick="window.pickVariant('${p.id}', ${i})" class="ui-btn bg-white hover:bg-yellow-100 w-full px-2 py-2 text-xs normal-case flex ${samePrice ? 'justify-center' : 'justify-between'} items-center gap-2 text-left"><span class="font-bold break-words min-w-0">${escapeHTML(v.name)}</span>${samePrice ? '' : `<span class="variant-price-pill">${formatWon(v.price)}</span>`}</button>`).join('');
+        const isStaffPick = Boolean(STATE.user) && ['admin', 'cashier'].includes(STATE.user.role);
+        const showStock = isStaffPick && p.stockMode === 'stock' && window.hasVarStock(p);
+        document.getElementById('variantPopList').innerHTML = vars.map((v, i) => {
+            const st = window.variantStatus(p, v);
+            const tag = !st.ok ? `<span class="variant-off-tag">${st.reason === 'habis' ? 'Habis' : 'OFF'}</span>` : (showStock ? `<span class="variant-stock-tag">Stok ${st.stock}</span>` : '');
+            const price = samePrice ? '' : `<span class="variant-price-pill">${formatWon(v.price)}</span>`;
+            const right = (tag || price) ? `<span class="inline-flex items-center gap-1 shrink-0">${tag}${price}</span>` : '';
+            return `<button type="button" ${st.ok ? `onclick="window.pickVariant('${p.id}', ${i})"` : 'disabled aria-disabled="true"'} class="ui-btn bg-white ${st.ok ? 'hover:bg-yellow-100' : 'variant-btn-off'} w-full px-2 py-2 text-xs normal-case flex ${samePrice && !tag ? 'justify-center' : 'justify-between'} items-center gap-2 text-left"><span class="font-bold break-words min-w-0">${escapeHTML(v.name)}</span>${right}</button>`;
+        }).join('');
         // Lebar mengikuti kartu produk (min 180px, maks 260px) supaya pas di tengah kartunya.
         const r0 = STATE.lastTapRect;
         pop.style.width = Math.round(Math.max(180, Math.min(260, r0 ? r0.width + 16 : 230))) + 'px';
@@ -10187,6 +10482,326 @@ measurementId: "G-ZVZ3QHEPKC"
             st('❌ Kamera tidak dapat dibuka: ' + (e && e.message ? e.message : e) + '. Ketik kode secara manual.');
         }
     };
+
+    // ======================================================= //
+    // SLIDE TEKS HALAMAN UMUM (pengganti judul "Menu Tersedia")
+    // Disimpan di settings/app_config -> slide_banner. Banyak slide, transisi halus,
+    // gaya teks per slide (huruf, ukuran, tebal/miring/garis bawah, rata tengah, warna terang/gelap, logo).
+    // ======================================================= //
+    const SB_FONTS = [
+        ['Inter', 'Inter:wght@400;700'], ['Poppins', 'Poppins:ital,wght@0,400;0,700;1,400;1,700'], ['Montserrat', 'Montserrat:ital,wght@0,400;0,700;1,400;1,700'],
+        ['Playfair Display', 'Playfair+Display:ital,wght@0,400;0,700;1,400;1,700'], ['Roboto Slab', 'Roboto+Slab:wght@400;700'], ['Oswald', 'Oswald:wght@400;700'],
+        ['Bebas Neue', 'Bebas+Neue'], ['Lobster', 'Lobster'], ['Pacifico', 'Pacifico'], ['Dancing Script', 'Dancing+Script:wght@400;700']
+    ];
+    const SB_TRANSITIONS = [['fade', 'Pudar (fade)'], ['slide', 'Geser ke kiri'], ['up', 'Geser ke atas'], ['zoom', 'Zoom'], ['blur', 'Blur halus']];
+    const SB_SPEEDS = [[300, 'Cepat (0,3 dtk)'], [600, 'Sedang (0,6 dtk)'], [900, 'Lambat (0,9 dtk)'], [1400, 'Sangat lambat (1,4 dtk)']];
+    const sbColor = (v, d) => /^#[0-9a-fA-F]{6}$/.test(String(v || '')) ? v : d;
+    const sbNum = (v, min, max, d) => { const n = Number(v); return isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : d; };
+    window.newSlide = (text) => ({ text: text || '', font: 'Inter', size: 22, bold: true, italic: false, underline: false, center: true, colorLight: '#111827', colorDark: '#ECEEF2', logo: false });
+    window.normSlideBanner = (c) => {
+        c = c && typeof c === 'object' ? c : {};
+        const slides = (Array.isArray(c.slides) ? c.slides : []).slice(0, 20).map(x => ({
+            text: String((x && x.text) || '').slice(0, 300),
+            font: SB_FONTS.some(f => f[0] === (x && x.font)) ? x.font : 'Inter',
+            size: sbNum(x && x.size, 10, 72, 22),
+            bold: Boolean(x && x.bold), italic: Boolean(x && x.italic), underline: Boolean(x && x.underline),
+            center: x && x.center !== undefined ? Boolean(x.center) : true,
+            colorLight: sbColor(x && x.colorLight, '#111827'), colorDark: sbColor(x && x.colorDark, '#ECEEF2'),
+            logo: Boolean(x && x.logo)
+        }));
+        return {
+            enabled: Boolean(c.enabled),
+            transition: SB_TRANSITIONS.some(t => t[0] === c.transition) ? c.transition : 'fade',
+            speed: sbNum(c.speed, 200, 3000, 600),
+            delay: sbNum(c.delay, 1, 60, 4),
+            height: sbNum(c.height, 40, 320, 76),
+            bgLight: sbColor(c.bgLight, '#FFF4D1'), bgDark: sbColor(c.bgDark, '#1E232C'),
+            logo: window.normSlideLogo(c.logo),
+            slides
+        };
+    };
+    // Logo slide: gambar upload sendiri (cadangan: logo toko), ukuran bebas & bisa keluar dari layout slide.
+    window.normSlideLogo = (l) => {
+        l = l && typeof l === 'object' ? l : {};
+        const img = String(l.img || '');
+        return {
+            img: (/^data:image\/(png|webp|jpeg|gif|svg\+xml);base64,/.test(img) || /^https:\/\//.test(img)) && img.length <= 450000 ? img : '',
+            size: sbNum(l.size, 16, 400, 56),
+            pos: l.pos === 'right' ? 'right' : 'left',
+            x: sbNum(l.x, -300, 600, 12),
+            y: sbNum(l.y, -300, 300, 0)
+        };
+    };
+    const sbLoadedFonts = new Set(['Inter']);
+    const sbLoadFont = (name) => {
+        if (sbLoadedFonts.has(name)) return;
+        const f = SB_FONTS.find(x => x[0] === name);
+        if (!f) return;
+        sbLoadedFonts.add(name);
+        const l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.href = `https://fonts.googleapis.com/css2?family=${f[1]}&display=swap`;
+        document.head.appendChild(l);
+    };
+    const sbStoreLogo = () => STATE.data.settings.logoUrl || (document.getElementById('headerLogo') || {}).src || '';
+    const sbLogoSrc = (cfg) => (cfg && cfg.logo && cfg.logo.img) || sbStoreLogo();
+
+    // Render ke elemen tujuan. Tidak membangun ulang bila konfigurasi sama (supaya slide tidak lompat ke awal).
+    window.renderSlideBanner = (el, cfgRaw, opts = {}) => {
+        if (!el) return;
+        const cfg = window.normSlideBanner(cfgRaw);
+        const show = (cfg.enabled || opts.preview) && cfg.slides.some(x => x.text.trim() || x.logo);
+        const sig = JSON.stringify([cfg, opts.forceTheme || '', show, sbLogoSrc(cfg), Boolean(opts.preview)]);
+        if (el.__sbSig === sig) return;
+        el.__sbSig = sig;
+        clearInterval(el.__sbTimer);
+        if (!show) { el.style.paddingTop = el.style.paddingBottom = ''; el.innerHTML = opts.preview ? '<div class="text-xs text-gray-500 p-4 text-center">Isi teks slide untuk melihat pratinjau.</div>' : ''; el.className = opts.preview ? '' : 'd-none'; return; }
+        const slides = cfg.slides.filter(x => x.text.trim() || x.logo);
+        slides.forEach(x => sbLoadFont(x.font));
+        const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // Host (overflow terlihat) berisi layout slide + logo melayang yang boleh keluar dari layout.
+        el.className = 'sb-host' + (opts.preview ? ' is-preview' : '');
+        el.style.setProperty('--sb-h', cfg.height + 'px');
+        el.style.setProperty('--sb-speed', cfg.speed + 'ms');
+        el.style.setProperty('--sb-bg-l', cfg.bgLight);
+        el.style.setProperty('--sb-bg-d', cfg.bgDark);
+        const lg = cfg.logo, logoSrc = sbLogoSrc(cfg);
+        const useLogo = Boolean(logoSrc) && slides.some(x => x.logo);
+        el.style.setProperty('--sb-lg-h', lg.size + 'px');
+        el.style.setProperty('--sb-lg-x', lg.x + 'px');
+        el.style.setProperty('--sb-lg-y', lg.y + 'px');
+        el.style.setProperty('--sb-logo-pad', Math.max(0, Math.round(lg.size + lg.x + 10)) + 'px');
+        const slideHtml = slides.map((x, i) => `<div class="sb-slide${i === 0 ? ' is-active' : ''}${x.logo && useLogo ? ' has-logo sb-pad-' + lg.pos : ''}" style="--sb-c-l:${x.colorLight};--sb-c-d:${x.colorDark};font-family:'${x.font}',Inter,sans-serif;font-size:${x.size}px;font-weight:${x.bold ? 700 : 400};font-style:${x.italic ? 'italic' : 'normal'};justify-content:${x.center ? 'center' : 'flex-start'};text-align:${x.center ? 'center' : 'left'}" aria-hidden="${i === 0 ? 'false' : 'true'}">${x.text.trim() ? `<span class="sb-text" style="text-decoration:${x.underline ? 'underline' : 'none'}">${escapeHTML(x.text)}</span>` : ''}</div>`).join('');
+        el.innerHTML = `<div class="sb-stage"><div class="slide-banner sb-t-${reduce ? 'fade' : cfg.transition}${opts.forceTheme ? ' sb-force-' + opts.forceTheme : ''}" role="region" aria-label="Pengumuman">${slideHtml}</div>`
+            + (useLogo ? `<img class="sb-flogo sb-flogo-${lg.pos}${slides[0].logo ? ' is-visible' : ''}" src="${escapeHTML(logoSrc)}" alt="" aria-hidden="true">` : '') + '</div>';
+        // Logo lebih besar dari layout -> beri ruang di atas/bawah supaya tidak menutupi konten lain.
+        const ovTop = useLogo ? Math.max(0, Math.round(lg.size / 2 - cfg.height / 2 - lg.y)) : 0;
+        const ovBot = useLogo ? Math.max(0, Math.round(lg.size / 2 - cfg.height / 2 + lg.y)) : 0;
+        el.style.paddingTop = ovTop ? ovTop + 'px' : '';
+        el.style.paddingBottom = ovBot ? ovBot + 'px' : '';
+        // Ruang teks menyesuaikan lebar asli logo (rasio gambar) supaya teks tidak tertutup.
+        const fl = el.querySelector('.sb-flogo');
+        if (fl) {
+            const setPad = () => { if (fl.naturalWidth && fl.naturalHeight) el.style.setProperty('--sb-logo-pad', Math.max(0, Math.round(lg.size * fl.naturalWidth / fl.naturalHeight + lg.x + 10)) + 'px'); };
+            if (fl.complete) setPad(); else fl.addEventListener('load', setPad, { once: true });
+        }
+        if (slides.length < 2) return;
+        let cur = 0;
+        el.__sbTimer = setInterval(() => {
+            if (document.hidden || !el.isConnected) return;
+            const nodes = el.querySelectorAll('.sb-slide');
+            if (!nodes.length) return;
+            const prev = nodes[cur];
+            cur = (cur + 1) % nodes.length;
+            const next = nodes[cur];
+            prev.classList.remove('is-active'); prev.classList.add('is-leaving'); prev.setAttribute('aria-hidden', 'true');
+            next.classList.remove('is-leaving'); next.classList.add('is-active'); next.setAttribute('aria-hidden', 'false');
+            const flo = el.querySelector('.sb-flogo');
+            if (flo) flo.classList.toggle('is-visible', Boolean(slides[cur] && slides[cur].logo));
+            setTimeout(() => prev.classList.remove('is-leaving'), cfg.speed + 50);
+        }, cfg.delay * 1000 + cfg.speed);
+    };
+    window.renderPublicSlideBanner = () => window.renderSlideBanner(document.getElementById('publicSlideBanner'), STATE.data.settings.slideBanner);
+    (() => {
+        const orig = window.renderPublicCatalog;
+        if (typeof orig === 'function') window.renderPublicCatalog = function (...a) { const r = orig.apply(this, a); try { window.renderPublicSlideBanner(); } catch (e) {} return r; };
+    })();
+
+    // ---------- Editor di Pengaturan ----------
+    STATE.slideDraft = window.normSlideBanner(null);
+    STATE.slidePreviewTheme = '';
+    window.loadSlideEditor = () => {
+        STATE.slideDraft = JSON.parse(JSON.stringify(window.normSlideBanner(STATE.data.settings.slideBanner)));
+        const cb = document.getElementById('setSlideEnabled');
+        if (cb) cb.checked = STATE.slideDraft.enabled;
+        window.renderSlideEditor();
+    };
+    window.getSlideDraftForSave = () => {
+        const cb = document.getElementById('setSlideEnabled');
+        return window.normSlideBanner({ ...STATE.slideDraft, enabled: cb ? cb.checked : STATE.slideDraft.enabled });
+    };
+    window.onSlideEnabledChange = () => {
+        const on = document.getElementById('setSlideEnabled').checked;
+        STATE.slideDraft.enabled = on;
+        if (on && !STATE.slideDraft.slides.length) STATE.slideDraft.slides.push(window.newSlide(`Selamat datang di ${STATE.data.settings.storeName || 'toko kami'}`));
+        window.renderSlideEditor();
+    };
+    const sbOpt = (list, val) => list.map(([v, l]) => `<option value="${v}" ${String(v) === String(val) ? 'selected' : ''}>${l}</option>`).join('');
+    window.renderSlideEditor = () => {
+        const wrap = document.getElementById('slideEditorWrap');
+        if (!wrap) return;
+        const d = STATE.slideDraft;
+        const on = Boolean(document.getElementById('setSlideEnabled') && document.getElementById('setSlideEnabled').checked);
+        wrap.classList.toggle('d-none', !on);
+        if (!on) return;
+        const tog = (i, k, label, title) => `<button type="button" data-i="${i}" data-k="${k}" class="sb-tog ${d.slides[i][k] ? 'is-on' : ''}" title="${title}" aria-pressed="${d.slides[i][k]}">${label}</button>`;
+        wrap.innerHTML = `
+            <div class="flex items-center justify-between gap-2 mb-1">
+                <span class="text-xs font-bold">Pratinjau</span>
+                <div class="sb-seg" role="group" aria-label="Mode pratinjau">
+                    <button type="button" data-pt="" class="${!STATE.slidePreviewTheme ? 'is-on' : ''}">Ikuti tema</button>
+                    <button type="button" data-pt="light" class="${STATE.slidePreviewTheme === 'light' ? 'is-on' : ''}">Terang</button>
+                    <button type="button" data-pt="dark" class="${STATE.slidePreviewTheme === 'dark' ? 'is-on' : ''}">Gelap</button>
+                </div>
+            </div>
+            <div id="slidePreview" class="mb-4"></div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                <div><label class="sb-lbl">Jenis transisi</label><select data-g="transition" class="ui-input bg-white text-sm" data-title="Jenis Transisi">${sbOpt(SB_TRANSITIONS, d.transition)}</select></div>
+                <div><label class="sb-lbl">Kecepatan transisi</label><select data-g="speed" class="ui-input bg-white text-sm" data-title="Kecepatan Transisi">${sbOpt(SB_SPEEDS.some(x => x[0] === d.speed) ? SB_SPEEDS : [...SB_SPEEDS, [d.speed, d.speed + ' ms']], d.speed)}</select></div>
+                <div><label class="sb-lbl">Jeda antar slide (detik)</label><input type="number" data-g="delay" min="1" max="60" value="${d.delay}" class="ui-input bg-white text-sm"></div>
+                <div class="col-span-2 md:col-span-1"><label class="sb-lbl">Tinggi layout: <b id="sbHeightVal">${d.height}px</b></label><input type="range" data-g="height" min="40" max="320" step="4" value="${d.height}" class="w-full sb-range"></div>
+                <div><label class="sb-lbl">Warna layout (terang)</label><input type="color" data-g="bgLight" value="${d.bgLight}" class="sb-color"></div>
+                <div><label class="sb-lbl">Warna layout (gelap)</label><input type="color" data-g="bgDark" value="${d.bgDark}" class="sb-color"></div>
+            </div>
+            ${sbLogoEditorHtml(d)}
+            <div class="space-y-3">${d.slides.map((x, i) => `
+                <div class="sb-item">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-xs font-bold">Slide ${i + 1}</span>
+                        <div class="flex gap-1">
+                            <button type="button" data-act="up" data-i="${i}" class="sb-mini" ${i === 0 ? 'disabled' : ''} title="Naikkan">▲</button>
+                            <button type="button" data-act="down" data-i="${i}" class="sb-mini" ${i === d.slides.length - 1 ? 'disabled' : ''} title="Turunkan">▼</button>
+                            <button type="button" data-act="dup" data-i="${i}" class="sb-mini" title="Gandakan">⧉</button>
+                            <button type="button" data-act="del" data-i="${i}" class="sb-mini is-danger" title="Hapus slide">✕</button>
+                        </div>
+                    </div>
+                    <textarea data-i="${i}" data-k="text" rows="2" maxlength="300" class="ui-input bg-white text-sm mb-2" placeholder="Tulis teks slide… (Enter = baris baru)">${escapeHTML(x.text)}</textarea>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div><label class="sb-lbl">Huruf</label><select data-i="${i}" data-k="font" class="ui-input bg-white text-sm" data-title="Jenis Huruf">${sbOpt(SB_FONTS.map(f => [f[0], f[0]]), x.font)}</select></div>
+                        <div><label class="sb-lbl">Ukuran (px)</label><input type="number" data-i="${i}" data-k="size" min="10" max="72" value="${x.size}" class="ui-input bg-white text-sm"></div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        ${tog(i, 'bold', '<b>B</b>', 'Tebal')}${tog(i, 'italic', '<i>I</i>', 'Miring')}${tog(i, 'underline', '<u>U</u>', 'Garis bawah')}${tog(i, 'center', '≡', 'Rata tengah')}${tog(i, 'logo', '🏷️ Logo', 'Tampilkan logo slide pada slide ini')}
+                        <label class="sb-swatch" title="Warna teks mode terang">☀️<input type="color" data-i="${i}" data-k="colorLight" value="${x.colorLight}"></label>
+                        <label class="sb-swatch" title="Warna teks mode gelap">🌙<input type="color" data-i="${i}" data-k="colorDark" value="${x.colorDark}"></label>
+                    </div>
+                </div>`).join('')}
+            </div>
+            <button type="button" data-act="add" class="ui-btn bg-white w-full py-2 mt-3 text-sm">+ Tambah Slide</button>`;
+        window.renderSlidePreview();
+    };
+    const sbLogoEditorHtml = (d) => {
+        const lg = d.logo, src = lg.img || sbStoreLogo();
+        const anyOn = d.slides.some(x => x.logo);
+        return `
+            <div class="sb-item mb-4">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="text-xs font-bold">Logo Slide</span>
+                    <span class="text-[10px] text-gray-500 text-right">Boleh lebih besar &amp; keluar dari layout slide</span>
+                </div>
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="sb-logo-thumb">${src ? `<img src="${escapeHTML(src)}" alt="Logo slide">` : '<span>Belum ada logo</span>'}</div>
+                    <div class="flex-1 min-w-0 flex flex-col gap-2">
+                        <button type="button" data-act="logoUp" class="ui-btn bg-white py-2 px-3 text-xs">⬆️ ${lg.img ? 'Ganti logo' : 'Upload logo'}</button>
+                        ${lg.img ? '<button type="button" data-act="logoDel" class="ui-btn bg-white py-2 px-3 text-xs text-danger">Hapus (pakai logo toko)</button>' : `<span class="text-[10px] text-gray-500 leading-tight">${src ? 'Sementara memakai logo toko.' : ''} PNG transparan paling bagus, otomatis dikompres.</span>`}
+                    </div>
+                    <input type="file" id="sbLogoFile" accept="image/*" class="hidden">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="md:col-span-2"><label class="sb-lbl">Ukuran logo (tinggi): <b id="sbLgSizeVal">${lg.size}px</b></label><input type="range" data-lg="size" min="16" max="400" step="2" value="${lg.size}" class="w-full sb-range"></div>
+                    <div><label class="sb-lbl">Posisi</label><div class="sb-seg" role="group" aria-label="Posisi logo"><button type="button" data-lgpos="left" class="${lg.pos === 'left' ? 'is-on' : ''}">Kiri</button><button type="button" data-lgpos="right" class="${lg.pos === 'right' ? 'is-on' : ''}">Kanan</button></div></div>
+                    <div class="flex items-end">${anyOn ? '' : '<button type="button" data-act="logoAll" class="ui-btn bg-accent py-2 px-3 text-xs w-full">Tampilkan logo di semua slide</button>'}</div>
+                    <div><label class="sb-lbl">Jarak dari tepi: <b id="sbLgXVal">${lg.x}px</b></label><input type="range" data-lg="x" min="-300" max="600" step="2" value="${lg.x}" class="w-full sb-range"></div>
+                    <div><label class="sb-lbl">Geser atas/bawah: <b id="sbLgYVal">${lg.y}px</b></label><input type="range" data-lg="y" min="-300" max="300" step="2" value="${lg.y}" class="w-full sb-range"></div>
+                </div>
+                <p class="text-[10px] text-gray-500 mt-2 leading-tight">Nilai minus = logo keluar dari layout. Logo tampil pada slide yang tombol 🏷️ Logo-nya aktif.</p>
+            </div>`;
+    };
+    // Kompres logo: maks 512px, tetap transparan (WebP, cadangan PNG), target ≤ ~250KB.
+    const sbCompressLogo = (file) => new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onerror = () => reject(new Error('File tidak bisa dibaca'));
+        fr.onload = () => {
+            const im = new Image();
+            im.onerror = () => reject(new Error('Format gambar tidak didukung'));
+            im.onload = () => {
+                let out = '';
+                for (const max of [512, 384, 256, 192]) {
+                    const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
+                    const cv = document.createElement('canvas');
+                    cv.width = Math.max(1, Math.round(im.naturalWidth * k));
+                    cv.height = Math.max(1, Math.round(im.naturalHeight * k));
+                    cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+                    let u = cv.toDataURL('image/webp', 0.9);
+                    if (!u.startsWith('data:image/webp')) u = cv.toDataURL('image/png');
+                    out = u;
+                    if (u.length <= 250000) break;
+                }
+                resolve(out);
+            };
+            im.src = fr.result;
+        };
+        fr.readAsDataURL(file);
+    });
+    document.addEventListener('change', async (e) => {
+        if (!e.target || e.target.id !== 'sbLogoFile') return;
+        const f = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!f) return;
+        if (!/^image\//.test(f.type)) return await window.customAlert('Pilih file gambar (PNG/JPG/WebP).', 'Peringatan');
+        try {
+            const url = await sbCompressLogo(f);
+            STATE.slideDraft.logo.img = url;
+            if (!STATE.slideDraft.slides.some(x => x.logo)) STATE.slideDraft.slides.forEach(x => { x.logo = true; });
+            window.renderSlideEditor();
+        } catch (err) { await window.customAlert(err.message || String(err), 'Gagal'); }
+    });
+    window.renderSlidePreview = () => {
+        const el = document.getElementById('slidePreview');
+        if (!el) return;
+        const target = document.createElement('div');
+        el.replaceChildren(target);
+        window.renderSlideBanner(target, { ...STATE.slideDraft, enabled: true }, { preview: true, forceTheme: STATE.slidePreviewTheme });
+    };
+    let sbPrevTimer = null;
+    const sbQueuePreview = () => { clearTimeout(sbPrevTimer); sbPrevTimer = setTimeout(window.renderSlidePreview, 250); };
+    const sbOnField = (e) => {
+        const t = e.target;
+        const d = STATE.slideDraft;
+        if (t.dataset.lg) {
+            const k = t.dataset.lg;
+            d.logo[k] = Number(t.value);
+            const lbl = document.getElementById({ size: 'sbLgSizeVal', x: 'sbLgXVal', y: 'sbLgYVal' }[k]);
+            if (lbl) lbl.textContent = t.value + 'px';
+            clearTimeout(sbPrevTimer); sbPrevTimer = setTimeout(window.renderSlidePreview, 40);
+            return;
+        }
+        if (t.dataset.g) {
+            const k = t.dataset.g;
+            d[k] = ['delay', 'height', 'speed'].includes(k) ? Number(t.value) : t.value;
+            if (k === 'height') document.getElementById('sbHeightVal').textContent = t.value + 'px';
+            sbQueuePreview();
+        } else if (t.dataset.i !== undefined && t.dataset.k && t.tagName !== 'BUTTON') {
+            const s = d.slides[Number(t.dataset.i)];
+            if (!s) return;
+            s[t.dataset.k] = t.dataset.k === 'size' ? Number(t.value) : t.value;
+            sbQueuePreview();
+        }
+    };
+    document.addEventListener('input', (e) => { if (e.target.closest && e.target.closest('#slideEditorWrap')) sbOnField(e); });
+    document.addEventListener('change', (e) => { if (e.target.closest && e.target.closest('#slideEditorWrap')) sbOnField(e); });
+    document.addEventListener('click', (e) => {
+        const b = e.target.closest && e.target.closest('#slideEditorWrap button');
+        if (!b) return;
+        const d = STATE.slideDraft;
+        const i = Number(b.dataset.i);
+        if (b.dataset.pt !== undefined) { STATE.slidePreviewTheme = b.dataset.pt; return window.renderSlideEditor(); }
+        if (b.dataset.lgpos) { d.logo.pos = b.dataset.lgpos; return window.renderSlideEditor(); }
+        if (b.dataset.act === 'logoUp') { const fi = document.getElementById('sbLogoFile'); if (fi) fi.click(); return; }
+        if (b.dataset.act === 'logoDel') { d.logo.img = ''; return window.renderSlideEditor(); }
+        if (b.dataset.act === 'logoAll') { d.slides.forEach(x => { x.logo = true; }); return window.renderSlideEditor(); }
+        if (b.classList.contains('sb-tog')) { d.slides[i][b.dataset.k] = !d.slides[i][b.dataset.k]; return window.renderSlideEditor(); }
+        const act = b.dataset.act;
+        if (act === 'add') { const last = d.slides[d.slides.length - 1]; d.slides.push(last ? { ...last, text: '' } : window.newSlide('')); }
+        else if (act === 'del') d.slides.splice(i, 1);
+        else if (act === 'dup') d.slides.splice(i + 1, 0, { ...d.slides[i] });
+        else if (act === 'up' && i > 0) [d.slides[i - 1], d.slides[i]] = [d.slides[i], d.slides[i - 1]];
+        else if (act === 'down' && i < d.slides.length - 1) [d.slides[i + 1], d.slides[i]] = [d.slides[i], d.slides[i + 1]];
+        else return;
+        window.renderSlideEditor();
+    });
+    // Nama sub produk berubah -> pilihan varian di daftar tanggal kedaluwarsa ikut diperbarui
+    document.addEventListener('input', (e) => { if (e.target.classList && e.target.classList.contains('prod-var-name')) window.syncExpVariantOptions(); });
 
     setInterval(window.updateStoreStatusDisplay, 30000);
 </script>
