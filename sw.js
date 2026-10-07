@@ -8,7 +8,7 @@
      supaya aplikasi tetap bisa dibuka lengkap tanpa internet; diperbarui di belakang saat online.
    - Data Firestore TIDAK lewat cache ini (sudah disimpan sendiri oleh Firestore di perangkat).
 */
-const VERSION = 'v18';   // samakan dengan APP_VERSION di index.html
+const VERSION = 'v20';   // samakan dengan APP_VERSION di index.html
 const CACHE = 'sbmart-' + VERSION;
 const CDN_CACHE = 'sbmart-cdn-v1';   // terpisah, tidak perlu diunduh ulang tiap ganti versi aplikasi
 const CORE = [
@@ -28,6 +28,8 @@ const CDN = [
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
+  'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
   'https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js',
   'https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js'
