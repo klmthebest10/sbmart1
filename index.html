@@ -810,33 +810,26 @@
         html[data-theme="dark"] #gasapp-root .bg-amber-200 { background-color: #5C4300 !important; color: #FFE7A3 !important; }
         /* ===== Slide teks halaman umum ===== */
         .sb-host { position: relative; z-index: 4; overflow: visible; }
-        .sb-stage { position: relative; }
-        .slide-banner { position: relative; width: 100%; height: var(--sb-h, 64px); overflow: hidden; border-radius: var(--r-lg); background: var(--sb-bg-l); box-shadow: var(--sh-1); isolation: isolate; color: var(--sb-c-l); }
-        .sb-host.is-full .slide-banner { border-radius: 0; box-shadow: none; }
-        html[data-theme="dark"] .slide-banner:not(.sb-force-light), .slide-banner.sb-force-dark { background: var(--sb-bg-d); color: var(--sb-c-d); }
-        .sb-slide { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 16px; line-height: 1.1; white-space: nowrap; overflow: hidden;
-            opacity: 0; pointer-events: none;
-            transition: opacity var(--sb-speed) ease, transform var(--sb-speed) cubic-bezier(.22,.61,.36,1), filter var(--sb-speed) ease;
-            will-change: opacity, transform; }
-        .sb-slide.is-active { opacity: 1; transform: none; filter: none; pointer-events: auto; }
-        .sb-t-slide .sb-slide { transform: translateX(60%); } .sb-t-slide .sb-slide.is-leaving { transform: translateX(-60%); }
-        .sb-t-up .sb-slide { transform: translateY(100%); } .sb-t-up .sb-slide.is-leaving { transform: translateY(-100%); }
-        .sb-t-zoom .sb-slide { transform: scale(.82); } .sb-t-zoom .sb-slide.is-leaving { transform: scale(1.15); }
-        .sb-t-blur .sb-slide { filter: blur(10px); } .sb-t-blur .sb-slide.is-leaving { filter: blur(10px); }
-        .sb-t-slide .sb-slide.is-active, .sb-t-up .sb-slide.is-active, .sb-t-zoom .sb-slide.is-active { transform: none; }
-        .sb-t-blur .sb-slide.is-active { filter: none; }
-        .sb-text { display: inline-block; white-space: nowrap; padding: .08em .1em; }
-        .sb-slide.is-active .sb-text.is-marquee { animation: sbMarq var(--sb-mq-d, 4s) ease-in-out 1s infinite alternate; }
-        .sb-slide:has(.is-marquee) { justify-content: flex-start !important; }
+        /* Layout penuh tepi ke tepi; dipotong hanya kiri-kanan supaya gambar boleh menyembul ke atas & bawah */
+        .slide-banner { position: relative; width: 100%; height: var(--sb-h, 64px); background: var(--sb-bg-l); isolation: isolate; clip-path: inset(-600px 0 -600px 0); }
+        html[data-theme="dark"] .slide-banner:not(.sb-force-light), .slide-banner.sb-force-dark { background: var(--sb-bg-d); }
+        .sb-slide { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 14px; line-height: 1.1; white-space: nowrap;
+            opacity: 0; pointer-events: none; transition: opacity .6s ease, transform .6s cubic-bezier(.22,.61,.36,1); will-change: opacity, transform; }
+        .sb-slide.sb-al-center { justify-content: center; } .sb-slide.sb-al-left { justify-content: flex-start; }
+        .sb-slide.is-active { opacity: 1; transform: none; pointer-events: auto; }
+        .sb-t-slide .sb-slide { transform: translateX(70%); } .sb-t-slide .sb-slide.is-leaving { transform: translateX(-70%); }
+        .sb-t-zoom .sb-slide { transform: scale(.8); } .sb-t-zoom .sb-slide.is-leaving { transform: scale(1.12); }
+        .sb-t-slide .sb-slide.is-active, .sb-t-zoom .sb-slide.is-active { transform: none; }
+        .sb-group { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; min-width: 0; }
+        .sb-group.is-rev { flex-direction: row-reverse; }
+        .sb-img { height: var(--sb-img-h, 96px); width: auto; max-width: none; flex-shrink: 0; object-fit: contain; filter: drop-shadow(0 3px 6px rgba(0,0,0,.25)); }
+        .sb-text { display: inline-block; white-space: nowrap; overflow: hidden; padding: .06em .18em .14em .06em; }
+        .sb-slide.is-active .sb-text.is-marquee { overflow: visible; animation: sbMarq var(--sb-mq-d, 4s) ease-in-out 1s infinite alternate; }
+        .sb-slide:has(.is-marquee) { justify-content: flex-start !important; overflow: hidden; }
         @keyframes sbMarq { 0%, 12% { transform: translateX(0); } 88%, 100% { transform: translateX(var(--sb-mq, 0px)); } }
-        .sb-fx-shadow .sb-text { text-shadow: 0 2px 0 var(--sb-fx), 0 3px 8px color-mix(in srgb, var(--sb-fx) 55%, transparent); }
-        .sb-fx-outline .sb-text { -webkit-text-stroke: .11em var(--sb-fx); paint-order: stroke fill; text-shadow: 0 2px 3px color-mix(in srgb, var(--sb-fx) 45%, transparent); }
-        .slide-banner.sb-logo-left .sb-slide { padding-left: min(var(--sb-logo-pad, 0px), 55%); }
-        .slide-banner.sb-logo-right .sb-slide { padding-right: min(var(--sb-logo-pad, 0px), 55%); }
-        /* Logo melayang: boleh keluar dari layout & tidak bergantung tinggi layout */
-        .sb-flogo { position: absolute; top: 50%; height: var(--sb-lg-h, 72px); width: auto; max-width: none; object-fit: contain; z-index: 2; pointer-events: none; filter: drop-shadow(0 2px 6px rgba(0,0,0,.22)); }
-        .sb-flogo-left { left: var(--sb-lg-x, 16px); transform: translateY(calc(-50% + var(--sb-lg-y, 0px))); }
-        .sb-flogo-right { right: var(--sb-lg-x, 16px); transform: translateY(calc(-50% + var(--sb-lg-y, 0px))); }
+        /* Huruf 3D: isi + garis tepi + lapisan kedalaman */
+        .sb3d { color: var(--sb-c, #fff); -webkit-text-stroke: .05em var(--sb-d, #1F2937); paint-order: stroke fill; letter-spacing: .01em;
+            text-shadow: .025em .025em 0 var(--sb-d, #1F2937), .05em .05em 0 var(--sb-d, #1F2937), .075em .075em 0 var(--sb-d, #1F2937), .1em .1em 0 var(--sb-d, #1F2937), .12em .14em .14em rgba(0,0,0,.4); }
         /* Editor slide di Pengaturan */
         #gasapp-root .sb-lbl { display: block; font-size: 11px; font-weight: 700; margin-bottom: 3px; color: var(--c-text-2); }
         #gasapp-root .sb-item { border: 1px solid var(--c-line); border-radius: var(--r-md); padding: 10px; background: var(--c-surface); }
@@ -902,15 +895,16 @@
         #gasapp-root .rs-reader video { position: absolute; inset: 0; width: 100% !important; height: 100% !important; object-fit: cover; }
         #gasapp-root .rs-reader.is-front video { transform: scaleX(-1); }
         #gasapp-root .rs-decode { position: absolute; left: -9999px; top: 0; width: 640px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
-        #gasapp-root .rs-shade { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-        #gasapp-root .rs-frame { position: relative; width: min(82vw, 440px); height: min(42vw, 230px); border-radius: 18px; box-shadow: 0 0 0 200vmax rgba(0,0,0,.45); transition: box-shadow .2s; }
-        #gasapp-root .rs-frame .c { position: absolute; width: 34px; height: 34px; border: 4px solid #FFC83D; }
-        #gasapp-root .rs-frame .tl { left: -2px; top: -2px; border-right: 0; border-bottom: 0; border-radius: 18px 0 0 0; }
-        #gasapp-root .rs-frame .tr { right: -2px; top: -2px; border-left: 0; border-bottom: 0; border-radius: 0 18px 0 0; }
-        #gasapp-root .rs-frame .bl { left: -2px; bottom: -2px; border-right: 0; border-top: 0; border-radius: 0 0 0 18px; }
-        #gasapp-root .rs-frame .br { right: -2px; bottom: -2px; border-left: 0; border-top: 0; border-radius: 0 0 18px 0; }
-        #gasapp-root .rs-laser { position: absolute; left: 6%; right: 6%; top: 50%; height: 2px; background: #FF3B3B; border-radius: 2px; box-shadow: 0 0 10px 2px rgba(255,59,59,.85); animation: rsLaser 1.8s ease-in-out infinite alternate; }
-        @keyframes rsLaser { from { top: 10%; } to { top: 90%; } }
+        /* Indikator scan = seluruh area kamera (penuh lebar & tinggi layar di antara bilah atas dan panel bawah) */
+        #gasapp-root .rs-shade { position: absolute; left: 0; right: 0; top: calc(64px + env(safe-area-inset-top, 0px)); bottom: var(--rs-bottom, 200px); padding: 8px 10px 14px; pointer-events: none; }
+        #gasapp-root .rs-frame { position: relative; width: 100%; height: 100%; border-radius: 24px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); transition: box-shadow .2s; }
+        #gasapp-root .rs-frame .c { position: absolute; width: 56px; height: 56px; border: 5px solid #FFC83D; filter: drop-shadow(0 0 6px rgba(0,0,0,.5)); }
+        #gasapp-root .rs-frame .tl { left: 0; top: 0; border-right: 0; border-bottom: 0; border-radius: 24px 0 0 0; }
+        #gasapp-root .rs-frame .tr { right: 0; top: 0; border-left: 0; border-bottom: 0; border-radius: 0 24px 0 0; }
+        #gasapp-root .rs-frame .bl { left: 0; bottom: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 24px; }
+        #gasapp-root .rs-frame .br { right: 0; bottom: 0; border-left: 0; border-top: 0; border-radius: 0 0 24px 0; }
+        #gasapp-root .rs-laser { position: absolute; left: 3%; right: 3%; top: 50%; height: 3px; background: #FF3B3B; border-radius: 3px; box-shadow: 0 0 14px 3px rgba(255,59,59,.85); animation: rsLaser 2.4s ease-in-out infinite alternate; }
+        @keyframes rsLaser { from { top: 4%; } to { top: 96%; } }
         #gasapp-root .rs-frame.is-hit .c { border-color: #22C55E; }
         #gasapp-root .rs-frame.is-hit .rs-laser { background: #22C55E; box-shadow: 0 0 14px 3px rgba(34,197,94,.9); }
         #gasapp-root .rs-flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s; }
@@ -938,15 +932,18 @@
         #gasapp-root .rs-start { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,.72); backdrop-filter: blur(4px); }
         #gasapp-root .rs-start-card { width: 100%; max-width: 340px; text-align: center; padding: 22px 18px; border-radius: 22px; background: var(--c-surface); color: var(--c-text); box-shadow: var(--sh-3); }
 
-        /* Editor slide: tab & baris teks */
-        #gasapp-root .sb-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; border-radius: 12px; background: var(--c-surface-2); border: 1px solid var(--c-line); }
-        #gasapp-root .sb-tabs button { padding: 8px 4px; border-radius: 9px; font-size: 12px; font-weight: 700; color: var(--c-text-2); white-space: nowrap; }
-        #gasapp-root .sb-tabs button.is-on { background: var(--c-surface); color: var(--c-text); box-shadow: var(--sh-1); }
-        #gasapp-root .sb-panel { border: 1px solid var(--c-line); border-radius: var(--r-md); padding: 12px; margin-top: 8px; background: var(--c-surface); }
+        /* Editor slide: bagian, baris teks & pilihan huruf 3D */
+        #gasapp-root .sb-sec { border: 1px solid var(--c-line); border-radius: var(--r-md); padding: 12px; margin-top: 10px; background: var(--c-surface); }
+        #gasapp-root .sb-sec-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--c-text-2); margin-bottom: 8px; }
+        #gasapp-root .sb-styles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+        #gasapp-root .sb-style { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 6px; border-radius: 12px; border: 2px solid transparent; background: var(--sb-bg-l); }
+        html[data-theme="dark"] #gasapp-root .sb-style { background: var(--sb-bg-d); }
+        #gasapp-root .sb-style .sb3d { font-size: 26px; line-height: 1.1; }
+        #gasapp-root .sb-style small { font-size: 10px; font-weight: 800; color: #1F1600; background: rgba(255,255,255,.75); padding: 0 6px; border-radius: 999px; }
+        #gasapp-root .sb-style.is-on { border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--c-accent-soft); }
         #gasapp-root .sb-line { display: flex; align-items: center; gap: 6px; }
         #gasapp-root .sb-line-no { flex-shrink: 0; width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; background: var(--c-surface-2); border: 1px solid var(--c-line-strong); color: var(--c-text-2); }
         #gasapp-root .sb-note { font-size: 10px; color: var(--c-text-3); margin-top: 8px; line-height: 1.35; }
-        #gasapp-root .sb-switch-row { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--c-text); }
         #gasapp-root .sb-dim { opacity: .45; pointer-events: none; }
 
         /* HP scanner: deretan produk terpindai (terbaru di kiri) */
@@ -1500,7 +1497,7 @@
                                 <label class="flex items-center gap-2 font-bold cursor-pointer bg-yellow-50 p-3 border border-line w-full">
                                     <input type="checkbox" id="setSlideEnabled" class="w-5 h-5 accent-black" onchange="window.onSlideEnabledChange()"> Aktifkan Slide Teks (pengganti judul "Menu Tersedia")
                                 </label>
-                                <p class="set-hint">Teks berganti otomatis di bagian atas katalog umum (1 baris, huruf mengecil otomatis bila panjang), lengkap dengan logo yang bisa diatur besar &amp; posisinya.</p>
+                                <p class="set-hint">Teks berganti otomatis di bagian atas katalog umum: 1 baris dengan huruf 3D, plus gambar di kiri/kanan tulisan.</p>
                                 <div id="slideEditorWrap" class="d-none mt-3"></div>
                             </div>
 
@@ -2768,7 +2765,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
 
     // Versi aplikasi: SAMAKAN dengan VERSION di sw.js setiap kali update.
-    const APP_VERSION = 'v22';
+    const APP_VERSION = 'v23';
     window.APP_VERSION = APP_VERSION;
     let db = null;
     let auth = null;
@@ -10593,6 +10590,10 @@ measurementId: "G-ZVZ3QHEPKC"
                 </div>
             </div>`;
         document.getElementById('gasapp-root').appendChild(view);
+        // Indikator scan mengikuti tinggi panel bawah (panel bisa bertambah tinggi saat ada hasil scan).
+        const syncBottom = () => { const bt = view.querySelector('.rs-bottom'); if (bt) view.style.setProperty('--rs-bottom', bt.offsetHeight + 'px'); };
+        syncBottom();
+        try { new ResizeObserver(syncBottom).observe(view.querySelector('.rs-bottom')); } catch (e) { window.addEventListener('resize', syncBottom); }
         const st = (t, kind) => { const el = document.getElementById('rsStatus'); el.textContent = t; el.className = 'rs-status' + (kind ? ' is-' + kind : ''); };
         const setState = (on, txt) => { const el = document.getElementById('rsState'); el.className = 'rs-pill ' + (on ? 'is-on' : 'is-off'); document.getElementById('rsStateTxt').textContent = txt; };
         const startErr = (t) => { const el = document.getElementById('rsStartErr'); el.textContent = t; el.classList.remove('d-none'); };
@@ -10713,7 +10714,7 @@ measurementId: "G-ZVZ3QHEPKC"
             const scale = Math.max(cw / vw, ch / vh);
             const offX = (vw * scale - cw) / 2, offY = (vh * scale - ch) / 2;
             const fr = document.getElementById('rsFrame').getBoundingClientRect(), rr = reader.getBoundingClientRect();
-            const mx = fr.width * 0.15, my = fr.height * 0.35;
+            const mx = 0, my = 0; // bingkai sudah seluas layar kamera
             let fx = fr.left - rr.left - mx, fy = fr.top - rr.top - my, fw = fr.width + 2 * mx, fh = fr.height + 2 * my;
             if (facing === 'user') fx = cw - fx - fw; // tampilan kamera depan dicerminkan
             let sx = Math.max(0, (fx + offX) / scale), sy = Math.max(0, (fy + offY) / scale);
@@ -10816,97 +10817,89 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
     // SLIDE TEKS HALAMAN UMUM (pengganti judul "Menu Tersedia")
     // Disimpan di settings/app_config -> slide_banner.
-    // Sederhana: daftar teks (selalu 1 baris, huruf mengecil otomatis bila terlalu panjang),
-    // satu gaya teks untuk semua slide, logo upload sendiri yang boleh keluar dari layout,
-    // layout penuh (tepi ke tepi) atau kartu, transisi halus.
+    // Simpel: daftar teks 1 baris (huruf mengecil otomatis), pilihan huruf 3D, satu gambar
+    // di kiri/kanan tulisan (boleh lebih tinggi dari layout), layout penuh tepi ke tepi.
     // ======================================================= //
-    const SB_FONTS = [
-        ['Inter', 'Inter:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800'], ['Poppins', 'Poppins:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800'], ['Montserrat', 'Montserrat:ital,wght@0,400;0,700;0,800;1,400;1,700;1,800'],
-        ['Nunito', 'Nunito:ital,wght@0,400;0,800;1,400;1,800'], ['Playfair Display', 'Playfair+Display:ital,wght@0,400;0,700;1,400;1,700'], ['Roboto Slab', 'Roboto+Slab:wght@400;700'],
-        ['Oswald', 'Oswald:wght@400;700'], ['Bebas Neue', 'Bebas+Neue'], ['Lobster', 'Lobster'], ['Pacifico', 'Pacifico'], ['Dancing Script', 'Dancing+Script:wght@400;700']
+    // [kode, nama, font, tebal, miring, parameter Google Fonts]
+    const SB_STYLES = [
+        ['klasik', 'Klasik', 'Inter', 900, true, 'Inter:ital,wght@1,900'],
+        ['bubble', 'Bubble', 'Fredoka', 700, false, 'Fredoka:wght@700'],
+        ['poster', 'Poster', 'Bungee', 400, false, 'Bungee'],
+        ['komik', 'Komik', 'Bangers', 400, false, 'Bangers'],
+        ['ceria', 'Ceria', 'Luckiest Guy', 400, false, 'Luckiest+Guy'],
+        ['tegas', 'Tegas', 'Lilita One', 400, false, 'Lilita+One'],
+        ['retro', 'Retro', 'Titan One', 400, false, 'Titan+One'],
+        ['elegan', 'Elegan', 'Playfair Display', 900, true, 'Playfair+Display:ital,wght@1,900']
     ];
-    const SB_TRANSITIONS = [['fade', 'Pudar'], ['slide', 'Geser kiri'], ['up', 'Geser atas'], ['zoom', 'Zoom'], ['blur', 'Blur']];
-    const SB_SPEEDS = [[300, 'Cepat'], [600, 'Sedang'], [900, 'Lambat'], [1400, 'Sangat lambat']];
+    const SB_TRANSITIONS = [['fade', 'Pudar'], ['slide', 'Geser'], ['zoom', 'Zoom']];
     const sbColor = (v, d) => /^#[0-9a-fA-F]{6}$/.test(String(v || '')) ? v : d;
-    const sbNum = (v, min, max, d) => { const n = Number(v); return isFinite(n) && v !== '' && v !== null ? Math.min(max, Math.max(min, Math.round(n))) : d; };
+    const sbNum = (v, min, max, d) => { const n = Number(v); return isFinite(n) && v !== '' && v !== null && v !== undefined ? Math.min(max, Math.max(min, Math.round(n))) : d; };
+    const sbStyle = (k) => SB_STYLES.find(x => x[0] === k) || SB_STYLES[0];
+    const sbImgOk = (img) => (/^data:image\/(png|webp|jpeg|gif|svg\+xml);base64,/.test(img) || /^https:\/\//.test(img)) && img.length <= 450000;
     window.newSlide = (text) => ({ text: text || '' });
-    window.normSlideLogo = (l, legacyShow) => {
-        l = l && typeof l === 'object' ? l : {};
-        const img = String(l.img || '');
-        return {
-            show: l.show !== undefined ? Boolean(l.show) : Boolean(legacyShow),
-            img: (/^data:image\/(png|webp|jpeg|gif|svg\+xml);base64,/.test(img) || /^https:\/\//.test(img)) && img.length <= 450000 ? img : '',
-            size: sbNum(l.size, 16, 400, 72),
-            pos: l.pos === 'right' ? 'right' : 'left',
-            x: sbNum(l.x, -300, 600, 16),
-            y: sbNum(l.y, -300, 300, 0)
-        };
-    };
     window.normSlideBanner = (c) => {
         c = c && typeof c === 'object' ? c : {};
         const raw = (Array.isArray(c.slides) ? c.slides : []).slice(0, 20);
-        // Versi lama menyimpan gaya per slide -> gaya slide pertama dipakai sebagai gaya bersama.
+        // Kompatibel dengan format lama (gaya per slide / c.text / c.logo).
         const first = raw.find(x => x && typeof x === 'object') || {};
-        const t = c.text && typeof c.text === 'object' ? c.text : first;
-        const text = {
-            font: SB_FONTS.some(f => f[0] === t.font) ? t.font : 'Inter',
-            size: sbNum(t.size, 12, 96, 26),
-            bold: t.bold !== undefined ? Boolean(t.bold) : true,
-            italic: Boolean(t.italic), underline: Boolean(t.underline),
-            align: t.align === 'left' ? 'left' : (t.align === 'center' ? 'center' : (t.center === false ? 'left' : 'center')),
-            colorLight: sbColor(t.colorLight, '#111827'), colorDark: sbColor(t.colorDark, '#ECEEF2'),
-            effect: ['none', 'shadow', 'outline'].includes(t.effect) ? t.effect : 'none',
-            effectColor: sbColor(t.effectColor, '#000000')
+        const oldT = (c.text && typeof c.text === 'object') ? c.text : first;
+        const oldLogo = (c.logo && typeof c.logo === 'object') ? c.logo : {};
+        const im = (c.image && typeof c.image === 'object') ? c.image : {
+            img: (oldLogo.show !== false && (oldLogo.show || raw.some(x => x && x.logo))) ? String(oldLogo.img || '') : '',
+            pos: oldLogo.pos, size: oldLogo.size
         };
+        const imgStr = String(im.img || '');
         return {
             enabled: Boolean(c.enabled),
-            transition: SB_TRANSITIONS.some(x => x[0] === c.transition) ? c.transition : 'fade',
-            speed: sbNum(c.speed, 200, 3000, 600),
-            delay: sbNum(c.delay, 1, 60, 4),
-            height: sbNum(c.height, 32, 240, 64),
-            shape: c.shape === 'card' ? 'card' : 'full',
+            height: sbNum(c.height, 40, 200, 64),
+            align: (c.align || oldT.align) === 'left' || oldT.center === false ? 'left' : 'center',
             bgLight: sbColor(c.bgLight, '#E9B949'), bgDark: sbColor(c.bgDark, '#C9A13B'),
-            text,
-            logo: window.normSlideLogo(c.logo, raw.some(x => x && x.logo)),
+            style: SB_STYLES.some(x => x[0] === c.style) ? c.style : 'klasik',
+            color: sbColor(c.color || oldT.colorLight, '#FFFFFF'),
+            depth: sbColor(c.depth || oldT.effectColor, '#1F2937'),
+            transition: SB_TRANSITIONS.some(x => x[0] === c.transition) ? c.transition : (c.transition === 'up' ? 'slide' : 'fade'),
+            delay: sbNum(c.delay, 1, 20, 4),
+            image: { img: sbImgOk(imgStr) ? imgStr : '', pos: im.pos === 'right' ? 'right' : 'left', size: sbNum(im.size, 24, 320, 96) },
             slides: raw.map(x => ({ text: String((typeof x === 'string' ? x : x && x.text) || '').replace(/\s*\n\s*/g, ' ').slice(0, 200) }))
         };
     };
-    const sbLoadedFonts = new Set(['Inter']);
-    const sbLoadFont = (name) => {
-        if (sbLoadedFonts.has(name)) return;
-        const f = SB_FONTS.find(x => x[0] === name);
-        if (!f) return;
-        sbLoadedFonts.add(name);
+    const sbLoadedFonts = new Set();
+    const sbLoadFont = (key) => {
+        const st = sbStyle(key);
+        if (sbLoadedFonts.has(st[0])) return;
+        sbLoadedFonts.add(st[0]);
         const l = document.createElement('link');
         l.rel = 'stylesheet';
-        l.href = `https://fonts.googleapis.com/css2?family=${f[1]}&display=swap`;
-        l.onload = () => sbRefitAll();
+        l.href = `https://fonts.googleapis.com/css2?family=${st[5]}&display=swap`;
+        l.onload = () => { if (document.fonts && document.fonts.load) document.fonts.load(`${st[4] ? 'italic ' : ''}${st[3]} 20px "${st[2]}"`).then(sbRefitAll, sbRefitAll); else sbRefitAll(); };
         document.head.appendChild(l);
     };
-    const sbStoreLogo = () => STATE.data.settings.logoUrl || (document.getElementById('headerLogo') || {}).src || '';
-    const sbLogoSrc = (cfg) => (cfg && cfg.logo && cfg.logo.img) || sbStoreLogo();
+    const sbFontCss = (key) => { const st = sbStyle(key); return `font-family:'${st[2]}',Inter,sans-serif;font-weight:${st[3]};font-style:${st[4] ? 'italic' : 'normal'}`; };
 
-    // Teks 1 baris: perkecil ukuran huruf sampai muat di lebar slide (minimal 9px).
+    // Teks 1 baris: perkecil ukuran huruf sampai muat (gambar di samping ikut diperhitungkan).
     const sbHosts = new Set();
     const sbFit = (el) => {
         if (!el || !el.isConnected) { sbHosts.delete(el); return; }
-        const base = Number(el.dataset.fs) || 24;
+        const base = Number(el.dataset.fs) || 30;
         el.querySelectorAll('.sb-slide').forEach(sl => {
             const tx = sl.querySelector('.sb-text');
             if (!tx) return;
             const cs = getComputedStyle(sl);
-            const avail = sl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+            const img = sl.querySelector('.sb-img');
+            const imgW = img ? img.getBoundingClientRect().width + 10 : 0;
+            const avail = sl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - imgW;
             let fs = base;
             tx.style.fontSize = fs + 'px';
             tx.classList.remove('is-marquee');
-            for (let i = 0; i < 6 && avail > 0 && tx.scrollWidth > avail && fs > 9; i++) {
-                fs = Math.max(9, Math.floor(fs * avail / tx.scrollWidth * 10) / 10);
+            for (let i = 0; i < 6 && avail > 0 && tx.scrollWidth > avail && fs > 10; i++) {
+                fs = Math.max(10, Math.floor(fs * avail / tx.scrollWidth * 10) / 10);
                 tx.style.fontSize = fs + 'px';
             }
             // Sangat panjang (sudah ukuran terkecil tapi belum muat): teks bergeser pelan supaya tetap terbaca utuh.
             const over = tx.scrollWidth - avail;
+            tx.style.maxWidth = avail > 0 ? avail + 'px' : '';
             if (avail > 0 && over > 1) {
-                tx.style.setProperty('--sb-mq', -Math.ceil(over + 4) + 'px');
+                tx.style.setProperty('--sb-mq', -Math.ceil(over + 6) + 'px');
                 tx.style.setProperty('--sb-mq-d', Math.max(3, Math.round(over / 40)) + 's');
                 tx.classList.add('is-marquee');
             }
@@ -10915,7 +10908,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // Layout penuh: lebarkan sampai tepi area halaman (menembus padding wadah).
     const sbBleed = (el) => {
         el.style.marginLeft = el.style.marginRight = '';
-        if (!el.classList.contains('is-full') || el.classList.contains('is-preview')) return;
+        if (el.classList.contains('is-preview')) return;
         const sec = el.closest('section') || el.parentElement;
         const box = sec && sec.parentElement;
         if (!box) return;
@@ -10933,11 +10926,10 @@ measurementId: "G-ZVZ3QHEPKC"
     window.renderSlideBanner = (el, cfgRaw, opts = {}) => {
         if (!el) return;
         const cfg = window.normSlideBanner(cfgRaw);
-        const lg = cfg.logo, logoSrc = sbLogoSrc(cfg);
-        const useLogo = lg.show && Boolean(logoSrc);
+        const im = cfg.image;
         const slides = cfg.slides.filter(x => x.text.trim());
-        const show = (cfg.enabled || opts.preview) && (slides.length > 0 || useLogo);
-        const sig = JSON.stringify([cfg, opts.forceTheme || '', show, useLogo ? logoSrc : '', Boolean(opts.preview)]);
+        const show = (cfg.enabled || opts.preview) && (slides.length > 0 || Boolean(im.img));
+        const sig = JSON.stringify([cfg, opts.forceTheme || '', show, Boolean(opts.preview)]);
         if (el.__sbSig === sig) { if (show) { sbBleed(el); sbFit(el); } return; }
         el.__sbSig = sig;
         clearInterval(el.__sbTimer);
@@ -10948,39 +10940,24 @@ measurementId: "G-ZVZ3QHEPKC"
             sbHosts.delete(el);
             return;
         }
-        const T = cfg.text;
-        sbLoadFont(T.font);
+        sbLoadFont(cfg.style);
         const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        el.className = 'sb-host' + (opts.preview ? ' is-preview' : '') + (cfg.shape === 'full' ? ' is-full' : '');
-        const vars = {
-            '--sb-h': cfg.height + 'px', '--sb-speed': cfg.speed + 'ms', '--sb-bg-l': cfg.bgLight, '--sb-bg-d': cfg.bgDark,
-            '--sb-c-l': T.colorLight, '--sb-c-d': T.colorDark, '--sb-fx': T.effectColor,
-            '--sb-lg-h': lg.size + 'px', '--sb-lg-x': lg.x + 'px', '--sb-lg-y': lg.y + 'px',
-            '--sb-logo-pad': Math.max(0, Math.round(lg.size + lg.x + 10)) + 'px'
-        };
+        el.className = 'sb-host' + (opts.preview ? ' is-preview' : '');
+        const vars = { '--sb-h': cfg.height + 'px', '--sb-bg-l': cfg.bgLight, '--sb-bg-d': cfg.bgDark, '--sb-c': cfg.color, '--sb-d': cfg.depth, '--sb-img-h': im.size + 'px' };
         Object.entries(vars).forEach(([k, v]) => el.style.setProperty(k, v));
-        el.dataset.fs = Math.min(T.size, Math.round(cfg.height * 0.72));
+        el.dataset.fs = Math.round(cfg.height * 0.56);
         const list = slides.length ? slides : [{ text: '' }];
-        const bannerCls = `slide-banner sb-t-${reduce ? 'fade' : cfg.transition} sb-fx-${T.effect}${useLogo ? ' sb-logo-' + lg.pos : ''}${opts.forceTheme ? ' sb-force-' + opts.forceTheme : ''}`;
-        const style = `font-family:'${T.font}',Inter,sans-serif;font-weight:${T.bold ? 800 : 400};font-style:${T.italic ? 'italic' : 'normal'};text-align:${T.align}`;
-        el.innerHTML = `<div class="sb-stage"><div class="${bannerCls}" style="${style}" role="region" aria-label="Pengumuman">`
-            + list.map((x, i) => `<div class="sb-slide${i === 0 ? ' is-active' : ''}" style="justify-content:${T.align === 'center' ? 'center' : 'flex-start'}" aria-hidden="${i === 0 ? 'false' : 'true'}">${x.text ? `<span class="sb-text" style="text-decoration:${T.underline ? 'underline' : 'none'}">${escapeHTML(x.text)}</span>` : ''}</div>`).join('')
-            + `</div>${useLogo ? `<img class="sb-flogo sb-flogo-${lg.pos}" src="${escapeHTML(logoSrc)}" alt="" aria-hidden="true">` : ''}</div>`;
-        // Logo lebih besar dari layout -> beri ruang di atas/bawah supaya tidak menutupi konten lain.
-        const ovTop = useLogo ? Math.max(0, Math.round(lg.size / 2 - cfg.height / 2 - lg.y)) : 0;
-        const ovBot = useLogo ? Math.max(0, Math.round(lg.size / 2 - cfg.height / 2 + lg.y)) : 0;
-        el.style.paddingTop = ovTop ? ovTop + 'px' : '';
-        el.style.paddingBottom = ovBot ? ovBot + 'px' : '';
+        const imgHtml = im.img ? `<img class="sb-img" src="${escapeHTML(im.img)}" alt="" aria-hidden="true">` : '';
+        el.innerHTML = `<div class="slide-banner sb-t-${reduce ? 'fade' : cfg.transition}${opts.forceTheme ? ' sb-force-' + opts.forceTheme : ''}" role="region" aria-label="Pengumuman">`
+            + list.map((x, i) => `<div class="sb-slide sb-al-${cfg.align}${i === 0 ? ' is-active' : ''}" aria-hidden="${i === 0 ? 'false' : 'true'}"><div class="sb-group${im.pos === 'right' ? ' is-rev' : ''}">${imgHtml}${x.text ? `<span class="sb-text sb3d" style="${sbFontCss(cfg.style)}">${escapeHTML(x.text)}</span>` : ''}</div></div>`).join('')
+            + `</div>`;
+        // Gambar lebih tinggi dari layout -> beri ruang di atas/bawah supaya tidak menutupi konten lain.
+        const ov = im.img ? Math.max(0, Math.round((im.size - cfg.height) / 2)) : 0;
+        el.style.paddingTop = el.style.paddingBottom = ov ? ov + 'px' : '';
         sbHosts.add(el);
         sbBleed(el);
         sbFit(el);
-        const fl = el.querySelector('.sb-flogo');
-        if (fl) {
-            // Ruang teks menyesuaikan lebar asli logo (rasio gambar).
-            const setPad = () => { if (fl.naturalWidth && fl.naturalHeight) { el.style.setProperty('--sb-logo-pad', Math.max(0, Math.round(lg.size * fl.naturalWidth / fl.naturalHeight + lg.x + 10)) + 'px'); sbFit(el); } };
-            if (fl.complete) setPad(); else fl.addEventListener('load', setPad, { once: true });
-        }
-        if (document.fonts && document.fonts.load) document.fonts.load(`${T.bold ? 800 : 400} ${T.italic ? 'italic ' : ''}20px "${T.font}"`).then(() => sbFit(el)).catch(() => {});
+        el.querySelectorAll('.sb-img').forEach(img => { if (!img.complete) img.addEventListener('load', () => sbFit(el), { once: true }); });
         if (list.length < 2) return;
         let cur = 0;
         el.__sbTimer = setInterval(() => {
@@ -10992,8 +10969,8 @@ measurementId: "G-ZVZ3QHEPKC"
             const next = nodes[cur];
             prev.classList.remove('is-active'); prev.classList.add('is-leaving'); prev.setAttribute('aria-hidden', 'true');
             next.classList.remove('is-leaving'); next.classList.add('is-active'); next.setAttribute('aria-hidden', 'false');
-            setTimeout(() => prev.classList.remove('is-leaving'), cfg.speed + 50);
-        }, cfg.delay * 1000 + cfg.speed);
+            setTimeout(() => prev.classList.remove('is-leaving'), 700);
+        }, cfg.delay * 1000 + 600);
     };
     window.renderPublicSlideBanner = () => window.renderSlideBanner(document.getElementById('publicSlideBanner'), STATE.data.settings.slideBanner);
     (() => {
@@ -11003,10 +10980,9 @@ measurementId: "G-ZVZ3QHEPKC"
         if (typeof origShow === 'function') window.showPage = async function (...a) { const r = await origShow.apply(this, a); setTimeout(sbRefitAll, 30); return r; };
     })();
 
-    // ---------- Editor di Pengaturan (tab: Teks · Gaya · Logo · Layout) ----------
+    // ---------- Editor di Pengaturan (satu halaman, ringkas) ----------
     STATE.slideDraft = window.normSlideBanner(null);
     STATE.slidePreviewTheme = '';
-    STATE.slideTab = 'text';
     window.loadSlideEditor = () => {
         STATE.slideDraft = JSON.parse(JSON.stringify(window.normSlideBanner(STATE.data.settings.slideBanner)));
         const cb = document.getElementById('setSlideEnabled');
@@ -11023,69 +10999,8 @@ measurementId: "G-ZVZ3QHEPKC"
         if (on && !STATE.slideDraft.slides.length) STATE.slideDraft.slides.push(window.newSlide(`Selamat datang di ${STATE.data.settings.storeName || 'toko kami'}`));
         window.renderSlideEditor();
     };
-    const sbOpt = (list, val) => list.map(([v, l]) => `<option value="${v}" ${String(v) === String(val) ? 'selected' : ''}>${l}</option>`).join('');
     const sbSeg = (attr, cur, items) => `<div class="sb-seg" role="group">${items.map(([v, l]) => `<button type="button" ${attr}="${v}" class="${String(cur) === String(v) ? 'is-on' : ''}">${l}</button>`).join('')}</div>`;
-    const sbRange = (attr, key, val, min, max, step, label, unit) => `<div><label class="sb-lbl">${label}: <b data-val="${attr}-${key}">${val}${unit}</b></label><input type="range" ${attr}="${key}" min="${min}" max="${max}" step="${step}" value="${val}" data-unit="${unit}" class="w-full sb-range"></div>`;
-    const sbSwitch = (attr, key, on, label) => `<button type="button" ${attr}="${key}" class="sb-switch-row" aria-pressed="${on}"><span class="ws-switch${on ? ' is-on' : ''}"></span><span>${label}</span></button>`;
-    const sbTabHtml = {
-        text: (d) => `
-            <div class="space-y-2">${d.slides.map((x, i) => `
-                <div class="sb-line">
-                    <span class="sb-line-no">${i + 1}</span>
-                    <input type="text" data-s="${i}" maxlength="200" value="${escapeHTML(x.text)}" class="ui-input bg-white text-sm flex-1 min-w-0" placeholder="Tulis teks slide…">
-                    <button type="button" data-act="up" data-i="${i}" class="sb-mini" ${i === 0 ? 'disabled' : ''} title="Naikkan">▲</button>
-                    <button type="button" data-act="down" data-i="${i}" class="sb-mini" ${i === d.slides.length - 1 ? 'disabled' : ''} title="Turunkan">▼</button>
-                    <button type="button" data-act="del" data-i="${i}" class="sb-mini is-danger" title="Hapus">✕</button>
-                </div>`).join('') || '<div class="text-xs text-gray-500 text-center py-2">Belum ada teks.</div>'}
-            </div>
-            <button type="button" data-act="add" class="ui-btn bg-white w-full py-2 mt-3 text-sm">+ Tambah Teks</button>
-            <p class="sb-note">Setiap teks tampil 1 baris. Jika terlalu panjang, ukuran huruf mengecil otomatis.</p>`,
-        style: (d) => { const t = d.text; return `
-            <div class="grid grid-cols-2 gap-3">
-                <div class="col-span-2"><label class="sb-lbl">Jenis huruf</label><select data-t="font" class="ui-input bg-white text-sm" data-title="Jenis Huruf">${sbOpt(SB_FONTS.map(f => [f[0], f[0]]), t.font)}</select></div>
-                <div class="col-span-2">${sbRange('data-t', 'size', t.size, 12, 96, 1, 'Ukuran huruf maksimal', 'px')}</div>
-                <div class="col-span-2 flex flex-wrap items-center gap-2">
-                    <button type="button" data-tt="bold" class="sb-tog ${t.bold ? 'is-on' : ''}" title="Tebal"><b>B</b></button>
-                    <button type="button" data-tt="italic" class="sb-tog ${t.italic ? 'is-on' : ''}" title="Miring"><i>I</i></button>
-                    <button type="button" data-tt="underline" class="sb-tog ${t.underline ? 'is-on' : ''}" title="Garis bawah"><u>U</u></button>
-                    ${sbSeg('data-talign', t.align, [['left', 'Kiri'], ['center', 'Tengah']])}
-                </div>
-                <div><label class="sb-lbl">Warna teks ☀️ terang</label><input type="color" data-t="colorLight" value="${t.colorLight}" class="sb-color"></div>
-                <div><label class="sb-lbl">Warna teks 🌙 gelap</label><input type="color" data-t="colorDark" value="${t.colorDark}" class="sb-color"></div>
-                <div class="col-span-2"><label class="sb-lbl">Efek teks</label>${sbSeg('data-tfx', t.effect, [['none', 'Polos'], ['shadow', 'Bayangan'], ['outline', 'Garis tepi']])}</div>
-                ${t.effect !== 'none' ? `<div><label class="sb-lbl">Warna efek</label><input type="color" data-t="effectColor" value="${t.effectColor}" class="sb-color"></div>` : ''}
-            </div>`; },
-        logo: (d) => { const lg = d.logo, src = lg.img || sbStoreLogo(); return `
-            ${sbSwitch('data-lgshow', '1', lg.show, 'Tampilkan logo di slide')}
-            <div class="${lg.show ? '' : 'sb-dim'}">
-                <div class="flex items-center gap-3 my-3">
-                    <div class="sb-logo-thumb">${src ? `<img src="${escapeHTML(src)}" alt="Logo slide">` : '<span>Belum ada logo</span>'}</div>
-                    <div class="flex-1 min-w-0 flex flex-col gap-2">
-                        <button type="button" data-act="logoUp" class="ui-btn bg-white py-2 px-3 text-xs">⬆️ ${lg.img ? 'Ganti logo' : 'Upload logo'}</button>
-                        ${lg.img ? '<button type="button" data-act="logoDel" class="ui-btn bg-white py-2 px-3 text-xs text-danger">Hapus (pakai logo toko)</button>' : `<span class="text-[10px] text-gray-500 leading-tight">${src ? 'Sementara memakai logo toko. ' : ''}PNG transparan paling bagus, otomatis dikompres.</span>`}
-                    </div>
-                    <input type="file" id="sbLogoFile" accept="image/*" class="hidden">
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div class="md:col-span-2">${sbRange('data-lg', 'size', lg.size, 16, 400, 2, 'Ukuran logo', 'px')}</div>
-                    <div><label class="sb-lbl">Posisi</label>${sbSeg('data-lgpos', lg.pos, [['left', 'Kiri'], ['right', 'Kanan']])}</div>
-                    <div></div>
-                    ${sbRange('data-lg', 'x', lg.x, -300, 600, 2, 'Jarak dari tepi', 'px')}
-                    ${sbRange('data-lg', 'y', lg.y, -300, 300, 2, 'Geser atas/bawah', 'px')}
-                </div>
-                <p class="sb-note">Logo boleh lebih besar dari layout dan keluar dari kotak slide. Nilai minus = keluar dari tepi.</p>
-            </div>`; },
-        layout: (d) => `
-            <div class="grid grid-cols-2 gap-3">
-                <div class="col-span-2"><label class="sb-lbl">Bentuk layout</label>${sbSeg('data-shape', d.shape, [['full', 'Penuh (tepi ke tepi)'], ['card', 'Kartu (sudut bulat)']])}</div>
-                <div class="col-span-2">${sbRange('data-g', 'height', d.height, 32, 240, 2, 'Tinggi layout', 'px')}</div>
-                <div><label class="sb-lbl">Warna latar ☀️ terang</label><input type="color" data-g="bgLight" value="${d.bgLight}" class="sb-color"></div>
-                <div><label class="sb-lbl">Warna latar 🌙 gelap</label><input type="color" data-g="bgDark" value="${d.bgDark}" class="sb-color"></div>
-                <div><label class="sb-lbl">Transisi</label><select data-g="transition" class="ui-input bg-white text-sm" data-title="Jenis Transisi">${sbOpt(SB_TRANSITIONS, d.transition)}</select></div>
-                <div><label class="sb-lbl">Kecepatan</label><select data-g="speed" class="ui-input bg-white text-sm" data-title="Kecepatan Transisi">${sbOpt(SB_SPEEDS.some(x => x[0] === d.speed) ? SB_SPEEDS : [...SB_SPEEDS, [d.speed, d.speed + ' ms']], d.speed)}</select></div>
-                <div class="col-span-2">${sbRange('data-g', 'delay', d.delay, 1, 20, 1, 'Jeda antar teks', ' dtk')}</div>
-            </div>`
-    };
+    const sbRange = (key, val, min, max, step, label, unit) => `<div><label class="sb-lbl">${label}: <b data-val="${key}">${val}${unit}</b></label><input type="range" data-g="${key}" min="${min}" max="${max}" step="${step}" value="${val}" data-unit="${unit}" class="w-full sb-range"></div>`;
     window.renderSlideEditor = () => {
         const wrap = document.getElementById('slideEditorWrap');
         if (!wrap) return;
@@ -11093,32 +11008,83 @@ measurementId: "G-ZVZ3QHEPKC"
         const on = Boolean(document.getElementById('setSlideEnabled') && document.getElementById('setSlideEnabled').checked);
         wrap.classList.toggle('d-none', !on);
         if (!on) return;
-        const tabs = [['text', '✏️ Teks'], ['style', '🔤 Gaya'], ['logo', '🏷️ Logo'], ['layout', '📐 Layout']];
+        SB_STYLES.forEach(st => sbLoadFont(st[0]));
+        const im = d.image;
         wrap.innerHTML = `
             <div class="flex items-center justify-between gap-2 mb-1">
                 <span class="text-xs font-bold">Pratinjau</span>
                 ${sbSeg('data-pt', STATE.slidePreviewTheme, [['', 'Ikuti tema'], ['light', 'Terang'], ['dark', 'Gelap']])}
             </div>
-            <div id="slidePreview" class="mb-3"></div>
-            <div class="sb-tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" data-tab="${k}" role="tab" aria-selected="${STATE.slideTab === k}" class="${STATE.slideTab === k ? 'is-on' : ''}">${l}</button>`).join('')}</div>
-            <div class="sb-panel">${sbTabHtml[STATE.slideTab](d)}</div>`;
+            <div id="slidePreview" class="mb-4"></div>
+
+            <div class="sb-sec">
+                <div class="sb-sec-title">Teks</div>
+                <div class="space-y-2">${d.slides.map((x, i) => `
+                    <div class="sb-line">
+                        <span class="sb-line-no">${i + 1}</span>
+                        <input type="text" data-s="${i}" maxlength="200" value="${escapeHTML(x.text)}" class="ui-input bg-white text-sm flex-1 min-w-0" placeholder="Tulis teks slide…">
+                        <button type="button" data-act="up" data-i="${i}" class="sb-mini" ${i === 0 ? 'disabled' : ''} title="Naikkan">▲</button>
+                        <button type="button" data-act="del" data-i="${i}" class="sb-mini is-danger" title="Hapus">✕</button>
+                    </div>`).join('') || '<div class="text-xs text-gray-500 text-center py-1">Belum ada teks.</div>'}
+                </div>
+                <button type="button" data-act="add" class="ui-btn bg-white w-full py-2 mt-2 text-sm">+ Tambah Teks</button>
+                <p class="sb-note">Tampil 1 baris. Jika terlalu panjang, huruf mengecil otomatis.</p>
+            </div>
+
+            <div class="sb-sec">
+                <div class="sb-sec-title">Huruf 3D</div>
+                <div class="sb-styles">${SB_STYLES.map(st => `<button type="button" data-style="${st[0]}" class="sb-style${d.style === st[0] ? ' is-on' : ''}" style="--sb-c:${d.color};--sb-d:${d.depth};--sb-bg-l:${d.bgLight};--sb-bg-d:${d.bgDark}"><span class="sb3d" style="${sbFontCss(st[0])}">Aa</span><small>${st[1]}</small></button>`).join('')}</div>
+                <div class="grid grid-cols-2 gap-3 mt-3">
+                    <div><label class="sb-lbl">Warna huruf</label><input type="color" data-g="color" value="${d.color}" class="sb-color"></div>
+                    <div><label class="sb-lbl">Warna 3D</label><input type="color" data-g="depth" value="${d.depth}" class="sb-color"></div>
+                </div>
+            </div>
+
+            <div class="sb-sec">
+                <div class="sb-sec-title">Gambar di samping tulisan</div>
+                <div class="flex items-center gap-3">
+                    <div class="sb-logo-thumb">${im.img ? `<img src="${escapeHTML(im.img)}" alt="Gambar slide">` : '<span>Tanpa gambar</span>'}</div>
+                    <div class="flex-1 min-w-0 flex flex-col gap-2">
+                        <button type="button" data-act="imgUp" class="ui-btn bg-white py-2 px-3 text-xs">⬆️ ${im.img ? 'Ganti gambar' : 'Upload gambar'}</button>
+                        ${im.img ? '<button type="button" data-act="imgDel" class="ui-btn bg-white py-2 px-3 text-xs text-danger">Hapus gambar</button>' : '<span class="text-[10px] text-gray-500 leading-tight">PNG transparan paling bagus (logo, maskot, ikon). Otomatis dikompres.</span>'}
+                    </div>
+                    <input type="file" id="sbLogoFile" accept="image/*" class="hidden">
+                </div>
+                <div class="${im.img ? '' : 'sb-dim'} grid grid-cols-1 gap-3 mt-3">
+                    <div><label class="sb-lbl">Posisi gambar</label>${sbSeg('data-imgpos', im.pos, [['left', '◀ Kiri tulisan'], ['right', 'Kanan tulisan ▶']])}</div>
+                    ${sbRange('imgSize', im.size, 24, 320, 2, 'Ukuran gambar', 'px')}
+                </div>
+                <p class="sb-note">Gambar boleh lebih tinggi dari layout slide (menyembul ke atas &amp; bawah).</p>
+            </div>
+
+            <div class="sb-sec">
+                <div class="sb-sec-title">Tampilan</div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2">${sbRange('height', d.height, 40, 200, 2, 'Tinggi layout', 'px')}</div>
+                    <div><label class="sb-lbl">Warna latar ☀️ terang</label><input type="color" data-g="bgLight" value="${d.bgLight}" class="sb-color"></div>
+                    <div><label class="sb-lbl">Warna latar 🌙 gelap</label><input type="color" data-g="bgDark" value="${d.bgDark}" class="sb-color"></div>
+                    <div><label class="sb-lbl">Posisi tulisan</label>${sbSeg('data-align', d.align, [['center', 'Tengah'], ['left', 'Kiri']])}</div>
+                    <div><label class="sb-lbl">Animasi</label>${sbSeg('data-tr', d.transition, SB_TRANSITIONS)}</div>
+                    <div class="col-span-2">${sbRange('delay', d.delay, 1, 20, 1, 'Ganti teks setiap', ' dtk')}</div>
+                </div>
+            </div>`;
         window.renderSlidePreview();
     };
-    // Kompres logo: maks 512px, tetap transparan (WebP, cadangan PNG), target ≤ ~250KB.
+    // Kompres gambar: maks 512px, tetap transparan (WebP, cadangan PNG), target ≤ ~250KB.
     const sbCompressLogo = (file) => new Promise((resolve, reject) => {
         const fr = new FileReader();
         fr.onerror = () => reject(new Error('File tidak bisa dibaca'));
         fr.onload = () => {
-            const im = new Image();
-            im.onerror = () => reject(new Error('Format gambar tidak didukung'));
-            im.onload = () => {
+            const imgEl = new Image();
+            imgEl.onerror = () => reject(new Error('Format gambar tidak didukung'));
+            imgEl.onload = () => {
                 let out = '';
                 for (const max of [512, 384, 256, 192]) {
-                    const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
+                    const k = Math.min(1, max / Math.max(imgEl.naturalWidth, imgEl.naturalHeight));
                     const cv = document.createElement('canvas');
-                    cv.width = Math.max(1, Math.round(im.naturalWidth * k));
-                    cv.height = Math.max(1, Math.round(im.naturalHeight * k));
-                    cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+                    cv.width = Math.max(1, Math.round(imgEl.naturalWidth * k));
+                    cv.height = Math.max(1, Math.round(imgEl.naturalHeight * k));
+                    cv.getContext('2d').drawImage(imgEl, 0, 0, cv.width, cv.height);
                     let u = cv.toDataURL('image/webp', 0.9);
                     if (!u.startsWith('data:image/webp')) u = cv.toDataURL('image/png');
                     out = u;
@@ -11126,7 +11092,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 }
                 resolve(out);
             };
-            im.src = fr.result;
+            imgEl.src = fr.result;
         };
         fr.readAsDataURL(file);
     });
@@ -11137,8 +11103,7 @@ measurementId: "G-ZVZ3QHEPKC"
         if (!f) return;
         if (!/^image\//.test(f.type)) return await window.customAlert('Pilih file gambar (PNG/JPG/WebP).', 'Peringatan');
         try {
-            STATE.slideDraft.logo.img = await sbCompressLogo(f);
-            STATE.slideDraft.logo.show = true;
+            STATE.slideDraft.image.img = await sbCompressLogo(f);
             window.renderSlideEditor();
         } catch (err) { await window.customAlert(err.message || String(err), 'Gagal'); }
     });
@@ -11151,21 +11116,20 @@ measurementId: "G-ZVZ3QHEPKC"
     };
     let sbPrevTimer = null;
     const sbQueuePreview = (ms) => { clearTimeout(sbPrevTimer); sbPrevTimer = setTimeout(window.renderSlidePreview, ms === undefined ? 200 : ms); };
-    const SB_NUM_KEYS = ['delay', 'height', 'speed', 'size', 'x', 'y'];
     const sbOnField = (e) => {
         const t = e.target, d = STATE.slideDraft;
-        const val = (k) => SB_NUM_KEYS.includes(k) ? Number(t.value) : t.value;
-        let k = null;
         if (t.dataset.s !== undefined) { const sl = d.slides[Number(t.dataset.s)]; if (sl) sl.text = t.value.replace(/\s*\n\s*/g, ' '); }
-        else if (t.dataset.g) { k = t.dataset.g; d[k] = val(k); }
-        else if (t.dataset.t) { k = t.dataset.t; d.text[k] = val(k); }
-        else if (t.dataset.lg) { k = t.dataset.lg; d.logo[k] = val(k); }
-        else return;
+        else if (t.dataset.g === 'imgSize') d.image.size = Number(t.value);
+        else if (t.dataset.g) {
+            const k = t.dataset.g;
+            d[k] = ['height', 'delay'].includes(k) ? Number(t.value) : t.value;
+            if (['color', 'depth', 'bgLight', 'bgDark'].includes(k)) document.querySelectorAll('#slideEditorWrap .sb-style').forEach(b => b.style.setProperty({ color: '--sb-c', depth: '--sb-d', bgLight: '--sb-bg-l', bgDark: '--sb-bg-d' }[k], t.value));
+        } else return;
         if (t.type === 'range') {
             const lbl = t.closest('div') && t.closest('div').querySelector('[data-val]');
             if (lbl) lbl.textContent = t.value + (t.dataset.unit || '');
         }
-        sbQueuePreview(t.type === 'range' ? 40 : 200);
+        sbQueuePreview(t.type === 'range' || t.type === 'color' ? 40 : 200);
     };
     document.addEventListener('input', (e) => { if (e.target.closest && e.target.closest('#slideEditorWrap')) sbOnField(e); });
     document.addEventListener('change', (e) => { if (e.target.closest && e.target.closest('#slideEditorWrap')) sbOnField(e); });
@@ -11174,20 +11138,16 @@ measurementId: "G-ZVZ3QHEPKC"
         if (!b) return;
         const d = STATE.slideDraft, ds = b.dataset;
         const i = Number(ds.i);
-        if (ds.tab) STATE.slideTab = ds.tab;
-        else if (ds.pt !== undefined) STATE.slidePreviewTheme = ds.pt;
-        else if (ds.tt) d.text[ds.tt] = !d.text[ds.tt];
-        else if (ds.talign) d.text.align = ds.talign;
-        else if (ds.tfx) d.text.effect = ds.tfx;
-        else if (ds.shape) d.shape = ds.shape;
-        else if (ds.lgshow) d.logo.show = !d.logo.show;
-        else if (ds.lgpos) d.logo.pos = ds.lgpos;
-        else if (ds.act === 'logoUp') { const fi = document.getElementById('sbLogoFile'); if (fi) fi.click(); return; }
-        else if (ds.act === 'logoDel') d.logo.img = '';
+        if (ds.pt !== undefined) STATE.slidePreviewTheme = ds.pt;
+        else if (ds.style) d.style = ds.style;
+        else if (ds.imgpos) d.image.pos = ds.imgpos;
+        else if (ds.align) d.align = ds.align;
+        else if (ds.tr) d.transition = ds.tr;
+        else if (ds.act === 'imgUp') { const fi = document.getElementById('sbLogoFile'); if (fi) fi.click(); return; }
+        else if (ds.act === 'imgDel') d.image.img = '';
         else if (ds.act === 'add') { d.slides.push(window.newSlide('')); setTimeout(() => { const ins = document.querySelectorAll('#slideEditorWrap [data-s]'); if (ins.length) ins[ins.length - 1].focus(); }, 0); }
         else if (ds.act === 'del') d.slides.splice(i, 1);
         else if (ds.act === 'up' && i > 0) [d.slides[i - 1], d.slides[i]] = [d.slides[i], d.slides[i - 1]];
-        else if (ds.act === 'down' && i < d.slides.length - 1) [d.slides[i + 1], d.slides[i]] = [d.slides[i], d.slides[i + 1]];
         else return;
         window.renderSlideEditor();
     });
