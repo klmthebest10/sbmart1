@@ -959,6 +959,21 @@
         #gasapp-root .rs-tile.is-unknown .rs-tile-name { color: #fff; }
         #gasapp-root .rs-tile-qty { position: absolute; right: 6px; bottom: 2px; font-size: 26px; line-height: 1; font-weight: 900; color: #2563EB; -webkit-text-stroke: 4px #fff; paint-order: stroke fill; }
         #gasapp-root .rs-tile-var { position: absolute; left: 3px; top: 3px; max-width: calc(100% - 6px); padding: 1px 5px; border-radius: 999px; font-size: 9px; font-weight: 800; background: rgba(0,0,0,.65); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Kedaluwarsa di kartu sub produk */
+        #gasapp-root .pv-exp { border-top: 1px dashed var(--c-line); padding-top: 6px; }
+        #gasapp-root .pv-exp-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 10px; font-weight: 700; color: var(--c-text-3); }
+        #gasapp-root .pv-exp-head i { font-style: normal; font-weight: 500; }
+        #gasapp-root .pv-exp-add { font-size: 11px; font-weight: 700; color: var(--c-accent); padding: 2px 6px; border-radius: 8px; }
+        #gasapp-root .pv-exp-list { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+        #gasapp-root .pv-exp-list:empty { display: none; }
+        #gasapp-root .pv-exp-row { display: flex; gap: 6px; align-items: center; }
+
+        /* Ikon QR HP scanner di header */
+        #gasapp-root #btnHeaderRemoteQr { position: relative; }
+        #gasapp-root .hdr-qr-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--c-text-3); box-shadow: 0 0 0 2px var(--c-surface); }
+        #gasapp-root .hdr-qr-dot.is-on { background: var(--c-success); }
+        #gasapp-root .bc-flash { box-shadow: 0 0 0 3px var(--c-success) !important; transition: box-shadow .2s; }
     </style>
 </head>
 <body>
@@ -987,6 +1002,10 @@
                 <div class="flex items-center gap-2 md:gap-3">
                     <button type="button" id="btnHeaderRefresh" onclick="window.location.reload()" class="hidden lg:inline-flex items-center justify-center w-10 h-10 header-icon-btn" title="Muat ulang halaman" aria-label="Muat ulang halaman">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+                    </button>
+                    <button type="button" id="btnHeaderRemoteQr" onclick="window.openRemoteScanFromHeader()" class="d-none inline-flex items-center justify-center w-10 h-10 header-icon-btn" title="QR untuk HP scanner" aria-label="Tampilkan QR untuk HP scanner">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>
+                        <span id="hdrQrDot" class="hdr-qr-dot"></span>
                     </button>
                     <nav class="flex items-center flex-wrap justify-end gap-2 md:gap-3" id="navMenu"></nav>
                 </div>
@@ -2087,8 +2106,8 @@
                         <button type="button" onclick="window.openBarcodeScanner('field')" class="ui-btn bg-white px-3 shrink-0 text-lg" title="Scan dengan kamera">📷</button>
                     </div>
                 </div>
-                <div class="pf-sec">
-                    <label class="block font-bold mb-1">Tanggal Kedaluwarsa <span class="font-normal text-[10px] text-gray-500">(opsional, bisa lebih dari 1)</span></label>
+                <div class="pf-sec" id="prodExpSection">
+                    <label class="block font-bold mb-1"><span id="prodExpTitle">Tanggal Kedaluwarsa</span> <span class="font-normal text-[10px] text-gray-500">(opsional, bisa lebih dari 1)</span></label>
                     <div id="prodExpList" class="space-y-2"></div>
                     <button type="button" onclick="window.addProdExpRow('')" class="ui-btn bg-white px-3 py-1 text-xs mt-2">+ Tambah Tanggal</button>
                 </div>
@@ -2765,7 +2784,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
 
     // Versi aplikasi: SAMAKAN dengan VERSION di sw.js setiap kali update.
-    const APP_VERSION = 'v23';
+    const APP_VERSION = 'v24';
     window.APP_VERSION = APP_VERSION;
     let db = null;
     let auth = null;
@@ -4139,7 +4158,12 @@ measurementId: "G-ZVZ3QHEPKC"
         if(!p || !p.available) return; 
         // Multi level harga: produk bervarian -> munculkan popup kecil pemilihan sub produk dulu.
         const vars = window.getActiveVariants(p);
-        if (vars.length && (variantIdx === undefined || variantIdx === null)) { window.openVariantPicker(p); return; }
+        if (vars.length && (variantIdx === undefined || variantIdx === null)) {
+            // Hanya satu sub produk yang bisa dipilih (lainnya OFF/habis) -> langsung masuk keranjang.
+            const avail = vars.map((v, i) => i).filter(i => window.variantStatus(p, vars[i]).ok);
+            if (avail.length === 1) variantIdx = avail[0];
+            else { window.openVariantPicker(p); return; }
+        }
         const v = vars.length ? vars[Number(variantIdx)] : null;
         if (vars.length && !v) return;
         const vname = v ? v.name : '';
@@ -5437,7 +5461,27 @@ measurementId: "G-ZVZ3QHEPKC"
         }
         window.syncVarSameUI();
     };
-    window.addProdVariantRow = (name = '', price = '', cost = '', barcode = '', on = true, stock = '') => {
+    // Tanggal kedaluwarsa per sub produk (di dalam kartu varian).
+    window.addVarExpRow = (card, val) => {
+        const list = card && card.querySelector('.pv-exp-list');
+        if (!list) return;
+        const r = document.createElement('div');
+        r.className = 'pv-exp-row';
+        r.innerHTML = `<input type="date" class="pv-exp-input ui-input bg-white text-xs flex-1 min-w-0" value="${escapeHTML(val || '')}"><button type="button" onclick="this.parentElement.remove()" class="ui-btn bg-danger text-white px-2 py-1 text-xs inline-flex items-center justify-center shrink-0" title="Hapus tanggal">✕</button>`;
+        list.appendChild(r);
+    };
+    // Multi Level Harga: barcode tunggal disembunyikan; kedaluwarsa diisi di tiap sub produk.
+    window.syncProdMultiSections = () => {
+        const multi = window.getProdPriceMode() === 'multi';
+        const bw = document.getElementById('prodBarcodeWrapper');
+        if (bw) bw.classList.toggle('d-none', !window.isBarcodeOn() || multi);
+        const sec = document.getElementById('prodExpSection');
+        const hasGlobal = Boolean(document.querySelector('#prodExpList .prod-exp-row'));
+        if (sec) sec.classList.toggle('d-none', multi && !hasGlobal);
+        const t = document.getElementById('prodExpTitle');
+        if (t) t.textContent = multi ? 'Kedaluwarsa (semua sub produk)' : 'Tanggal Kedaluwarsa';
+    };
+    window.addProdVariantRow = (name = '', price = '', cost = '', barcode = '', on = true, stock = '', exps = []) => {
         const wrap = document.getElementById('prodVariantList');
         if (!wrap) return;
         const row = document.createElement('div');
@@ -5450,7 +5494,9 @@ measurementId: "G-ZVZ3QHEPKC"
             + `<div class="pv-f pv-f-avail"><label>Ketersediaan</label><button type="button" class="pv-on var-same-toggle" aria-pressed="${on === false ? 'false' : 'true'}" onclick="window.togglePvOn(this)" title="ON = bisa dipilih, OFF = tampil tetapi tidak bisa dipilih"><span class="ws-switch${on === false ? '' : ' is-on'}"></span><span class="pv-on-lbl text-[11px] font-bold">${on === false ? 'OFF' : 'ON'}</span></button></div>`
             + `<div class="pv-f pv-f-stock"><label>Stok</label><input type="number" min="0" step="1" inputmode="numeric" class="prod-var-stock ui-input bg-white text-sm text-right" placeholder="0" value="${numVal(stock)}" oninput="window.syncPvStockTotal()"></div>`
             + `</div>`
-            + `<div class="prod-var-bc-wrap w-full flex gap-2${window.isBarcodeOn() ? '' : ' d-none'}"><input type="text" maxlength="64" autocomplete="off" inputmode="numeric" class="prod-var-barcode prod-bc-input ui-input bg-white text-xs flex-1 min-w-0" placeholder="Barcode varian (opsional)" value="${escapeHTML(barcode || '')}" onkeydown="if(event.key==='Enter'){event.preventDefault();}"><button type="button" onclick="window.openBarcodeScanner('field', this.previousElementSibling)" class="ui-btn bg-white px-2.5 shrink-0 text-sm" title="Scan barcode varian">📷</button></div>`;
+            + `<div class="prod-var-bc-wrap w-full flex gap-2${window.isBarcodeOn() ? '' : ' d-none'}"><input type="text" maxlength="64" autocomplete="off" inputmode="numeric" class="prod-var-barcode prod-bc-input ui-input bg-white text-xs flex-1 min-w-0" placeholder="Barcode varian (opsional)" value="${escapeHTML(barcode || '')}" onkeydown="if(event.key==='Enter'){event.preventDefault();}"><button type="button" onclick="window.openBarcodeScanner('field', this.previousElementSibling)" class="ui-btn bg-white px-2.5 shrink-0 text-sm" title="Scan barcode varian">📷</button></div>`
+            + `<div class="pv-exp"><div class="pv-exp-head"><span>Kedaluwarsa <i>(opsional)</i></span><button type="button" class="pv-exp-add" onclick="window.addVarExpRow(this.closest('.prod-var-row'), '')">+ Tanggal</button></div><div class="pv-exp-list"></div></div>`;
+        (exps || []).forEach(d => window.addVarExpRow(row, d));
         wrap.appendChild(row);
         window.syncProdPriceHint();
         if (window.syncExpVariantOptions) window.syncExpVariantOptions();
@@ -5487,7 +5533,15 @@ measurementId: "G-ZVZ3QHEPKC"
         if (window.syncWholesaleSection) window.syncWholesaleSection();
         document.getElementById('prodVariantWrapper').classList.toggle('d-none', !multi);
         if (multi && !document.querySelector('#prodVariantList .prod-var-row')) window.addProdVariantRow();
+        if (!multi) {
+            // Kembali ke Harga Tunggal: tanggal di kartu varian dipindah ke daftar umum supaya tidak hilang.
+            document.querySelectorAll('#prodVariantList .prod-var-row').forEach(card => {
+                const vn = card.querySelector('.prod-var-name').value.trim();
+                card.querySelectorAll('.pv-exp-input').forEach(i => { if (i.value) window.addProdExpRow(i.value, vn); i.parentElement.remove(); });
+            });
+        }
         window.onProdSystemChange();
+        window.syncProdMultiSections();
     };
     window.prepareProductFormExtras = (p) => {
         window.syncBarcodeUI();
@@ -5498,7 +5552,9 @@ measurementId: "G-ZVZ3QHEPKC"
         // Produk lama (stok gabungan) -> stok per sub produk dikosongkan dan perlu diisi.
         const legacyStock = Boolean(p && p.stockMode === 'stock' && hasVars && !p.variants.some(v => typeof v.stock === 'number'));
         STATE.pvLegacyStock = legacyStock ? Number(p.stock || 0) : null;
-        if (mp && hasVars) p.variants.forEach(v => window.addProdVariantRow(v.name, v.price, v.cost, v.barcode, v.on !== false, typeof v.stock === 'number' ? v.stock : ''));
+        const allExp = window.normExpItems(p && p.expItems, p && p.expDates);
+        const varNames = mp && hasVars ? p.variants.map(v => v.name) : [];
+        if (mp && hasVars) p.variants.forEach(v => window.addProdVariantRow(v.name, v.price, v.cost, v.barcode, v.on !== false, typeof v.stock === 'number' ? v.stock : '', allExp.filter(x => x.v === v.name).map(x => x.d)));
         // Semua sub produk berharga sama (>1 varian) -> sakelar "Harga sama" otomatis aktif
         STATE.varSamePrice = Boolean(hasVars && p.variants.length > 1 && p.variants.every(v => v.price === p.variants[0].price && Number(v.cost || 0) === Number(p.variants[0].cost || 0)));
         document.getElementById('prodVarSamePrice').value = STATE.varSamePrice ? p.variants[0].price : '';
@@ -5518,7 +5574,8 @@ measurementId: "G-ZVZ3QHEPKC"
         window.onProdSystemChange();
         const wrap = document.getElementById('prodExpList');
         wrap.innerHTML = '';
-        window.normExpItems(p && p.expItems, p && p.expDates).forEach(x => window.addProdExpRow(x.d, x.v));
+        allExp.filter(x => !varNames.includes(x.v)).forEach(x => window.addProdExpRow(x.d, x.v));
+        window.syncProdMultiSections();
     };
 
     window.editProduct = id => {
@@ -5624,7 +5681,8 @@ measurementId: "G-ZVZ3QHEPKC"
         if (isStockMode && !varStockMode && (stockRaw === '' || isNaN(parseInt(stockRaw)) || parseInt(stockRaw) < 0)) {
             return await window.customAlert('Sisa stok wajib diisi (angka 0 atau lebih).', 'Peringatan');
         }
-        const barcodeVal = window.isBarcodeOn() ? normBarcode(document.getElementById('prodBarcode').value) : null;
+        // Multi Level Harga memakai barcode per sub produk -> barcode tunggal dikosongkan.
+        const barcodeVal = window.isBarcodeOn() ? (priceMode === 'multi' ? '' : normBarcode(document.getElementById('prodBarcode').value)) : null;
         if (window.isBarcodeOn()) {
             // Semua barcode di form ini (produk + varian) harus unik, dan tidak boleh dipakai produk/varian lain.
             const editId = document.getElementById('prodId').value;
@@ -5644,10 +5702,17 @@ measurementId: "G-ZVZ3QHEPKC"
                 if (hit) return await window.customAlert(`Barcode ${m.code} (${m.label}) sudah dipakai ${hit.variant ? `varian "${hit.variant.name}" pada ` : ''}produk "${hit.p.name}".`, 'Barcode Ganda');
             }
         }
-        const expItems = window.normExpItems(Array.from(document.querySelectorAll('#prodExpList .prod-exp-row')).map(r => ({
+        const expRaw = Array.from(document.querySelectorAll('#prodExpList .prod-exp-row')).map(r => ({
             d: r.querySelector('.prod-exp-input').value,
             v: (r.querySelector('.prod-exp-var') && !r.querySelector('.prod-exp-var').classList.contains('d-none')) ? r.querySelector('.prod-exp-var').value : ''
-        })));
+        }));
+        if (priceMode === 'multi') {
+            document.querySelectorAll('#prodVariantList .prod-var-row').forEach(card => {
+                const vn = card.querySelector('.prod-var-name').value.trim().slice(0, 40);
+                if (vn) card.querySelectorAll('.pv-exp-input').forEach(i => expRaw.push({ d: i.value, v: vn }));
+            });
+        }
+        const expItems = window.normExpItems(expRaw);
         const uniqExp = [...new Set(expItems.map(x => x.d))].sort();
         showLoad();
         const prodIdVal = document.getElementById('prodId').value;
@@ -7673,6 +7738,18 @@ measurementId: "G-ZVZ3QHEPKC"
     };
     window.findProductByBarcode = (code) => { const m = window.findBarcodeMatch(code); return m ? m.p : null; };
 
+    // Validasi hasil kamera: kode angka 8/12/13 digit (EAN-8, UPC-A, EAN-13) wajib lolos cek digit GS1,
+    // kode lain minimal 4 karakter. Mencegah salah baca saat kamera goyang / buram.
+    window.isPlausibleBarcode = (raw) => {
+        const c = String(raw || '').trim();
+        if (c.length < 4) return false;
+        if (/^\d+$/.test(c) && [8, 12, 13].includes(c.length)) {
+            const d = c.split('').map(Number), chk = d.pop();
+            const sum = d.reverse().reduce((t, n, i) => t + n * (i % 2 === 0 ? 3 : 1), 0);
+            return (10 - (sum % 10)) % 10 === chk;
+        }
+        return true;
+    };
     // Bunyi bip (berhasil) / dengung rendah (gagal) seperti scanner kasir.
     const scanBeep = (ok) => {
         try {
@@ -7742,6 +7819,21 @@ measurementId: "G-ZVZ3QHEPKC"
             scanBeep(true);
             showScanToast(`✔ ${p.name} (${match.variant.name}) ${after}x`, true);
             if (source === 'camera') document.getElementById('scanStatus').textContent = `✔ ${p.name} (${match.variant.name}) ditambahkan (${after}x) — scan berikutnya…`;
+            return true;
+        }
+        // Barcode tunggal produk bervarian: bila hanya satu sub produk yang tersedia -> langsung masuk keranjang.
+        const onlyIdx = activeVars.map((v, i) => i).filter(i => window.variantStatus(p, activeVars[i]).ok);
+        if (activeVars.length && onlyIdx.length === 1) {
+            const v1 = activeVars[onlyIdx[0]];
+            const qtyOf1 = () => STATE.cart.filter(x => x.id === p.id && x.variant === v1.name).reduce((s, x) => s + x.qty, 0);
+            const b1 = qtyOf1();
+            window.__sfxQuiet = true;
+            try { await window.addToCart(p.id, onlyIdx[0]); } finally { window.__sfxQuiet = false; }
+            const a1 = qtyOf1();
+            if (a1 <= b1) { scanBeep(false); return false; }
+            scanBeep(true);
+            showScanToast(`✔ ${p.name} (${v1.name}) ${a1}x`, true);
+            if (source === 'camera') document.getElementById('scanStatus').textContent = `✔ ${p.name} (${v1.name}) ditambahkan (${a1}x) — scan berikutnya…`;
             return true;
         }
         // Barcode tunggal produk bervarian (atau varian belum punya barcode) -> tetap pilih varian.
@@ -7845,7 +7937,7 @@ measurementId: "G-ZVZ3QHEPKC"
             await loadScanLib();
             const H = window.Html5Qrcode;
             const F = window.Html5QrcodeSupportedFormats || {};
-            const formats = ['EAN_13', 'EAN_8', 'UPC_A', 'UPC_E', 'CODE_128', 'CODE_39', 'CODE_93', 'ITF', 'CODABAR', 'QR_CODE'].map(k => F[k]).filter(v => v !== undefined);
+            const formats = ['EAN_13', 'EAN_8', 'UPC_A', 'UPC_E', 'CODE_128', 'CODE_39', 'QR_CODE'].map(k => F[k]).filter(v => v !== undefined);
             STATE.scanner = new H('barcodeReader', { formatsToSupport: formats.length ? formats : undefined, experimentalFeatures: { useBarCodeDetectorIfSupported: true }, verbose: false });
             const box = Math.min(300, Math.floor((document.getElementById('barcodeReader').clientWidth || 320) * 0.85));
             await STATE.scanner.start(
@@ -7863,9 +7955,16 @@ measurementId: "G-ZVZ3QHEPKC"
         }
     };
 
-    window.onCameraScan = async (text) => {
+    window.onCameraScan = async (text, manual) => {
         const code = normBarcode(text);
         const now = Date.now();
+        if (!manual) {
+            if (!window.isPlausibleBarcode(code)) return;
+            // Harus terbaca 2x sama berturut-turut (≤1,2 dtk) -> mencegah salah scan.
+            const cand = STATE.scanCand || {};
+            if (cand.c !== code || now - cand.t > 1200) { STATE.scanCand = { c: code, t: now }; return; }
+            STATE.scanCand = { c: '', t: 0 };
+        }
         // Anti-dobel: kode yang sama diabaikan selama 1,5 detik (kamera membaca berkali-kali per detik).
         if (code === STATE.scanLast.code && now - STATE.scanLast.t < 1500) return;
         STATE.scanLast = { code, t: now };
@@ -7884,7 +7983,7 @@ measurementId: "G-ZVZ3QHEPKC"
         if (!code) return;
         inp.value = '';
         STATE.scanLast = { code: '', t: 0 };
-        await window.onCameraScan(code);
+        await window.onCameraScan(code, true);
     };
 
     window.closeBarcodeScanner = async () => {
@@ -7903,7 +8002,8 @@ measurementId: "G-ZVZ3QHEPKC"
         const scanBtn = document.getElementById('btnPosScan');
         if (scanBtn) scanBtn.classList.toggle('d-none', !on);
         const wrap = document.getElementById('prodBarcodeWrapper');
-        if (wrap) wrap.classList.toggle('d-none', !on);
+        if (wrap) wrap.classList.toggle('d-none', !on || (window.getProdPriceMode && window.getProdPriceMode() === 'multi'));
+        if (window.syncScanSourceUI) setTimeout(window.syncScanSourceUI, 0);
         const inp = document.getElementById('posInlineSearch');
         if (inp) inp.placeholder = on ? 'Cari produk / scan barcode...' : 'Cari produk...';
         document.querySelectorAll('.prod-var-bc-wrap').forEach(el => el.classList.toggle('d-none', !on));
@@ -10355,6 +10455,14 @@ measurementId: "G-ZVZ3QHEPKC"
         if (pair) pair.classList.toggle('d-none', src !== 'remote');
         const btn = document.getElementById('btnPosScan');
         if (btn) btn.title = src === 'remote' ? 'Scanner dari perangkat lain' : 'Scan dengan kamera';
+        // Ikon QR di header: muncul bila sumber scan = HP lain (khusus admin/kasir yang login).
+        const hq = document.getElementById('btnHeaderRemoteQr');
+        const staff = Boolean(STATE.user) && ['admin', 'cashier'].includes(STATE.user.role);
+        if (hq) hq.classList.toggle('d-none', !(staff && src === 'remote' && window.isBarcodeOn()));
+    };
+    window.openRemoteScanFromHeader = () => {
+        const pm = document.getElementById('modalAddProduct');
+        window.openRemoteScanPanel(pm && !pm.classList.contains('d-none') ? 'field' : 'pos');
     };
     const genScanId = () => { const a = new Uint8Array(6); crypto.getRandomValues(a); return Array.from(a).map(b => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join(''); };
     const scanRefs = (id) => db ? [db.collection('scan_sessions').doc(id), db.collection('settings').doc('scan_' + id)] : [];
@@ -10387,6 +10495,7 @@ measurementId: "G-ZVZ3QHEPKC"
         if (STATE.remoteScan.started || IS_PREVIEW || !db || !STATE.user) return;
         if (window.getScanSource() !== 'remote' || !window.isBarcodeOn()) return;
         STATE.remoteScan.started = true;
+        if (!STATE.remoteScan.dotTimer) STATE.remoteScan.dotTimer = setInterval(window.renderRemoteScanStatus, 5000);
         const ses = await window.ensureRemoteSession(false);
         STATE.remoteScan.errors = 0;
         STATE.remoteScan.sid = ses.id;
@@ -10422,30 +10531,55 @@ measurementId: "G-ZVZ3QHEPKC"
         });
     };
     // Kode dari HP scanner: isi kolom barcode di form produk, atau masuk keranjang POS.
+    // Kolom barcode terakhir yang disentuh di form produk (tujuan hasil scan HP lain).
+    document.addEventListener('focusin', (e) => {
+        const t = e.target;
+        if (t && (t.id === 'prodBarcode' || (t.classList && t.classList.contains('prod-var-barcode')))) STATE.lastBarcodeField = t;
+    });
+    const pickBarcodeField = () => {
+        const vis = (el) => el && el.isConnected && el.offsetParent !== null;
+        const cands = [STATE.scanTargetInput, document.activeElement, STATE.lastBarcodeField].filter(el => el && (el.id === 'prodBarcode' || (el.classList && el.classList.contains('prod-var-barcode'))));
+        const hit = cands.find(vis);
+        if (hit) return hit;
+        const all = Array.from(document.querySelectorAll('#prodBarcode, #prodVariantList .prod-var-barcode')).filter(vis);
+        return all.find(el => !el.value.trim()) || all[0] || null;
+    };
+    const isShown = (id) => { const el = document.getElementById(id); return Boolean(el && !el.classList.contains('d-none')); };
+    // Kode dari HP scanner: form produk terbuka -> isi kolom barcode; POS / katalog -> masuk keranjang;
+    // menu Produk -> buka produk yang cocok, atau Tambah Produk dengan barcode terisi.
     window.onRemoteScanCode = async (code) => {
         if (!code) return;
         STATE.remoteScan.count++;
-        const prodModal = document.getElementById('modalAddProduct');
-        const formOpen = prodModal && !prodModal.classList.contains('d-none');
         const panel = document.getElementById('remoteScanLast');
         if (panel) panel.textContent = code;
-        if (formOpen) {
-            let target = STATE.scanTargetInput;
-            const ae = document.activeElement;
-            if (!target && ae && (ae.id === 'prodBarcode' || ae.classList.contains('prod-var-barcode'))) target = ae;
-            target = target || document.getElementById('prodBarcode');
+        if (isShown('modalAddProduct')) {
+            const target = pickBarcodeField();
+            STATE.scanTargetInput = null;
+            if (!target) { scanBeep(false); showScanToast('Aktifkan Barcode di pengaturan untuk mengisi kolom barcode', false); return; }
+            const editId = document.getElementById('prodId').value;
+            const hit = window.findBarcodeMatch(code, editId);
             target.value = code;
             target.dispatchEvent(new Event('input', { bubbles: true }));
-            STATE.scanTargetInput = null;
-            scanBeep(true);
-            showScanToast(`📲 Barcode ${code} diisi`, true);
+            const vn = target.classList.contains('prod-var-barcode') ? (target.closest('.prod-var-row').querySelector('.prod-var-name').value.trim() || 'sub produk') : '';
+            if (hit) { scanBeep(false); showScanToast(`⚠️ ${code} sudah dipakai "${hit.p.name}${hit.variant ? ' (' + hit.variant.name + ')' : ''}"`, false); }
+            else { scanBeep(true); showScanToast(`📲 Barcode ${code} diisi${vn ? ' ke ' + vn : ''}`, true); }
+            target.classList.add('bc-flash'); setTimeout(() => target.classList.remove('bc-flash'), 900);
             const rp = document.getElementById('modalRemoteScan');
             if (rp && !rp.classList.contains('d-none') && STATE.remoteScanMode === 'field') window.closeModal('modalRemoteScan');
             return;
         }
-        const pos = document.getElementById('pageAdminPOS');
-        if (pos && !pos.classList.contains('d-none')) return window.handleScannedCode(code, 'remote');
-        showScanToast(`📲 ${code} (buka halaman POS / form produk untuk memakai hasil scan)`, false);
+        if (isShown('pageAdminPOS') || isShown('pagePublic')) return window.handleScannedCode(code, 'remote');
+        if (isShown('pageAdminMgmt') && isShown('admin_products')) {
+            const m = window.findBarcodeMatch(code);
+            if (m) { scanBeep(true); showScanToast(`📲 ${m.p.name}${m.variant ? ' (' + m.variant.name + ')' : ''}`, true); window.editProduct(m.p.id); return; }
+            scanBeep(true);
+            window.openModal('modalAddProduct');
+            const f = pickBarcodeField();
+            if (f) { f.value = code; f.dispatchEvent(new Event('input', { bubbles: true })); }
+            showScanToast(`📲 Barcode baru ${code} — lengkapi data produk`, true);
+            return;
+        }
+        showScanToast(`📲 ${code} (buka POS, katalog, atau menu Produk untuk memakai hasil scan)`, false);
     };
     const loadQrLib = () => new Promise((resolve, reject) => {
         if (window.QRCode) return resolve();
@@ -10456,9 +10590,10 @@ measurementId: "G-ZVZ3QHEPKC"
         document.head.appendChild(sc);
     });
     window.renderRemoteScanStatus = () => {
-        const el = document.getElementById('remoteScanState');
-        if (!el) return;
+        const el = document.getElementById('remoteScanState') || document.createElement('span');
         const online = Date.now() - STATE.remoteScan.lastSeen < 35000;
+        const dot = document.getElementById('hdrQrDot');
+        if (dot) dot.classList.toggle('is-on', online);
         el.className = 'remote-state ' + (online ? 'is-on' : 'is-off');
         el.innerHTML = online ? '<span class="net-dot"></span>HP scanner terhubung' : '<span class="net-dot"></span>Menunggu HP scanner…';
         const er = document.getElementById('remoteScanErr');
@@ -10679,7 +10814,7 @@ measurementId: "G-ZVZ3QHEPKC"
         // 3) Kamera layar penuh (depan/belakang). Gambar dipindai pada resolusi asli kamera
         //    (area bingkai bidik), memakai BarcodeDetector bawaan HP bila ada, cadangan pustaka html5-qrcode.
         let stream = null, busy = false, loopTimer = null, decoding = false, decoder = null, native = null;
-        const FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'code_93', 'itf', 'codabar', 'qr_code'];
+        const FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'];
         const reader = document.getElementById('rsReader');
         const video = document.createElement('video');
         video.setAttribute('playsinline', ''); video.setAttribute('autoplay', ''); video.muted = true;
@@ -10702,11 +10837,12 @@ measurementId: "G-ZVZ3QHEPKC"
             if (!native && !decoder) {
                 await loadScanLib();
                 const F = window.Html5QrcodeSupportedFormats || {};
-                const formats = ['EAN_13', 'EAN_8', 'UPC_A', 'UPC_E', 'CODE_128', 'CODE_39', 'CODE_93', 'ITF', 'CODABAR', 'QR_CODE'].map(k => F[k]).filter(v => v !== undefined);
+                const formats = ['EAN_13', 'EAN_8', 'UPC_A', 'UPC_E', 'CODE_128', 'CODE_39', 'QR_CODE'].map(k => F[k]).filter(v => v !== undefined);
                 decoder = new window.Html5Qrcode('rsDecode', { formatsToSupport: formats.length ? formats : undefined, experimentalFeatures: { useBarCodeDetectorIfSupported: false }, verbose: false });
             }
         };
         // Potong area bingkai bidik (dengan margin) dari gambar kamera, memperhitungkan object-fit: cover.
+        let bandTurn = false;
         const grabFrame = () => {
             const vw = video.videoWidth, vh = video.videoHeight;
             if (!vw || !vh) return null;
@@ -10716,6 +10852,9 @@ measurementId: "G-ZVZ3QHEPKC"
             const fr = document.getElementById('rsFrame').getBoundingClientRect(), rr = reader.getBoundingClientRect();
             const mx = 0, my = 0; // bingkai sudah seluas layar kamera
             let fx = fr.left - rr.left - mx, fy = fr.top - rr.top - my, fw = fr.width + 2 * mx, fh = fr.height + 2 * my;
+            // Bergantian: pita tengah (resolusi lebih tinggi, cepat) dan seluruh bingkai.
+            bandTurn = !bandTurn;
+            if (bandTurn) { fy += fh * 0.28; fh *= 0.44; }
             if (facing === 'user') fx = cw - fx - fw; // tampilan kamera depan dicerminkan
             let sx = Math.max(0, (fx + offX) / scale), sy = Math.max(0, (fy + offY) / scale);
             let sw = Math.min(vw - sx, fw / scale), sh = Math.min(vh - sy, fh / scale);
@@ -10738,16 +10877,25 @@ measurementId: "G-ZVZ3QHEPKC"
             if (!blob) return null;
             try { const r = await decoder.scanFileV2(new File([blob], 'f.jpg', { type: 'image/jpeg' }), false); return r && r.decodedText; } catch (e) { return null; }
         };
+        let cand = { c: '', t: 0 };
         const loop = () => {
             clearTimeout(loopTimer);
             loopTimer = setTimeout(async () => {
                 if (stream && !decoding && document.visibilityState === 'visible') {
                     decoding = true;
-                    try { const t = await decodeOnce(); if (t) send(t); } catch (e) {}
+                    try {
+                        const t = normBarcode(await decodeOnce());
+                        // Terima hanya bila valid & terbaca 2x sama berturut-turut (anti salah scan).
+                        if (t && window.isPlausibleBarcode(t)) {
+                            const now = Date.now();
+                            if (cand.c === t && now - cand.t < 1200) { cand = { c: '', t: 0 }; send(t); }
+                            else cand = { c: t, t: now };
+                        }
+                    } catch (e) {}
                     decoding = false;
                 }
                 if (stream) loop();
-            }, native ? 90 : 220);
+            }, native ? 60 : 120);
         };
         const stopCam = () => {
             clearTimeout(loopTimer);
