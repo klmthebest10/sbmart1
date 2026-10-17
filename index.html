@@ -811,7 +811,8 @@
         /* ===== Slide teks halaman umum ===== */
         .sb-host { position: relative; z-index: 4; overflow: visible; }
         /* Layout penuh tepi ke tepi; dipotong hanya kiri-kanan supaya gambar boleh menyembul ke atas & bawah */
-        .slide-banner { position: relative; width: 100%; height: var(--sb-h, 64px); background: var(--sb-bg-l); isolation: isolate; clip-path: inset(-600px 0 -600px 0); }
+        .slide-banner { position: relative; width: 100%; height: var(--sb-h, 64px); background: var(--sb-bg-l); isolation: isolate; overflow-x: clip; overflow-y: visible; }
+        @supports not (overflow: clip) { .slide-banner { overflow: visible; } }
         html[data-theme="dark"] .slide-banner:not(.sb-force-light), .slide-banner.sb-force-dark { background: var(--sb-bg-d); }
         .sb-slide { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 14px; line-height: 1.1; white-space: nowrap;
             opacity: 0; pointer-events: none; transition: opacity .6s ease, transform .6s cubic-bezier(.22,.61,.36,1); will-change: opacity, transform; }
@@ -823,9 +824,10 @@
         .sb-group { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; min-width: 0; }
         .sb-group.is-rev { flex-direction: row-reverse; }
         .sb-img { height: var(--sb-img-h, 96px); width: auto; max-width: none; flex-shrink: 0; object-fit: contain; filter: drop-shadow(0 3px 6px rgba(0,0,0,.25)); }
-        .sb-text { display: inline-block; white-space: nowrap; overflow: hidden; padding: .06em .18em .14em .06em; }
-        .sb-slide.is-active .sb-text.is-marquee { overflow: visible; animation: sbMarq var(--sb-mq-d, 4s) ease-in-out 1s infinite alternate; }
-        .sb-slide:has(.is-marquee) { justify-content: flex-start !important; overflow: hidden; }
+        .sb-text { display: inline-block; white-space: nowrap; overflow: hidden; padding: .06em .18em .14em .06em; min-width: 0; }
+        .sb-tx { display: inline-block; }
+        /* Teks sangat panjang: hanya tulisan yang bergeser (dipotong di kotak teks), gambar tetap bebas menyembul */
+        .sb-slide.is-active .sb-text.is-marquee .sb-tx { animation: sbMarq var(--sb-mq-d, 4s) ease-in-out 1s infinite alternate; }
         @keyframes sbMarq { 0%, 12% { transform: translateX(0); } 88%, 100% { transform: translateX(var(--sb-mq, 0px)); } }
         /* Huruf 3D: isi + garis tepi + lapisan kedalaman */
         .sb3d { color: var(--sb-c, #fff); -webkit-text-stroke: .05em var(--sb-d, #1F2937); paint-order: stroke fill; letter-spacing: .01em;
@@ -974,6 +976,16 @@
         #gasapp-root .hdr-qr-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--c-text-3); box-shadow: 0 0 0 2px var(--c-surface); }
         #gasapp-root .hdr-qr-dot.is-on { background: var(--c-success); }
         #gasapp-root .bc-flash { box-shadow: 0 0 0 3px var(--c-success) !important; transition: box-shadow .2s; }
+
+        /* HP scanner: ringkasan keranjang kasir */
+        #gasapp-root .rs-cartbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 14px; background: var(--c-surface-2); border: 1px solid var(--c-line); }
+        #gasapp-root .rs-cart-l { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        #gasapp-root .rs-cart-ic { font-size: 20px; line-height: 1; }
+        #gasapp-root .rs-cart-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--c-text-3); }
+        #gasapp-root .rs-cart-n { font-size: 13px; color: var(--c-text-2); }
+        #gasapp-root .rs-cart-n b { color: var(--c-text); font-size: 15px; }
+        #gasapp-root .rs-cart-r { text-align: right; }
+        #gasapp-root .rs-cart-total { display: block; font-size: 22px; line-height: 1.1; font-weight: 900; color: var(--c-text); font-variant-numeric: tabular-nums; }
     </style>
 </head>
 <body>
@@ -2784,7 +2796,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
 
     // Versi aplikasi: SAMAKAN dengan VERSION di sw.js setiap kali update.
-    const APP_VERSION = 'v24';
+    const APP_VERSION = 'v25';
     window.APP_VERSION = APP_VERSION;
     let db = null;
     let auth = null;
@@ -9484,7 +9496,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // Catatan sinkron yang ditolak server (mis. permission-denied) untuk ditampilkan di popup status.
     STATE.syncErrors = [];
     // Penulisan latar belakang yang sudah punya penanganan sendiri -> tidak perlu notifikasi ke pengguna.
-    const QUIET_SYNC = ['shifts/', 'settings/shifts_log', 'settings/best_sellers', 'settings/finance_auto', 'shared_receipts/', 'sales_archive/'];
+    const QUIET_SYNC = ['scan_sessions/', 'settings/scan_', 'shifts/', 'settings/shifts_log', 'settings/best_sellers', 'settings/finance_auto', 'shared_receipts/', 'sales_archive/'];
     const syncGroupName = (path) => {
         const col = String(path || '').split('/')[0];
         return ({ orders: 'Transaksi', products: 'Produk', customers: 'Pelanggan', settings: 'Pengaturan', finance_notes: 'Catatan Keuangan', categories: 'Kategori', promos: 'Promo', shifts: 'Shift Kasir' })[col] || col || 'data';
@@ -10499,6 +10511,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const ses = await window.ensureRemoteSession(false);
         STATE.remoteScan.errors = 0;
         STATE.remoteScan.sid = ses.id;
+        setTimeout(() => window.syncRemoteCart && window.syncRemoteCart(true), 300);
         scanRefs(ses.id).forEach((ref, ri) => {
             // Sampai data dari server diterima, semua kode dianggap lama (tidak diproses ulang).
             let first = true;
@@ -10531,6 +10544,41 @@ measurementId: "G-ZVZ3QHEPKC"
         });
     };
     // Kode dari HP scanner: isi kolom barcode di form produk, atau masuk keranjang POS.
+    // Isi keranjang kasir (tambah/kurang jumlah, produk dari klik maupun scan) + total dikirim ke HP scanner.
+    let cartSyncT = null, cartLastSig = '';
+    const cartTouch = {};
+    window.syncRemoteCart = (force) => {
+        if (!STATE.remoteScan.started || !STATE.remoteScan.sid || IS_PREVIEW || !db) return;
+        clearTimeout(cartSyncT);
+        cartSyncT = setTimeout(() => {
+            const prevQ = STATE.remoteScan.prevQ || {};
+            const now = Date.now();
+            const items = (STATE.cart || []).map(i => {
+                const k = i.id + '::' + (i.variant || '');
+                if (prevQ[k] !== i.qty || !cartTouch[k]) cartTouch[k] = now;
+                return { id: String(i.id || ''), v: String(i.variant || '').slice(0, 40), n: String(i.name || '').slice(0, 80), q: Number(i.qty) || 0, s: Math.round((Number(i.price) || 0) * (Number(i.qty) || 0)), t: cartTouch[k] };
+            });
+            STATE.remoteScan.prevQ = Object.fromEntries(items.map(x => [x.id + '::' + x.v, x.q]));
+            let total = items.reduce((t, x) => t + x.s, 0);
+            try { const tt = window.getCartTotals(); if (tt && isFinite(Number(tt.total))) total = Math.round(Number(tt.total)); } catch (e) {}
+            // Terbaru (ditambah / diubah jumlahnya) di kiri.
+            const cart = { items: items.sort((a, b) => b.t - a.t).slice(0, 60), total, count: items.reduce((t, x) => t + x.q, 0) };
+            const sig = STATE.remoteScan.sid + JSON.stringify(cart);
+            if (sig === cartLastSig && !force) return;
+            cartLastSig = sig;
+            cart.t = now;
+            scanRefs(STATE.remoteScan.sid).forEach(ref => {
+                const pr = ref.set({ cart }, { merge: true });
+                if (pr && pr.catch) pr.catch(() => {});
+                if (pr && pr.__real) pr.__real.catch(() => {});
+            });
+        }, force ? 0 : 300);
+    };
+    (() => {
+        const orig = window.updateCartUI;
+        if (typeof orig === 'function') window.updateCartUI = function (...a) { const r = orig.apply(this, a); try { window.syncRemoteCart(); } catch (e) {} return r; };
+    })();
+
     // Kolom barcode terakhir yang disentuh di form produk (tujuan hasil scan HP lain).
     document.addEventListener('focusin', (e) => {
         const t = e.target;
@@ -10704,7 +10752,11 @@ measurementId: "G-ZVZ3QHEPKC"
             </div>
             <div class="rs-bottom">
                 <div id="rsStatus" class="rs-status">Menyiapkan…</div>
-                <div id="rsTiles" class="rs-tiles" aria-label="Produk terpindai (terbaru di kiri)"></div>
+                <div id="rsCartBar" class="rs-cartbar d-none">
+                    <div class="rs-cart-l"><span class="rs-cart-ic">🛒</span><div><div class="rs-cart-k">Keranjang kasir</div><div class="rs-cart-n"><b id="rsCartCount">0</b> item</div></div></div>
+                    <div class="rs-cart-r"><div class="rs-cart-k">Total</div><b id="rsCartTotal" class="rs-cart-total">₩0</b></div>
+                </div>
+                <div id="rsTiles" class="rs-tiles" aria-label="Isi keranjang (terbaru di kiri)"></div>
                 <div id="rsManualRow" class="rs-manual d-none">
                     <input type="text" id="rsManual" inputmode="numeric" autocomplete="off" class="ui-input text-sm flex-1 min-w-0" placeholder="Ketik kode barcode">
                     <button type="button" id="rsSend" class="ui-btn bg-main px-4 text-sm shrink-0">Kirim</button>
@@ -10751,25 +10803,48 @@ measurementId: "G-ZVZ3QHEPKC"
             setState(true, 'Terhubung');
             const beat = () => { const p = target.set({ scanner_seen: Date.now() }, { merge: true }); if (p.__real) p.catch(() => {}); (p.__real || p).then(() => setState(true, 'Terhubung'), () => setState(false, 'Gagal kirim')); };
             beat(); setInterval(beat, 10000);
+            // Pantau isi keranjang yang dikirim perangkat kasir.
+            target.onSnapshot(doc => {
+                const d = doc.data() || {};
+                if (d.cart && typeof d.cart === 'object' && Array.isArray(d.cart.items)) renderCart(d.cart);
+            }, () => {});
             return true;
         };
-        const connP = connect();
 
         // Data produk untuk menampilkan gambar & nama hasil scan (cache perangkat dulu, lalu server).
         try { loadLocalDataCache(); } catch (e) {}
         const dataP = (async () => { try { await fetchPublicData(); } catch (e) {} })();
         // Deretan hasil scan: gambar + jumlah (tanpa gambar -> nama produk), terbaru di kiri, geser ke samping.
+        // Setelah keranjang kasir diterima, deretan ini mengikuti isi keranjang kasir (termasuk produk yang
+        // ditambah/diubah langsung di PC tanpa scan).
         const tiles = [];
-        const renderTiles = () => {
+        let cartMode = false, lastTopKey = '';
+        const renderCart = (cart) => {
+            cartMode = true;
+            const prods = STATE.data.products || [];
+            tiles.length = 0;
+            cart.items.filter(x => x && x.q > 0).forEach(x => {
+                const pr = prods.find(p => p.id === x.id);
+                tiles.push({ key: x.id + '::' + (x.v || ''), qty: x.q, unknown: false, img: pr ? (pr.img || '') : '', variant: x.v || '', name: x.n || (pr ? pr.name : '?') });
+            });
+            document.getElementById('rsCartBar').classList.remove('d-none');
+            document.getElementById('rsCartCount').textContent = Number(cart.count) || 0;
+            document.getElementById('rsCartTotal').textContent = formatWon(Number(cart.total) || 0);
+            const topKey = tiles[0] ? tiles[0].key + '|' + tiles[0].qty : '';
+            renderTiles(topKey !== lastTopKey);
+            lastTopKey = topKey;
+        };
+        const renderTiles = (animate = true) => {
             const box = document.getElementById('rsTiles');
-            box.innerHTML = tiles.map((x, i) => `<div class="rs-tile${x.img ? '' : ' no-img'}${x.unknown ? ' is-unknown' : ''}${i === 0 ? ' is-new' : ''}" title="${escapeHTML(x.name)}">`
+            box.innerHTML = tiles.map((x, i) => `<div class="rs-tile${x.img ? '' : ' no-img'}${x.unknown ? ' is-unknown' : ''}${i === 0 && animate ? ' is-new' : ''}" title="${escapeHTML(x.name)}">`
                 + (x.img ? `<img src="${escapeHTML(x.img)}" alt="${escapeHTML(x.name)}" loading="lazy">` : `<span class="rs-tile-name">${escapeHTML(x.name)}</span>`)
                 + (x.variant && x.img ? `<span class="rs-tile-var">${escapeHTML(x.variant)}</span>` : '')
                 + `<b class="rs-tile-qty">${x.qty}</b></div>`).join('');
-            box.scrollTo({ left: 0, behavior: 'smooth' });
+            if (animate) box.scrollTo({ left: 0, behavior: 'smooth' });
         };
         const addTile = (c) => {
             const m = window.findBarcodeMatch(c);
+            if (cartMode) return; // isi deretan mengikuti keranjang kasir
             const key = m ? m.p.id + '::' + (m.variant ? m.variant.name : '') : 'code::' + c;
             const i = tiles.findIndex(x => x.key === key);
             const item = i > -1 ? tiles.splice(i, 1)[0] : {
@@ -10781,6 +10856,8 @@ measurementId: "G-ZVZ3QHEPKC"
             tiles.unshift(item);
             renderTiles();
         };
+
+        const connP = connect();
 
         // 2) Kirim kode
         let last = { c: '', t: 0, seen: 0 }, count = 0;
@@ -11097,7 +11174,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const list = slides.length ? slides : [{ text: '' }];
         const imgHtml = im.img ? `<img class="sb-img" src="${escapeHTML(im.img)}" alt="" aria-hidden="true">` : '';
         el.innerHTML = `<div class="slide-banner sb-t-${reduce ? 'fade' : cfg.transition}${opts.forceTheme ? ' sb-force-' + opts.forceTheme : ''}" role="region" aria-label="Pengumuman">`
-            + list.map((x, i) => `<div class="sb-slide sb-al-${cfg.align}${i === 0 ? ' is-active' : ''}" aria-hidden="${i === 0 ? 'false' : 'true'}"><div class="sb-group${im.pos === 'right' ? ' is-rev' : ''}">${imgHtml}${x.text ? `<span class="sb-text sb3d" style="${sbFontCss(cfg.style)}">${escapeHTML(x.text)}</span>` : ''}</div></div>`).join('')
+            + list.map((x, i) => `<div class="sb-slide sb-al-${cfg.align}${i === 0 ? ' is-active' : ''}" aria-hidden="${i === 0 ? 'false' : 'true'}"><div class="sb-group${im.pos === 'right' ? ' is-rev' : ''}">${imgHtml}${x.text ? `<span class="sb-text sb3d" style="${sbFontCss(cfg.style)}"><span class="sb-tx">${escapeHTML(x.text)}</span></span>` : ''}</div></div>`).join('')
             + `</div>`;
         // Gambar lebih tinggi dari layout -> beri ruang di atas/bawah supaya tidak menutupi konten lain.
         const ov = im.img ? Math.max(0, Math.round((im.size - cfg.height) / 2)) : 0;
