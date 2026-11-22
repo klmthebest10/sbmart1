@@ -1001,6 +1001,31 @@
         .ai-cand.is-sure { background: rgba(34,197,94,.14); border-color: #16a34a; }
         .ai-cand.is-sure .ai-cand-pct { color: #16a34a; opacity: 1; }
         .ai-cand.is-off { opacity: .55; }
+
+        /* ===== HP scanner: mode AI & foto ===== */
+        #gasapp-root .rs-modes { display: flex; gap: 6px; }
+        #gasapp-root .rs-modes button { flex: 1; padding: 8px 4px; border-radius: 12px; font-size: 11px; font-weight: 800; background: var(--c-surface-2); border: 1px solid var(--c-line); color: var(--c-text); white-space: nowrap; }
+        #gasapp-root .rs-modes button.is-active { background: var(--c-accent, #FFC83D); color: #111; border-color: transparent; }
+        #gasapp-root .rs-aiguide { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); border: 3px solid rgba(255,200,61,.95); border-radius: 18px; pointer-events: none; display: none; width: 60vmin; height: 60vmin; }
+        #remoteScannerView[data-mode="ai"] .rs-aiguide { display: block; }
+        #remoteScannerView[data-mode="ai"] .rs-laser, #remoteScannerView[data-mode="photo"] .rs-laser { display: none; }
+        #remoteScannerView[data-mode="photo"] .rs-shade { display: none; }
+        #gasapp-root .rs-ai { display: flex; flex-direction: column; gap: 6px; }
+        #gasapp-root .rs-ai-c { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 6px 8px; border-radius: 12px; background: var(--c-surface-2); border: 1px solid var(--c-line); color: var(--c-text); }
+        #gasapp-root .rs-ai-c img, #gasapp-root .rs-ai-noimg { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--c-surface-3, #ddd); }
+        #gasapp-root .rs-ai-i { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        #gasapp-root .rs-ai-i b { font-size: 13px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #gasapp-root .rs-ai-i em { font-size: 11px; font-style: normal; opacity: .75; }
+        #gasapp-root .rs-ai-p { font-weight: 800; font-size: 12px; opacity: .8; }
+        #gasapp-root .rs-ai-c.is-top { border-width: 2px; }
+        #gasapp-root .rs-ai-c.is-sure { border-color: #16a34a; background: rgba(34,197,94,.18); }
+        #gasapp-root .rs-ai-c.is-off { opacity: .5; }
+        #gasapp-root .rs-photo-row { display: flex; justify-content: center; padding: 2px 0 6px; }
+        #gasapp-root .rs-shutter { width: 68px; height: 68px; border-radius: 50%; background: #fff; border: 5px solid rgba(255,255,255,.55); box-shadow: 0 0 0 3px rgba(0,0,0,.45); }
+        #gasapp-root .rs-shutter:active { transform: scale(.93); }
+        #gasapp-root .rs-photo-review { position: absolute; inset: 0; z-index: 6; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 14px; }
+        #gasapp-root .rs-photo-review img { max-width: 100%; max-height: 72%; object-fit: contain; border-radius: 12px; }
+        #gasapp-root .rs-photo-btns { display: flex; gap: 10px; align-items: center; }
     </style>
 </head>
 <body>
@@ -2037,6 +2062,7 @@
                         <button type="button" onclick="document.getElementById('prodImgFile').click()" class="ui-btn bg-white py-2 px-1 text-xs flex items-center justify-center gap-1.5">🖼️ Galeri / File</button>
                         <button type="button" onclick="window.openProductCamera()" class="ui-btn bg-accent py-2 px-1 text-xs flex items-center justify-center gap-1.5">📷 Kamera</button>
                     </div>
+                    <button type="button" onclick="window.openRemoteScanPanel('photo')" class="ui-btn bg-white py-2 px-1 text-xs w-full mt-2 flex items-center justify-center gap-1.5" id="btnProdPhotoRemote">📱 Ambil Foto dari HP Lain</button>
                     <!-- Input tersembunyi: galeri/file perangkat & kamera bawaan HP (cadangan jika kamera langsung tidak tersedia) -->
                     <input type="file" id="prodImgFile" class="hidden" accept="image/*" onchange="window.handleProdImgSelect(event)">
                     <input type="file" id="prodImgCapture" class="hidden" accept="image/*" capture="environment" onchange="window.handleProdImgSelect(event)">
@@ -2844,7 +2870,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
 
     // Versi aplikasi: SAMAKAN dengan VERSION di sw.js setiap kali update.
-    const APP_VERSION = 'v29';
+    const APP_VERSION = 'v30';
     window.APP_VERSION = APP_VERSION;
     let db = null;
     let auth = null;
@@ -8147,6 +8173,7 @@ measurementId: "G-ZVZ3QHEPKC"
     };
 
     // Urutan kandidat untuk satu frame (skor dirata-ratakan antar frame agar stabil)
+    window.aiIsReady = () => Boolean(AI.ready && AI.ref.size);
     window.aiRank = (feat, smooth) => {
         const out = [];
         AI.ref.forEach((rec, pid) => {
@@ -8199,6 +8226,7 @@ measurementId: "G-ZVZ3QHEPKC"
     };
 
     window.openAiScanner = async () => {
+        if (window.getScanSource && window.getScanSource() === 'remote' && window.isBarcodeOn && window.isBarcodeOn()) return window.openRemoteScanPanel('pos');
         aiEl('aiCands').innerHTML = '';
         aiEl('aiLog').innerHTML = ''; aiEl('aiLogWrap').classList.add('d-none');
         AI.scores.clear(); STATE.aiTop = [];
@@ -10823,7 +10851,7 @@ measurementId: "G-ZVZ3QHEPKC"
     };
     window.startRemoteScanListener = async () => {
         if (STATE.remoteScan.started || IS_PREVIEW || !db || !STATE.user) return;
-        if (window.getScanSource() !== 'remote' || !window.isBarcodeOn()) return;
+        if (!STATE.remoteScan.force && (window.getScanSource() !== 'remote' || !window.isBarcodeOn())) return;
         STATE.remoteScan.started = true;
         if (!STATE.remoteScan.dotTimer) STATE.remoteScan.dotTimer = setInterval(window.renderRemoteScanStatus, 5000);
         const ses = await window.ensureRemoteSession(false);
@@ -10849,6 +10877,18 @@ measurementId: "G-ZVZ3QHEPKC"
                     STATE.remoteScan.lastSeen = Date.now();
                     window.onRemoteScanCode(String(x.c || ''));
                 });
+                // Foto produk dari HP lain (satu dokumen foto, bukan daftar)
+                if (d.photo && d.photo.d) {
+                    const pk = 'ph|' + d.photo.t + '|' + d.photo.r;
+                    if (!STATE.remoteScan.seen.has(pk)) {
+                        STATE.remoteScan.seen.add(pk);
+                        if (!first) {
+                            STATE.remoteScan.lastSeen = Date.now();
+                            window.onRemotePhoto(String(d.photo.d));
+                            try { const pr = ref.set({ photo: firebase.firestore.FieldValue.delete() }, { merge: true }); (pr.__real || pr).catch(() => {}); } catch (e) {}
+                        }
+                    }
+                }
                 if (!doc.metadata.fromCache) first = false;
                 window.renderRemoteScanStatus();
                 // Rapikan daftar kode kalau sudah terlalu panjang
@@ -10913,9 +10953,27 @@ measurementId: "G-ZVZ3QHEPKC"
     const isShown = (id) => { const el = document.getElementById(id); return Boolean(el && !el.classList.contains('d-none')); };
     // Kode dari HP scanner: form produk terbuka -> isi kolom barcode; POS / katalog -> masuk keranjang;
     // menu Produk -> buka produk yang cocok, atau Tambah Produk dengan barcode terisi.
+    // Foto produk dari HP lain -> jadi gambar produk di form Tambah/Edit Produk yang sedang terbuka.
+    window.onRemotePhoto = (d) => {
+        if (!/^data:image\/(jpeg|png|webp);base64,/.test(d) || d.length > 700000) { showScanToast('Foto dari HP tidak valid / terlalu besar', false); return; }
+        if (!isShown('modalAddProduct')) { scanBeep(false); showScanToast('📲 Foto diterima, tetapi form produk tidak terbuka', false); return; }
+        STATE.tempProdImgBase64 = d;
+        window.setProdImgPreview(d);
+        scanBeep(true); showScanToast('📲 Foto dari HP dipakai sebagai gambar produk', true);
+        const rp = document.getElementById('modalRemoteScan');
+        if (rp && !rp.classList.contains('d-none') && STATE.remoteScanMode === 'photo') window.closeModal('modalRemoteScan');
+    };
     window.onRemoteScanCode = async (code) => {
         if (!code) return;
         STATE.remoteScan.count++;
+        // Hasil scan tanpa barcode (gambar AI) dari HP: "ai:<id produk>"
+        if (code.startsWith('ai:')) {
+            const ap = (STATE.data.products || []).find(x => x.id === code.slice(3));
+            const panelA = document.getElementById('remoteScanLast'); if (panelA) panelA.textContent = ap ? ap.name : code;
+            if (!ap) { scanBeep(false); showScanToast('📲 Produk dari scan AI tidak ditemukan', false); return; }
+            if (isShown('pageAdminPOS') || isShown('pagePublic')) return window.handleScannedCode(ap, 'ai');
+            scanBeep(false); showScanToast(`📲 ${ap.name} (buka POS atau katalog untuk memasukkan ke keranjang)`, false); return;
+        }
         const panel = document.getElementById('remoteScanLast');
         if (panel) panel.textContent = code;
         if (isShown('modalAddProduct')) {
@@ -10971,13 +11029,14 @@ measurementId: "G-ZVZ3QHEPKC"
     };
     window.openRemoteScanPanel = async (mode) => {
         STATE.remoteScanMode = mode || 'pos';
+        if (STATE.remoteScanMode === 'photo') STATE.remoteScan.force = true;
         if (IS_PREVIEW || !db) return window.customAlert('Scanner dari perangkat lain membutuhkan koneksi ke server (Firebase).', 'Scanner');
         if (!window.isAppOnline()) return window.customAlert('Scanner dari perangkat lain membutuhkan internet di kedua perangkat.', 'Scanner');
         if (STATE.remoteScan.started && STATE.remoteScan.errors) window.stopRemoteScanListener();
         await window.startRemoteScanListener();
         const ses = await window.ensureRemoteSession(false);
         const link = scanLink(ses.id);
-        document.getElementById('remoteScanTarget').textContent = STATE.remoteScanMode === 'field' ? 'Hasil scan akan mengisi kolom barcode produk.' : 'Hasil scan langsung masuk ke keranjang POS.';
+        document.getElementById('remoteScanTarget').textContent = STATE.remoteScanMode === 'photo' ? 'Di HP pilih mode "Foto", ambil foto, lalu "Kirim ke Kasir" — foto menjadi gambar produk.' : (STATE.remoteScanMode === 'field' ? 'Hasil scan akan mengisi kolom barcode produk.' : 'Hasil scan langsung masuk ke keranjang POS. Di HP tersedia mode Barcode, Tanpa Barcode (AI), dan Foto.');
         document.getElementById('remoteScanCode').textContent = ses.id.toUpperCase();
         document.getElementById('remoteScanLink').value = link;
         document.getElementById('remoteScanLast').textContent = '-';
@@ -11068,8 +11127,16 @@ measurementId: "G-ZVZ3QHEPKC"
                 <div class="min-w-0"><div class="rs-kicker">Mode HP Scanner · ${escapeHTML(id.toUpperCase())}</div><div class="rs-store" id="rsStore">Menghubungkan…</div></div>
                 <span id="rsState" class="rs-pill is-off"><span class="dot"></span><span id="rsStateTxt">Menghubungkan</span></span>
             </div>
+            <div class="rs-aiguide" id="rsAiGuide" aria-hidden="true"></div>
             <div class="rs-bottom">
+                <div class="rs-modes" id="rsModes">
+                    <button type="button" data-m="barcode" class="is-active">▮▯ Barcode</button>
+                    <button type="button" data-m="ai">✨ Tanpa Barcode</button>
+                    <button type="button" data-m="photo">📷 Foto</button>
+                </div>
                 <div id="rsStatus" class="rs-status">Menyiapkan…</div>
+                <div id="rsAi" class="rs-ai d-none"></div>
+                <div id="rsPhotoRow" class="rs-photo-row d-none"><button type="button" id="rsShutter" class="rs-shutter" aria-label="Ambil foto"></button></div>
                 <div id="rsCartBar" class="rs-cartbar d-none">
                     <div class="rs-cart-l"><span class="rs-cart-ic">🛒</span><div><div class="rs-cart-k">Keranjang kasir</div><div class="rs-cart-n"><b id="rsCartCount">0</b> item</div></div></div>
                     <div class="rs-cart-r"><div class="rs-cart-k">Total</div><b id="rsCartTotal" class="rs-cart-total">₩0</b></div>
@@ -11084,6 +11151,10 @@ measurementId: "G-ZVZ3QHEPKC"
                     <div class="rs-count"><b id="rsCount">0</b><span>terkirim</span></div>
                     <button type="button" id="rsFlipBtn" class="rs-act" aria-label="Ganti kamera depan/belakang"><span class="ic">🔄</span><span id="rsFlipTxt">${facing === 'user' ? 'Depan' : 'Belakang'}</span></button>
                 </div>
+            </div>
+            <div id="rsPhotoReview" class="rs-photo-review d-none">
+                <img id="rsPhotoImg" alt="Foto produk">
+                <div class="rs-photo-btns"><button type="button" id="rsPhotoRetake" class="rs-act"><span>Ulangi</span></button><button type="button" id="rsPhotoSend" class="ui-btn bg-main px-5 py-3 font-bold">Kirim ke Kasir</button></div>
             </div>
             <div id="rsStart" class="rs-start">
                 <div class="rs-start-card">
@@ -11185,8 +11256,8 @@ measurementId: "G-ZVZ3QHEPKC"
             fr.classList.remove('is-hit'); void fr.offsetWidth; fr.classList.add('is-hit');
             clearTimeout(flash.t); flash.t = setTimeout(() => { f.className = 'rs-flash'; fr.classList.remove('is-hit'); }, 350);
         };
-        const send = (raw, manual) => {
-            const c = normBarcode(raw);
+        const send = (raw, manual, isAi) => {
+            const c = isAi ? String(raw) : normBarcode(raw);
             if (!c) return;
             const now = Date.now();
             // Seperti scanner kasir: barcode yang sama baru dikirim lagi setelah sempat keluar dari bingkai.
@@ -11199,8 +11270,19 @@ measurementId: "G-ZVZ3QHEPKC"
             (p.__real || p).catch(err => { rsBeep(false); st('⚠️ Gagal mengirim ' + c + ': ' + ((err && err.code) || err), 'err'); });
             rsBeep(true); flash(true);
             count++; document.getElementById('rsCount').textContent = count;
-            st(`✔ ${c} terkirim`, 'ok');
-            addTile(c);
+            if (isAi) {
+                const ap = (STATE.data.products || []).find(x => x.id === c.slice(3));
+                st(`✔ ${ap ? ap.name : 'Produk'} terkirim`, 'ok');
+                if (!cartMode && ap) {
+                    const key = ap.id + '::';
+                    const i = tiles.findIndex(x => x.key === key);
+                    const item = i > -1 ? tiles.splice(i, 1)[0] : { key, qty: 0, unknown: false, img: ap.img || '', variant: '', name: ap.name };
+                    item.qty++; tiles.unshift(item); renderTiles();
+                }
+            } else {
+                st(`✔ ${c} terkirim`, 'ok');
+                addTile(c);
+            }
         };
         document.getElementById('rsSend').onclick = () => { const i = document.getElementById('rsManual'); send(i.value, true); i.value = ''; i.focus(); };
         document.getElementById('rsManual').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('rsSend').click(); } };
@@ -11208,7 +11290,7 @@ measurementId: "G-ZVZ3QHEPKC"
 
         // 3) Kamera layar penuh (depan/belakang). Gambar dipindai pada resolusi asli kamera
         //    (area bingkai bidik), memakai BarcodeDetector bawaan HP bila ada, cadangan pustaka html5-qrcode.
-        let stream = null, busy = false, loopTimer = null, decoding = false, decoder = null, native = null;
+        let stream = null, busy = false, loopTimer = null, decoding = false, decoder = null, native = null, mode = 'barcode';
         const FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'];
         const reader = document.getElementById('rsReader');
         const video = document.createElement('video');
@@ -11276,7 +11358,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const loop = () => {
             clearTimeout(loopTimer);
             loopTimer = setTimeout(async () => {
-                if (stream && !decoding && document.visibilityState === 'visible') {
+                if (stream && !decoding && mode === 'barcode' && document.visibilityState === 'visible') {
                     decoding = true;
                     try {
                         const t = normBarcode(await decodeOnce());
@@ -11328,6 +11410,85 @@ measurementId: "G-ZVZ3QHEPKC"
             try { await startCam(); try { localStorage.setItem(FACING_KEY, facing); } catch (e) {} st(target ? 'Arahkan kamera ke barcode produk…' : 'Menunggu koneksi ke kasir…'); }
             catch (e) { facing = prev; try { await startCam(); } catch (e2) {} st('❌ Kamera ' + (prev === 'user' ? 'belakang' : 'depan') + ' tidak tersedia.', 'err'); }
             busy = false;
+        };
+        // ---- Mode HP: Barcode / Tanpa Barcode (AI gambar) / Foto produk ----
+        let aiTimer = null, aiBusy = false, aiLastPid = '', aiLastAt = 0, photoData = '';
+        const rsAiBox = document.getElementById('rsAi');
+        const aiCrop = () => {
+            const vw = video.videoWidth, vh = video.videoHeight;
+            if (!vw || !vh) return null;
+            const cw = reader.clientWidth, ch = reader.clientHeight, scale = Math.max(cw / vw, ch / vh);
+            const visW = cw / scale, visH = ch / scale, offX = (vw - visW) / 2, offY = (vh - visH) / 2;
+            const sq = Math.min(visW, visH) * 0.62;
+            return { sx: offX + (visW - sq) / 2, sy: offY + (visH - sq) / 2, s: sq, px: Math.min(cw, ch) * 0.62 };
+        };
+        const renderAi = (ranked) => {
+            const top = ranked.slice(0, 3);
+            const gap = top.length > 1 ? top[0].score - top[1].score : 1;
+            rsAiBox.innerHTML = top.map((t, i) => {
+                const pr = (STATE.data.products || []).find(x => x.id === t.pid); if (!pr) return '';
+                const pct = Math.max(1, Math.min(99, Math.round((t.score - 0.35) / 0.6 * 100)));
+                const sure = i === 0 && t.score >= 0.78 && gap >= 0.04;
+                return `<button type="button" class="rs-ai-c${i === 0 ? ' is-top' : ''}${sure ? ' is-sure' : ''}${pr.available ? '' : ' is-off'}" data-pid="${escapeHTML(pr.id)}"${pr.available ? '' : ' disabled'}>
+                    ${pr.img ? `<img src="${escapeHTML(pr.img)}" alt="">` : '<span class="rs-ai-noimg"></span>'}
+                    <span class="rs-ai-i"><b>${escapeHTML(pr.name)}</b><em>${pr.available ? formatWon(pr.price) : 'Habis'}</em></span>
+                    <span class="rs-ai-p">${sure ? '✔ ' : ''}${pct}%</span></button>`;
+            }).join('');
+            if (top[0]) st(top[0].score >= 0.78 && gap >= 0.04 ? 'Produk terdeteksi — ketuk untuk mengirim' : 'Arahkan produk ke tengah kotak bidik', top[0].score >= 0.78 && gap >= 0.04 ? 'ok' : '');
+        };
+        const aiTick = () => {
+            if (aiBusy || !stream || mode !== 'ai' || !window.aiIsReady()) return;
+            const c = aiCrop(); if (!c) return;
+            aiBusy = true;
+            try { renderAi(window.aiRank(window.aiFeatures(video, c.sx, c.sy, c.s, c.s), true)); } catch (e) {}
+            aiBusy = false;
+        };
+        rsAiBox.addEventListener('click', (e) => {
+            const b = e.target.closest('[data-pid]'); if (!b || b.disabled) return;
+            const now = Date.now();
+            if (b.dataset.pid === aiLastPid && now - aiLastAt < 700) return;
+            aiLastPid = b.dataset.pid; aiLastAt = now;
+            send('ai:' + b.dataset.pid, true, true);
+        });
+        const setMode = async (m) => {
+            if (m === mode) return;
+            mode = m;
+            clearInterval(aiTimer); aiTimer = null;
+            view.dataset.mode = m;
+            document.querySelectorAll('#rsModes button').forEach(b => b.classList.toggle('is-active', b.dataset.m === m));
+            rsAiBox.classList.toggle('d-none', m !== 'ai');
+            document.getElementById('rsPhotoRow').classList.toggle('d-none', m !== 'photo');
+            document.getElementById('rsPhotoReview').classList.add('d-none');
+            if (m === 'barcode') { st(target ? 'Arahkan kamera ke barcode produk…' : 'Menunggu koneksi ke kasir…'); return; }
+            if (m === 'photo') { st('Arahkan ke produk lalu ketuk tombol putih. Foto dikirim ke form produk di kasir.'); return; }
+            const g = document.getElementById('rsAiGuide'), c = aiCrop();
+            if (c) { g.style.width = g.style.height = c.px + 'px'; }
+            st('Mempelajari gambar produk…');
+            try { await dataP; } catch (e) {}
+            const withImg = (STATE.data.products || []).filter(x => x.img && String(x.img).length > 20).length;
+            if (!withImg) { st('Belum ada produk yang punya gambar.', 'err'); return; }
+            await window.aiBuildIndex((d, t) => { if (mode === 'ai') st(`Mempelajari gambar produk… ${d}/${t}`); });
+            if (mode !== 'ai') return;
+            st('Arahkan produk ke tengah kotak bidik');
+            aiTimer = setInterval(aiTick, 450);
+        };
+        document.getElementById('rsModes').addEventListener('click', (e) => { const b = e.target.closest('button[data-m]'); if (b && stream) setMode(b.dataset.m); });
+        document.getElementById('rsShutter').onclick = () => {
+            if (!stream || !video.videoWidth) return;
+            try { photoData = window.compressDrawable(video, video.videoWidth, video.videoHeight); } catch (e) { st('❌ Gagal mengambil foto', 'err'); return; }
+            document.getElementById('rsPhotoImg').src = photoData;
+            document.getElementById('rsPhotoReview').classList.remove('d-none');
+            flash(true);
+        };
+        document.getElementById('rsPhotoRetake').onclick = () => { photoData = ''; document.getElementById('rsPhotoReview').classList.add('d-none'); };
+        document.getElementById('rsPhotoSend').onclick = () => {
+            if (!photoData) return;
+            if (!target) { rsBeep(false); st('⚠️ Belum terhubung ke kasir — foto tidak terkirim.', 'err'); return; }
+            const now = Date.now();
+            const p = target.set({ photo: { d: photoData, t: now, r: Math.random().toString(36).slice(2, 8) }, scanner_seen: now }, { merge: true });
+            if (p.__real) p.catch(() => {});
+            (p.__real || p).then(() => { rsBeep(true); st('✔ Foto terkirim ke kasir', 'ok'); }, err => { rsBeep(false); st('⚠️ Gagal mengirim foto: ' + ((err && err.code) || err) + ' (perbarui Firestore Rules v29)', 'err'); });
+            photoData = ''; document.getElementById('rsPhotoReview').classList.add('d-none');
         };
         // Layar tetap menyala selama mode scanner
         let wake = null;
