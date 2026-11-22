@@ -1010,6 +1010,8 @@
         #remoteScannerView[data-mode="ai"] .rs-aiguide { display: block; }
         #remoteScannerView[data-mode="ai"] .rs-laser, #remoteScannerView[data-mode="photo"] .rs-laser { display: none; }
         #remoteScannerView[data-mode="photo"] .rs-shade { display: none; }
+        #gasapp-root .rs-ainn { font-size: 10px; text-align: center; opacity: .7; }
+        #remoteScannerView:not([data-mode="ai"]) .rs-ainn { display: none; }
         #gasapp-root .rs-ai { display: flex; flex-direction: column; gap: 6px; }
         #gasapp-root .rs-ai-c { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 6px 8px; border-radius: 12px; background: var(--c-surface-2); border: 1px solid var(--c-line); color: var(--c-text); }
         #gasapp-root .rs-ai-c img, #gasapp-root .rs-ai-noimg { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--c-surface-3, #ddd); }
@@ -2532,7 +2534,8 @@
                 <div id="aiPrep" class="ai-prep d-none"></div>
             </div>
             <div class="p-3 bg-white shrink-0">
-                <div id="aiStatus" class="text-xs font-bold text-center mb-2">Menyiapkan kamera…</div>
+                <div id="aiStatus" class="text-xs font-bold text-center mb-1">Menyiapkan kamera…</div>
+                <div id="aiNN" class="text-[10px] text-center text-gray-500 mb-2"></div>
                 <div id="aiCands" class="space-y-1.5"></div>
                 <button type="button" onclick="window.aiPickBest()" class="ui-btn bg-accent w-full mt-2 py-2 text-xs">Tambahkan yang paling cocok</button>
             </div>
@@ -2870,7 +2873,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
 
     // Versi aplikasi: SAMAKAN dengan VERSION di sw.js setiap kali update.
-    const APP_VERSION = 'v30';
+    const APP_VERSION = 'v31';
     window.APP_VERSION = APP_VERSION;
     let db = null;
     let auth = null;
@@ -8134,16 +8137,44 @@ measurementId: "G-ZVZ3QHEPKC"
         im.src = url;
     });
     // Beberapa potongan per gambar produk (penuh, tengah 80%, tengah 60%) supaya tahan perbedaan jarak/zoom.
+    // Cari kotak objek produk pada foto katalog (buang latar polos di tepi) -> {x,y,s} persegi, atau null.
+    window.aiTrimBox = (im) => {
+        const w = im.naturalWidth || im.width, h = im.naturalHeight || im.height, N = 64;
+        const c = document.createElement('canvas'); c.width = c.height = N;
+        const x = c.getContext('2d', { willReadFrequently: true });
+        x.fillStyle = '#fff'; x.fillRect(0, 0, N, N);
+        const k = N / Math.max(w, h), dw = w * k, dh = h * k;
+        x.drawImage(im, (N - dw) / 2, (N - dh) / 2, dw, dh);
+        const d = x.getImageData(0, 0, N, N).data;
+        let br = 0, bg = 0, bb = 0, n = 0;
+        for (let i = 0; i < N; i++) for (const [px, py] of [[i, 0], [i, N - 1], [0, i], [N - 1, i]]) { const o = (py * N + px) * 4; br += d[o]; bg += d[o + 1]; bb += d[o + 2]; n++; }
+        br /= n; bg /= n; bb /= n;
+        let x0 = N, y0 = N, x1 = -1, y1 = -1, cnt = 0;
+        for (let yy = 0; yy < N; yy++) for (let xx = 0; xx < N; xx++) {
+            const o = (yy * N + xx) * 4;
+            if (Math.abs(d[o] - br) + Math.abs(d[o + 1] - bg) + Math.abs(d[o + 2] - bb) > 60) { cnt++; if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+        }
+        if (x1 < 0 || cnt < N * N * 0.04) return null;
+        const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+        if (bw * bh > N * N * 0.9) return null; // sudah memenuhi gambar
+        const side = Math.max(bw, bh) * 1.12, cx = (x0 + x1 + 1) / 2, cy = (y0 + y1 + 1) / 2;
+        const ox = (N - dw) / 2, oy = (N - dh) / 2;
+        // kembali ke koordinat gambar asli
+        return { x: (cx - side / 2 - ox) / k, y: (cy - side / 2 - oy) / k, s: side / k };
+    };
+    // Beberapa tampilan per gambar produk: objek terpotong (tanpa latar), penuh, tengah 80%, tengah 60%.
     window.aiRefFromImage = (im) => {
         const w = im.naturalWidth || im.width, h = im.naturalHeight || im.height, m = Math.min(w, h);
-        return [1, 0.8, 0.6].map(f => { const s = m * f; return window.aiFeatures(im, (w - s) / 2, (h - s) / 2, s, s); });
+        const out = [1, 0.8, 0.6].map(f => { const s = m * f; return window.aiFeatures(im, (w - s) / 2, (h - s) / 2, s, s); });
+        try { const b = window.aiTrimBox(im); if (b) out.unshift(window.aiFeatures(im, b.x, b.y, b.s, b.s)); } catch (e) {}
+        return out;
     };
-    const aiSig = p => String(p.img.length) + ':' + p.img.slice(-32);
+    const aiSig = p => String(p.img.length) + ':' + p.img.slice(-32) + '|v2';
     // Cache ciri di IndexedDB agar tidak dihitung ulang tiap buka.
     const aiDb = () => new Promise(res => {
-        try { const r = indexedDB.open('sbmart_ai', 1); r.onupgradeneeded = () => r.result.createObjectStore('f'); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch (e) { res(null); }
+        try { const r = indexedDB.open('sbmart_ai', 2); r.onupgradeneeded = () => { const d = r.result; ['f', 'n'].forEach(n => { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n); }); }; r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch (e) { res(null); }
     });
-    const aiIdb = (db, mode, fn) => new Promise(res => { if (!db) return res(null); try { const tx = db.transaction('f', mode); const rq = fn(tx.objectStore('f')); tx.oncomplete = () => res(rq ? rq.result : null); tx.onerror = () => res(null); } catch (e) { res(null); } });
+    const aiIdb = (db, mode, fn, store) => new Promise(res => { if (!db) return res(null); try { const tx = db.transaction(store || 'f', mode); const rq = fn(tx.objectStore(store || 'f')); tx.oncomplete = () => res(rq ? rq.result : null); tx.onerror = () => res(null); } catch (e) { res(null); } });
 
     window.aiBuildIndex = async (onProgress) => {
         if (AI.building) return AI.building;
@@ -8173,6 +8204,136 @@ measurementId: "G-ZVZ3QHEPKC"
     };
 
     // Urutan kandidat untuk satu frame (skor dirata-ratakan antar frame agar stabil)
+    // ---------- AI canggih (jaringan saraf DINOv2-small, berjalan di perangkat) ----------
+    // Mengubah gambar jadi "sidik jari" 768 angka yang tahan pada sudut, cahaya & latar berbeda.
+    // Model (±25MB) diunduh sekali saat online lalu tersimpan di perangkat. Bila gagal/offline -> mode dasar (ciri warna/pola).
+    const NN = { state: 'idle', ext: null, loading: null, ref: new Map(), done: 0, total: 0, building: null, size: 224 };
+    window.AI_NN = NN;
+    const nnCv = document.createElement('canvas'); nnCv.width = nnCv.height = NN.size;
+    const nnCx = nnCv.getContext('2d');
+    const nnNorm = (a) => { let n = 0; for (let i = 0; i < a.length; i++) n += a[i] * a[i]; n = Math.sqrt(n) || 1; for (let i = 0; i < a.length; i++) a[i] /= n; return a; };
+    // tensor keluaran model -> vektor: token CLS + rata-rata token patch
+    window.aiNNVector = (out) => {
+        const d = out.data, dims = out.dims || [];
+        if (dims.length === 3) {
+            const T = dims[1], D = dims[2];
+            const cls = Float32Array.from(d.subarray ? d.subarray(0, D) : d.slice(0, D));
+            const mean = new Float32Array(D);
+            for (let t = 1; t < T; t++) for (let j = 0; j < D; j++) mean[j] += d[t * D + j];
+            for (let j = 0; j < D; j++) mean[j] /= Math.max(1, T - 1);
+            const v = new Float32Array(D * 2); v.set(nnNorm(cls), 0); v.set(nnNorm(mean), D);
+            return nnNorm(v);
+        }
+        return nnNorm(Float32Array.from(d));
+    };
+    window.aiNNEmbedCanvas = async (cv) => {
+        if (!NN.ext) return null;
+        const out = await NN.ext(cv.toDataURL('image/jpeg', 0.92));
+        return window.aiNNVector(out);
+    };
+    // Potongan persegi dari sumber (gambar/video) -> kanvas 224
+    const nnCrop = (src, sx, sy, sw, sh) => { nnCx.fillStyle = '#fff'; nnCx.fillRect(0, 0, NN.size, NN.size); nnCx.drawImage(src, sx, sy, sw, sh, 0, 0, NN.size, NN.size); return nnCv; };
+    window.aiNNLoad = (onStatus) => {
+        if (NN.ext) return Promise.resolve(true);
+        if (NN.state === 'failed') return Promise.resolve(false);
+        if (NN.loading) return NN.loading;
+        NN.state = 'loading';
+        NN.loading = (async () => {
+            try {
+                if (window.__aiNNMock) { NN.ext = window.__aiNNMock; NN.state = 'ready'; return true; }
+                if (!navigator.onLine && !NN.cachedHint) throw new Error('offline');
+                const mod = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2');
+                mod.env.allowLocalModels = false;
+                mod.env.useBrowserCache = true;
+                let lastErr = null;
+                for (const id of ['Xenova/dinov2-small', 'onnx-community/dinov2-small']) {
+                    try {
+                        NN.ext = await mod.pipeline('image-feature-extraction', id, { dtype: 'q8', progress_callback: (e) => { if (onStatus && e && e.status === 'progress' && e.total) onStatus(Math.round(e.loaded / e.total * 100)); } });
+                        NN.modelId = id; break;
+                    } catch (e) { lastErr = e; }
+                }
+                if (!NN.ext) throw lastErr || new Error('model');
+                NN.state = 'ready';
+                try { localStorage.setItem('wi_ai_nn_ok', '1'); } catch (e) {}
+                return true;
+            } catch (e) {
+                console.warn('AI canggih tidak tersedia, memakai mode dasar:', e);
+                NN.state = 'failed'; NN.ext = null; return false;
+            }
+        })().finally(() => { NN.loading = null; });
+        return NN.loading;
+    };
+    window.aiNNComplete = () => Boolean(NN.ext && NN.total > 0 && NN.done >= NN.total && NN.ref.size >= NN.total);
+    // Hitung sidik jari tiap gambar produk (disimpan di IndexedDB, dihitung ulang hanya bila gambar berubah)
+    window.aiNNBuild = (onProgress) => {
+        if (!NN.ext) return Promise.resolve(false);
+        if (NN.building) return NN.building;
+        NN.building = (async () => {
+            const prods = (STATE.data.products || []).filter(p => p && p.img && String(p.img).length > 20 && AI.ref.has(p.id));
+            NN.total = prods.length; NN.done = 0;
+            const db = await aiDb(), keep = new Set();
+            for (const p of prods) {
+                keep.add(p.id);
+                const sig = aiSig(p), cur = NN.ref.get(p.id);
+                if (!(cur && cur.sig === sig)) {
+                    let rec = await aiIdb(db, 'readonly', st => st.get(p.id), 'n');
+                    if (!(rec && rec.sig === sig && rec.v && rec.m === (NN.modelId || 'x'))) {
+                        rec = null;
+                        try {
+                            const im = await aiLoadImg(p.img), w = im.naturalWidth || im.width, h = im.naturalHeight || im.height;
+                            const b = window.aiTrimBox(im);
+                            const cv = b ? nnCrop(im, b.x, b.y, b.s, b.s) : nnCrop(im, (w - Math.min(w, h)) / 2, (h - Math.min(w, h)) / 2, Math.min(w, h), Math.min(w, h));
+                            rec = { sig, m: NN.modelId || 'x', v: await window.aiNNEmbedCanvas(cv) };
+                            if (rec.v) await aiIdb(db, 'readwrite', st => st.put(rec, p.id), 'n');
+                        } catch (e) { rec = null; }
+                    }
+                    if (rec && rec.v) NN.ref.set(p.id, rec); else NN.ref.delete(p.id);
+                }
+                NN.done++;
+                if (onProgress) onProgress(NN.done, NN.total);
+                await new Promise(r => setTimeout(r, 0));
+            }
+            [...NN.ref.keys()].forEach(k => { if (!keep.has(k)) NN.ref.delete(k); });
+            // produk yang gagal dibaca tidak menahan mode canggih
+            NN.total = NN.ref.size;
+            return true;
+        })().finally(() => { NN.building = null; });
+        return NN.building;
+    };
+    // Kandidat untuk satu bingkai: gabungan AI canggih (utama) + ciri dasar; EMA antar frame supaya stabil.
+    window.aiRankFrame = async (src, sx, sy, s) => {
+        const feat = window.aiFeatures(src, sx, sy, s, s);
+        const base = window.aiRank(feat, false);
+        let ranked = base, usedNN = false;
+        if (window.aiNNComplete()) {
+            try {
+                const q = await window.aiNNEmbedCanvas(nnCrop(src, sx, sy, s, s));
+                if (q) {
+                    const bmap = new Map(base.map(b => [b.pid, b.score]));
+                    ranked = [];
+                    NN.ref.forEach((rec, pid) => {
+                        let dot = 0; const a = rec.v; for (let i = 0; i < a.length; i++) dot += a[i] * q[i];
+                        const nnS = 0.35 + 0.6 * Math.max(0, Math.min(1, (dot - 0.15) / 0.75));
+                        ranked.push({ pid, score: 0.85 * nnS + 0.15 * (bmap.get(pid) || 0) });
+                    });
+                    usedNN = true;
+                }
+            } catch (e) { ranked = base; }
+        }
+        ranked.forEach(r => { const prev = AI.scores.get(r.pid); r.score = prev === undefined ? r.score : prev * 0.4 + r.score * 0.6; AI.scores.set(r.pid, r.score); });
+        ranked.sort((a, b) => b.score - a.score);
+        ranked.nn = usedNN;
+        return ranked;
+    };
+    // Mulai unduh model + hitung sidik jari di latar belakang (tidak menahan mode dasar)
+    window.aiNNStart = (onInfo) => {
+        window.aiNNLoad((pct) => onInfo && onInfo(`Mengunduh AI canggih… ${pct}%`)).then(ok => {
+            if (!ok) { onInfo && onInfo('Mode dasar aktif (AI canggih tidak tersedia / offline)'); return; }
+            onInfo && onInfo('Mempelajari produk (AI canggih)…');
+            return window.aiNNBuild((d, t) => onInfo && onInfo(d >= t ? 'AI canggih aktif ✔' : `Mempelajari produk (AI canggih) ${d}/${t}`));
+        }).catch(() => {});
+    };
+
     window.aiIsReady = () => Boolean(AI.ready && AI.ref.size);
     window.aiRank = (feat, smooth) => {
         const out = [];
@@ -8219,8 +8380,7 @@ measurementId: "G-ZVZ3QHEPKC"
         AI.busy = true;
         try {
             const w = v.videoWidth, h = v.videoHeight, s = Math.min(w, h) * 0.62;
-            const feat = window.aiFeatures(v, (w - s) / 2, (h - s) / 2, s, s);
-            window.aiRenderCands(window.aiRank(feat, true));
+            window.aiRenderCands(await window.aiRankFrame(v, (w - s) / 2, (h - s) / 2, s));
         } catch (e) { /* abaikan frame */ }
         AI.busy = false;
     };
@@ -8244,6 +8404,7 @@ measurementId: "G-ZVZ3QHEPKC"
         prep.classList.remove('d-none');
         await window.aiBuildIndex((d, t) => { prep.textContent = `Mempelajari gambar produk… ${d}/${t}`; });
         prep.classList.add('d-none');
+        window.aiNNStart((t) => { STATE.aiNNInfo = t; const e = aiEl('aiNN'); if (e) e.textContent = t; });
         if (!STATE.aiOpen) return;
         aiStatus(AI.ref.size ? 'Arahkan produk ke tengah bingkai…' : 'Gambar produk tidak dapat dibaca.');
     };
@@ -11135,6 +11296,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     <button type="button" data-m="photo">📷 Foto</button>
                 </div>
                 <div id="rsStatus" class="rs-status">Menyiapkan…</div>
+                <div id="rsAiNN" class="rs-ainn"></div>
                 <div id="rsAi" class="rs-ai d-none"></div>
                 <div id="rsPhotoRow" class="rs-photo-row d-none"><button type="button" id="rsShutter" class="rs-shutter" aria-label="Ambil foto"></button></div>
                 <div id="rsCartBar" class="rs-cartbar d-none">
@@ -11436,11 +11598,11 @@ measurementId: "G-ZVZ3QHEPKC"
             }).join('');
             if (top[0]) st(top[0].score >= 0.78 && gap >= 0.04 ? 'Produk terdeteksi — ketuk untuk mengirim' : 'Arahkan produk ke tengah kotak bidik', top[0].score >= 0.78 && gap >= 0.04 ? 'ok' : '');
         };
-        const aiTick = () => {
+        const aiTick = async () => {
             if (aiBusy || !stream || mode !== 'ai' || !window.aiIsReady()) return;
             const c = aiCrop(); if (!c) return;
             aiBusy = true;
-            try { renderAi(window.aiRank(window.aiFeatures(video, c.sx, c.sy, c.s, c.s), true)); } catch (e) {}
+            try { renderAi(await window.aiRankFrame(video, c.sx, c.sy, c.s)); } catch (e) {}
             aiBusy = false;
         };
         rsAiBox.addEventListener('click', (e) => {
@@ -11470,6 +11632,7 @@ measurementId: "G-ZVZ3QHEPKC"
             await window.aiBuildIndex((d, t) => { if (mode === 'ai') st(`Mempelajari gambar produk… ${d}/${t}`); });
             if (mode !== 'ai') return;
             st('Arahkan produk ke tengah kotak bidik');
+            window.aiNNStart((t) => { const e = document.getElementById('rsAiNN'); if (e) e.textContent = t; });
             aiTimer = setInterval(aiTick, 450);
         };
         document.getElementById('rsModes').addEventListener('click', (e) => { const b = e.target.closest('button[data-m]'); if (b && stream) setMode(b.dataset.m); });
