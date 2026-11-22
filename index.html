@@ -986,6 +986,21 @@
         #gasapp-root .rs-cart-n b { color: var(--c-text); font-size: 15px; }
         #gasapp-root .rs-cart-r { text-align: right; }
         #gasapp-root .rs-cart-total { display: block; font-size: 22px; line-height: 1.1; font-weight: 900; color: var(--c-text); font-variant-numeric: tabular-nums; }
+
+        /* ===== Scan produk gambar AI ===== */
+        #aiVideo { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .ai-frame { position: absolute; left: 50%; top: 50%; height: 82%; aspect-ratio: 1; transform: translate(-50%, -50%); border: 3px solid rgba(255,200,61,0.95); border-radius: 14px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.28); }
+        .ai-prep { position: absolute; left: 8px; right: 8px; bottom: 8px; background: rgba(0,0,0,0.72); color: #fff; font-size: 11px; font-weight: 700; padding: 6px 8px; border-radius: 8px; text-align: center; }
+        .ai-cand { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 6px 8px; border: 1px solid var(--c-line, #111); background: var(--c-surface, #fff); color: inherit; border-radius: 10px; }
+        .ai-cand img { width: 42px; height: 42px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: var(--c-surface-3, #eee); }
+        .ai-cand-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .ai-cand-name { font-weight: 700; font-size: 13px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ai-cand-sub { font-size: 11px; opacity: .7; }
+        .ai-cand-pct { font-weight: 800; font-size: 12px; white-space: nowrap; opacity: .75; }
+        .ai-cand.is-top { border-width: 2px; }
+        .ai-cand.is-sure { background: rgba(34,197,94,.14); border-color: #16a34a; }
+        .ai-cand.is-sure .ai-cand-pct { color: #16a34a; opacity: 1; }
+        .ai-cand.is-off { opacity: .55; }
     </style>
 </head>
 <body>
@@ -1177,6 +1192,7 @@
                 <div class="flex items-center gap-2 mb-4 transition-all" id="posSearchWrap">
                     <div class="flex-1 flex overflow-x-auto gap-3 py-2 no-scrollbar" id="adminPosCategoryFilter"></div>
                     <input type="text" id="posInlineSearch" autocomplete="off" onkeyup="window.doPosInlineSearch()" onkeydown="window.onPosSearchKeydown(event)" placeholder="Cari produk / scan barcode..." class="d-none ui-input flex-1 bg-white py-2 text-sm">
+                    <button onclick="window.openAiScanner()" id="btnPosAiScan" class="ui-btn bg-white w-10 h-10 flex-shrink-0 flex items-center justify-center shadow-sm border border-line" title="Scan Produk tanpa Barcode (Gambar AI)" aria-label="Scan produk dengan gambar AI"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M12 8.5l1.1 2.4 2.4 1.1-2.4 1.1L12 15.5l-1.1-2.4-2.4-1.1 2.4-1.1z"/></svg></button>
                     <button onclick="window.openBarcodeScanner('pos')" id="btnPosScan" class="d-none ui-btn bg-white w-10 h-10 flex-shrink-0 flex items-center justify-center text-lg shadow-sm border border-line" title="Scan Barcode (Kamera)" aria-label="Scan Barcode">📷</button>
                     <button onclick="window.togglePosSearch()" class="ui-btn bg-white w-10 h-10 flex-shrink-0 flex items-center justify-center text-lg shadow-sm border border-line">🔍</button>
                 </div>
@@ -1677,6 +1693,11 @@
                                         <button type="button" data-scan-src="remote" onclick="window.setScanSource('remote')" class="scan-src-opt"><span class="font-bold">📲 HP lain sebagai scanner</span><span class="prn-sub">Pindai QR dengan HP lain</span></button>
                                     </div>
                                     <button type="button" id="setScanPairBtn" onclick="window.openRemoteScanPanel('pos')" class="d-none ui-btn bg-white w-full py-2 mt-2 text-sm">Tampilkan QR untuk HP scanner</button>
+                                    <div class="mt-3">
+                                        <label for="setScanBaseUrl" class="text-xs font-bold mb-1 block">Alamat aplikasi untuk QR HP scanner</label>
+                                        <input type="text" id="setScanBaseUrl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" class="ui-input bg-white text-sm" placeholder="contoh: https://tokoanda.com">
+                                        <p class="set-hint">Isi dengan domain yang dipakai sekarang. Kosongkan = memakai alamat yang sedang dibuka di perangkat ini.</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -2469,6 +2490,33 @@
         </div>
     </div>
 
+    <!-- Scan produk tanpa barcode (gambar AI) -->
+    <div id="modalAiScan" class="fixed inset-0 modal-backdrop d-none z-[99990] flex items-center justify-center p-3">
+        <div class="ui-card bg-white w-full max-w-md relative flex flex-col max-h-[95vh] overflow-hidden">
+            <div class="p-3 border-b border-line font-bold uppercase bg-main flex justify-between items-center shrink-0 gap-2">
+                <span>✨ Scan Tanpa Barcode (AI)</span>
+                <span class="flex gap-1.5">
+                    <button type="button" onclick="window.aiSwitchCamera()" class="bg-white text-black font-bold px-2 py-1 border border-line text-sm" title="Ganti kamera" aria-label="Ganti kamera">🔄</button>
+                    <button type="button" onclick="window.closeAiScanner()" class="bg-white text-black font-bold px-2 py-1 border border-line text-sm inline-flex items-center justify-center" aria-label="Tutup"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
+                </span>
+            </div>
+            <div class="bg-black relative shrink-0" style="aspect-ratio:4/3;">
+                <video id="aiVideo" class="w-full h-full object-cover" playsinline muted autoplay></video>
+                <div class="ai-frame pointer-events-none"></div>
+                <div id="aiPrep" class="ai-prep d-none"></div>
+            </div>
+            <div class="p-3 bg-white shrink-0">
+                <div id="aiStatus" class="text-xs font-bold text-center mb-2">Menyiapkan kamera…</div>
+                <div id="aiCands" class="space-y-1.5"></div>
+                <button type="button" onclick="window.aiPickBest()" class="ui-btn bg-accent w-full mt-2 py-2 text-xs">Tambahkan yang paling cocok</button>
+            </div>
+            <div id="aiLogWrap" class="px-3 pb-3 overflow-y-auto bg-white d-none" style="max-height:22vh;">
+                <div class="text-[11px] font-bold uppercase border-t border-line pt-2 mb-1">Ditambahkan ke keranjang</div>
+                <div id="aiLog" class="space-y-1"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Notifikasi singkat (hasil scan) -->
     <div id="scanToast" class="scan-toast d-none"></div>
 
@@ -2796,7 +2844,7 @@ measurementId: "G-ZVZ3QHEPKC"
     // ======================================================= //
 
     // Versi aplikasi: SAMAKAN dengan VERSION di sw.js setiap kali update.
-    const APP_VERSION = 'v25';
+    const APP_VERSION = 'v29';
     window.APP_VERSION = APP_VERSION;
     let db = null;
     let auth = null;
@@ -2810,7 +2858,8 @@ measurementId: "G-ZVZ3QHEPKC"
             // Offline: simpan seluruh data di perangkat tanpa batas ukuran cache.
             try { db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED }); } catch (e) { console.warn('Pengaturan cache Firestore gagal:', e); }
             auth = firebase.auth();
-            db.enablePersistence({ synchronizeTabs: true }).then(() => { window.__persistOK = true; }).catch(err => {
+            // Mode satu-tab (tanpa synchronizeTabs): mode multi-tab SDK 10.13 sering memicu 'INTERNAL ASSERTION FAILED: Unexpected state'.
+            db.enablePersistence().then(() => { window.__persistOK = true; }).catch(err => {
                 window.__persistOK = false;
                 if (err.code === 'failed-precondition') console.warn('Firestore multi-tab persistence not enabled');
                 else if (err.code === 'unimplemented') console.warn('Browser does not support Firestore persistence');
@@ -2819,6 +2868,26 @@ measurementId: "G-ZVZ3QHEPKC"
             console.error("Firebase initialization failed:", e);
         }
     }
+
+    // ===== Pemulihan otomatis galat internal Firestore ("INTERNAL ASSERTION FAILED: Unexpected state") =====
+    // Galat ini berasal dari SDK (bukan data). Tidak ditampilkan sebagai dialog; aplikasi memulai ulang koneksi datanya
+    // sekali (maks. 1x per 2 menit, tanpa menghapus data offline yang belum terkirim).
+    window.isFsInternalError = (x) => /INTERNAL ASSERTION FAILED|Unexpected state/i.test(String((x && (x.message || x.reason && x.reason.message)) || x || ''));
+    window.recoverFirestore = () => {
+        try {
+            const k = 'wi_fs_recover', last = Number(sessionStorage.getItem(k) || 0), now = Date.now();
+            if (now - last < 120000) return;
+            sessionStorage.setItem(k, String(now));
+        } catch (e) {}
+        console.warn('Firestore internal error -> memuat ulang koneksi data');
+        const t = document.createElement('div');
+        t.textContent = 'Menyegarkan koneksi data…';
+        t.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;font:700 13px sans-serif;z-index:2147483647';
+        document.body.appendChild(t);
+        setTimeout(() => location.reload(), 1200);
+    };
+    window.addEventListener('unhandledrejection', (e) => { if (window.isFsInternalError(e.reason)) { e.preventDefault(); window.recoverFirestore(); } });
+    window.addEventListener('error', (e) => { if (window.isFsInternalError(e.error || e.message)) { e.preventDefault(); window.recoverFirestore(); } });
 
     // Global State Manager (Semua Fitur Default OFF & Nama "Warung Indonesia")
     let STATE = {
@@ -2856,6 +2925,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 shiftEnabled: false, shiftRequired: false,
                 publicHistoryEnabled: false,
                 barcodeEnabled: false,
+                scanBaseUrl: '',
                 priceTagColor: "#FFD500",
                 hideStoreStatusBadge: false,
                 scheduleOpenEnabled: false,
@@ -3148,6 +3218,7 @@ measurementId: "G-ZVZ3QHEPKC"
     
     // Custom Dialog Replacements
     window.customAlert = (msg, title="Info") => {
+        if (window.isFsInternalError && window.isFsInternalError(msg)) { window.recoverFirestore(); return Promise.resolve(); }
         return new Promise(resolve => {
             document.getElementById('dialogHeader').textContent = title;
             document.getElementById('dialogHeader').className = 'p-3 border-b border-line font-bold uppercase bg-main';
@@ -3299,6 +3370,7 @@ measurementId: "G-ZVZ3QHEPKC"
                     shiftRequired: Boolean(s.shift_required),
                     publicHistoryEnabled: Boolean(s.public_history_enabled),
                     barcodeEnabled: Boolean(s.barcode_enabled),
+                    scanBaseUrl: typeof s.scan_base_url === 'string' ? s.scan_base_url : '',
                     priceTagColor: /^#[0-9a-fA-F]{6}$/.test(s.price_tag_color || '') ? s.price_tag_color : '#FFD500',
                     hideStoreStatusBadge: Boolean(s.hide_store_status_badge),
                     scheduleOpenEnabled: Boolean(s.schedule_open_enabled),
@@ -3402,6 +3474,7 @@ measurementId: "G-ZVZ3QHEPKC"
         notes: o.notes || '',
         custName: o.cust_name || '',
         debtPaid: Number(o.debt_paid || 0),
+        payMethod: o.pay_method || '',
         discount: Number(o.discount || 0),
         promos: Array.isArray(o.promos) ? o.promos : [],
         bonusItems: Array.isArray(o.bonus_items) ? o.bonus_items : [],
@@ -4440,6 +4513,8 @@ measurementId: "G-ZVZ3QHEPKC"
         window.calculateTotal();
     };
     window.renderCartExtras = () => {
+        const il = document.getElementById('cartItemsList');
+        if (il && !STATE.cart.length) il.innerHTML = (STATE.cartExtras || []).length ? '<p class="text-xs text-gray-500 text-center p-3">Belum ada produk — transaksi hanya berisi Tambahan.</p>' : '<p class="font-bold text-center p-4">Keranjang kosong</p>';
         const list = document.getElementById('cartExtraList');
         if (!list) return;
         list.innerHTML = (STATE.cartExtras || []).map((x, i) => `<div class="flex justify-between items-center gap-2 bg-yellow-50 border border-line p-1.5 text-xs"><span class="font-bold flex-1 min-w-0 break-words">+ ${escapeHTML(x.name)}</span><span class="font-bold whitespace-nowrap">${formatWon(x.amount)}</span><button type="button" onclick="window.removeCartExtra(${i})" class="w-6 h-6 font-bold bg-danger text-white border border-line inline-flex items-center justify-center shrink-0"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" class="pointer-events-none"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button></div>`).join('');
@@ -4452,7 +4527,7 @@ measurementId: "G-ZVZ3QHEPKC"
         const isCardOn = Boolean(STATE.data.settings.cardEnabled);
 
         if(STATE.cart.length === 0) {
-            list.innerHTML = '<p class="font-bold text-center p-4">Keranjang kosong</p>';
+            list.innerHTML = (STATE.cartExtras || []).length ? '<p class="text-xs text-gray-500 text-center p-3">Belum ada produk — transaksi hanya berisi Tambahan.</p>' : '<p class="font-bold text-center p-4">Keranjang kosong</p>';
         } else {
             list.innerHTML = STATE.cart.map((item, index) => {
                 const prod = STATE.data.products.find(p => p.id === item.id);
@@ -4772,7 +4847,9 @@ measurementId: "G-ZVZ3QHEPKC"
     };
 
     window.processCheckout = async (isPrint) => {
-        if(STATE.cart.length === 0) return await window.customAlert('Keranjang kosong!', 'Peringatan');
+        // Keranjang tanpa produk tetap bisa diproses bila ada nominal di Tambahan (opsional).
+        const extraOnly = (STATE.cartExtras || []).reduce((s, x) => s + (Number(x.amount) || 0), 0);
+        if(STATE.cart.length === 0 && extraOnly <= 0) return await window.customAlert('Keranjang kosong! Tambahkan produk atau isi nominal di Tambahan (opsional).', 'Peringatan');
         if (STATE.user && STATE.data.settings.shiftEnabled && STATE.data.settings.shiftRequired && !STATE.shift) {
             await window.customAlert('Buka shift kasir terlebih dahulu sebelum memproses transaksi.', 'Peringatan');
             return window.openShiftModal();
@@ -4992,7 +5069,7 @@ measurementId: "G-ZVZ3QHEPKC"
 
     // Status hanya untuk metode Hutang (Lunas / Belum Lunas). Metode lain dianggap lunas & tidak menampilkan baris status.
     const statusRow = order.type === 'Hutang'
-        ? `<div style="display:flex; justify-content:space-between;"><span>Status:</span> <span style="font-weight:bold">${order.paymentStatus === 'Paid' ? 'LUNAS' : 'BELUM LUNAS'}</span></div>`
+        ? `<div style="display:flex; justify-content:space-between;"><span>Status:</span> <span style="font-weight:bold">${order.paymentStatus === 'Paid' ? 'LUNAS' + (order.payMethod ? ' (' + escapeHTML(order.payMethod) + ')' : '') : 'BELUM LUNAS'}</span></div>`
         : '';
     // Nama pelanggan hanya ditampilkan untuk metode Hutang; catatan ditampilkan jika ada.
     const custRow = (order.type === 'Hutang' && custName && custName !== 'Umum')
@@ -6058,7 +6135,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 const pay = Math.min(left, remain);
                 left -= pay;
                 const newPaid = Number(o.debtPaid || 0) + pay;
-                updates.push({ o, newPaid, done: newPaid >= Number(o.total || 0) });
+                updates.push({ o, newPaid, done: newPaid >= Number(o.total || 0), method: res.method });
             }
             const newDebt = Math.max(0, cust.debt - amount);
             const payEntry = { date: new Date().toISOString(), amount, method: res.method };
@@ -6067,12 +6144,12 @@ measurementId: "G-ZVZ3QHEPKC"
 
             if (!IS_PREVIEW && db) {
                 const batch = db.batch();
-                updates.forEach(u => batch.update(db.collection('orders').doc(u.o.id), { debt_paid: u.newPaid, payment_status: u.done ? 'Paid' : 'Unpaid' }));
+                updates.forEach(u => batch.update(db.collection('orders').doc(u.o.id), { debt_paid: u.newPaid, pay_method: u.method, payment_status: u.done ? 'Paid' : 'Unpaid' }));
                 batch.update(db.collection('customers').doc(id), { debt: newDebt, payments: newPayments });
                 await batch.commit();
                 await fetchAllData();
             } else {
-                updates.forEach(u => { u.o.debtPaid = u.newPaid; if (u.done) u.o.paymentStatus = 'Paid'; });
+                updates.forEach(u => { u.o.debtPaid = u.newPaid; u.o.payMethod = u.method; if (u.done) u.o.paymentStatus = 'Paid'; });
                 cust.debt = newDebt;
                 cust.payments = newPayments;
             }
@@ -6295,18 +6372,31 @@ measurementId: "G-ZVZ3QHEPKC"
         }
         document.getElementById('adminHistoryTable').innerHTML = shown.map(o => {
             let custName = o.custId ? (STATE.data.customers.find(x => x.id === o.custId)?.name || o.custName || 'Umum') : (o.custName || 'Umum'); 
-            let badgeColor = o.type === 'Hutang' ? 'bg-danger text-white' : (o.type === 'Transfer' ? 'bg-accent text-black' : (o.type === 'Kartu' ? 'bg-blue-600 text-white' : 'bg-black text-white'));
+            const om = window.orderMethod(o); let badgeColor = om.cls;
             const isCashier = STATE.user && STATE.user.role === 'cashier';
             const editedTag = o.isEdited ? `<div class="mt-0.5"><span class="bg-danger text-white text-[9px] font-bold px-1 rounded">TELAH DIEDIT</span>${o.editedBy ? ` <span class="text-[9px] text-gray-500">oleh ${escapeHTML(o.editedBy)}</span>` : ''}</div>` : '';
             const cashierTag = o.cashierId ? `<div class="text-[9px] text-gray-500">Kasir: ${escapeHTML(window.getCashierNameById(o.cashierId, o.cashierName))}</div>` : '';
-            return `<tr class="border-b border-line hover:bg-yellow-50"><td class="p-2 border-r border-line text-xs md:text-sm">${safeDate(o.date)}</td><td class="p-2 border-r border-line text-[10px] md:text-xs">${o.id}${cashierTag}${editedTag}</td><td class="p-2 border-r border-line text-xs md:text-sm">${escapeHTML(custName)}</td><td class="p-2 border-r border-line text-center"><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold ${badgeColor}">${o.type}</span><br><span class="text-[9px] md:text-[10px] ${o.paymentStatus === 'Unpaid' ? 'text-danger' : 'text-success'}">${o.paymentStatus === 'Unpaid' ? 'Belum Lunas' : 'Lunas'}</span></td><td class="p-2 border-r border-line font-bold text-sm">${formatWon(o.total)}</td><td class="p-2 text-center flex gap-1 justify-center flex-wrap w-full md:w-32"><button onclick="window.showReceiptPopup('${o.id}')" class="ui-btn bg-accent border border-line px-2 py-1 text-[10px] flex-1">Nota</button><button onclick="window.editTransaction('${o.id}')" class="ui-btn bg-main border border-line px-2 py-1 text-[10px] flex-1">Edit</button>${!isCashier ? `<button onclick="window.deleteTransaction('${o.id}')" class="ui-btn bg-danger text-white border border-line px-2 py-1 text-[10px] w-full mt-1">Hapus</button>` : ''}</td></tr>`;
+            return `<tr class="border-b border-line hover:bg-yellow-50"><td class="p-2 border-r border-line text-xs md:text-sm">${safeDate(o.date)}</td><td class="p-2 border-r border-line text-[10px] md:text-xs">${o.id}${cashierTag}${editedTag}</td><td class="p-2 border-r border-line text-xs md:text-sm">${escapeHTML(custName)}</td><td class="p-2 border-r border-line text-center"><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold ${badgeColor}">${om.label}</span><br><span class="text-[9px] md:text-[10px] ${o.paymentStatus === 'Unpaid' ? 'text-danger' : 'text-success'}">${o.paymentStatus === 'Unpaid' ? 'Belum Lunas' : 'Lunas'}</span>${om.sub ? `<br><span class="text-[9px] text-gray-500">${escapeHTML(om.sub)}</span>` : ''}</td><td class="p-2 border-r border-line font-bold text-sm">${formatWon(o.total)}</td><td class="p-2 text-center flex gap-1 justify-center flex-wrap w-full md:w-32"><button onclick="window.showReceiptPopup('${o.id}')" class="ui-btn bg-accent border border-line px-2 py-1 text-[10px] flex-1">Nota</button><button onclick="window.editTransaction('${o.id}')" class="ui-btn bg-main border border-line px-2 py-1 text-[10px] flex-1">Edit</button>${!isCashier ? `<button onclick="window.deleteTransaction('${o.id}')" class="ui-btn bg-danger text-white border border-line px-2 py-1 text-[10px] w-full mt-1">Hapus</button>` : ''}</td></tr>`;
         }).join('');
+    };
+
+    // Metode yang ditampilkan di riwayat: transaksi Hutang yang sudah lunas lewat cicilan memakai metode cicilan
+    // yang dipilih (Cash/Transfer/Kartu). Yang belum tertutup penuh tetap dihitung Hutang (+ info sudah dicicil).
+    window.orderMethod = o => {
+        const cls = t => t === 'Hutang' ? 'bg-danger text-white' : (t === 'Transfer' ? 'bg-accent text-black' : (t === 'Kartu' ? 'bg-blue-600 text-white' : 'bg-black text-white'));
+        const viaInst = o.type === 'Hutang' && o.paymentStatus !== 'Unpaid' && o.payMethod;
+        const label = viaInst ? o.payMethod : o.type;
+        let sub = '';
+        if (viaInst) sub = 'dari Hutang';
+        else if (o.type === 'Hutang' && o.paymentStatus === 'Unpaid' && Number(o.debtPaid || 0) > 0) sub = `dicicil ${formatWon(o.debtPaid)}${o.payMethod ? ' · ' + o.payMethod : ''}`;
+        return { label, cls: cls(label), sub, viaInst: Boolean(viaInst) };
     };
 
     // Kartu riwayat versi HP: tampilan awal tanggal, total & aksi; detail (dropdown) berisi item, metode,
     // nama pelanggan (khusus Hutang) dan catatan jika ada. Dipakai di riwayat admin, kasir & publik.
     window.buildHistoryMobileCard = (o, actionsHtml, extraHtml = '') => {
-        const badgeColor = o.type === 'Hutang' ? 'bg-danger text-white' : (o.type === 'Transfer' ? 'bg-accent text-black' : (o.type === 'Kartu' ? 'bg-blue-600 text-white' : 'bg-black text-white'));
+        const om = window.orderMethod(o);
+        const badgeColor = om.cls;
         const custName = o.custId ? ((STATE.data.customers.find(x => x.id === o.custId) || {}).name || o.custName || '') : (o.custName || '');
         const stop = 'onclick="event.stopPropagation()"';
         return `<details class="hist-card ui-card bg-white">
@@ -6320,7 +6410,7 @@ measurementId: "G-ZVZ3QHEPKC"
             </summary>
             <div class="border-t border-line p-2.5 text-xs space-y-1.5">
                 <div class="flex justify-between gap-2"><span class="text-gray-600">No. Inv</span><span class="font-bold text-right break-all">${o.id}</span></div>
-                <div class="flex justify-between gap-2 items-center"><span class="text-gray-600">Metode</span><span class="text-right"><span class="px-2 py-0.5 text-[10px] font-bold ${badgeColor}">${o.type}</span> <span class="text-[10px] font-bold ${o.paymentStatus === 'Unpaid' ? 'text-danger' : 'text-success'}">${o.paymentStatus === 'Unpaid' ? 'Belum Lunas' : 'Lunas'}</span></span></div>
+                <div class="flex justify-between gap-2 items-center"><span class="text-gray-600">Metode</span><span class="text-right"><span class="px-2 py-0.5 text-[10px] font-bold ${badgeColor}">${om.label}</span> <span class="text-[10px] font-bold ${o.paymentStatus === 'Unpaid' ? 'text-danger' : 'text-success'}">${o.paymentStatus === 'Unpaid' ? 'Belum Lunas' : 'Lunas'}</span>${om.sub ? `<span class="block text-[9px] text-gray-500">${escapeHTML(om.sub)}</span>` : ''}</span></div>
                 ${o.type === 'Hutang' && custName ? `<div class="flex justify-between gap-2"><span class="text-gray-600">Pelanggan</span><span class="font-bold text-right break-words">${escapeHTML(custName)}</span></div>` : ''}
                 <div class="border-t border-line pt-1.5">${(o.items || []).map(i => `<div class="flex justify-between gap-2"><span>${i.qty}x ${escapeHTML(i.name)}</span><span class="whitespace-nowrap">${formatWon(i.price * i.qty)}</span></div>`).join('')}${(o.bonusItems || []).map(b => `<div class="flex justify-between gap-2"><span>${b.qty}x ${escapeHTML(b.name)} (Bonus)</span><span>${formatWon(0)}</span></div>`).join('')}${(o.extras || []).map(x => `<div class="flex justify-between gap-2"><span>+ ${escapeHTML(x.name)}</span><span class="whitespace-nowrap">${formatWon(x.amount)}</span></div>`).join('')}</div>
                 ${o.notes ? `<div class="bg-gray-100 border border-line p-1.5 italic break-words whitespace-pre-wrap">Catatan: ${escapeHTML(o.notes)}</div>` : ''}
@@ -6593,6 +6683,7 @@ measurementId: "G-ZVZ3QHEPKC"
         document.getElementById('setShiftRequired').checked = Boolean(STATE.data.settings.shiftRequired);
         document.getElementById('setPublicHistoryEnabled').checked = Boolean(STATE.data.settings.publicHistoryEnabled);
         document.getElementById('setBarcodeEnabled').checked = Boolean(STATE.data.settings.barcodeEnabled);
+        document.getElementById('setScanBaseUrl').value = STATE.data.settings.scanBaseUrl || '';
 
         STATE.tempOrderAlarmBase64 = STATE.data.settings.orderAlarmAudio || '';
         const orderAlarmInput = document.getElementById('setOrderAlarmFile');
@@ -6680,7 +6771,8 @@ measurementId: "G-ZVZ3QHEPKC"
             shift_enabled: document.getElementById('setShiftEnabled').checked,
             shift_required: document.getElementById('setShiftRequired').checked,
             public_history_enabled: document.getElementById('setPublicHistoryEnabled').checked,
-            barcode_enabled: document.getElementById('setBarcodeEnabled').checked
+            barcode_enabled: document.getElementById('setBarcodeEnabled').checked,
+            scan_base_url: window.normScanBaseUrl(document.getElementById('setScanBaseUrl').value)
         };
         // Password admin hanya ikut disimpan/di-hash kalau kolomnya benar-benar diisi ulang.
         // Kalau dikosongkan, password lama (hash-nya) tidak disentuh sama sekali.
@@ -6737,6 +6829,7 @@ measurementId: "G-ZVZ3QHEPKC"
                 shiftRequired: payload.shift_required,
                 publicHistoryEnabled: payload.public_history_enabled,
                 barcodeEnabled: payload.barcode_enabled,
+                scanBaseUrl: payload.scan_base_url,
                 scheduleOpenEnabled: payload.schedule_open_enabled,
                 scheduleOpenDateTime: payload.schedule_open_datetime,
                 scheduleCloseEnabled: payload.schedule_close_enabled,
@@ -6788,6 +6881,7 @@ measurementId: "G-ZVZ3QHEPKC"
     
     window.closeModal = id => { 
         document.getElementById(id).classList.add('d-none'); 
+        if (id === 'modalAiScan' && window.aiStopCamera) window.aiStopCamera();
         if(id === 'modalAddProduct') { 
             if (STATE.prodCam && STATE.prodCam.stream) window.closeProductCamera();
             document.getElementById('prodId').value = ''; 
@@ -7503,12 +7597,12 @@ measurementId: "G-ZVZ3QHEPKC"
         }
         if (mobileBox) mobileBox.innerHTML = list.map(o => window.buildHistoryMobileCard(o, `<button onclick="window.showReceiptPopup('${o.id}')" class="ui-btn bg-accent border border-line px-3 py-1 text-[10px]">Nota</button>`)).join('');
         tbody.innerHTML = list.map(o => {
-            const badge = o.type === 'Hutang' ? 'bg-danger text-white' : (o.type === 'Transfer' ? 'bg-accent text-black' : (o.type === 'Kartu' ? 'bg-blue-600 text-white' : 'bg-black text-white'));
+            const om = window.orderMethod(o); const badge = om.cls;
             return `<tr class="border-b border-line hover:bg-yellow-50">
                 <td class="p-2 border-r border-line text-xs md:text-sm">${safeDate(o.date)}</td>
                 <td class="p-2 border-r border-line text-[10px] md:text-xs">${o.id}</td>
                 <td class="p-2 border-r border-line text-xs">${(o.items || []).map(i => `${i.qty}x ${escapeHTML(i.name)}`).concat((o.extras || []).map(x => `+ ${escapeHTML(x.name)} (${formatWon(x.amount)})`)).join('<br>')}</td>
-                <td class="p-2 border-r border-line text-center"><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold ${badge}">${o.type}</span><br><span class="text-[9px] md:text-[10px] ${o.paymentStatus === 'Unpaid' ? 'text-danger' : 'text-success'}">${o.paymentStatus === 'Unpaid' ? 'Belum Lunas' : 'Lunas'}</span></td>
+                <td class="p-2 border-r border-line text-center"><span class="px-2 py-1 text-[9px] md:text-[10px] font-bold ${badge}">${om.label}</span><br><span class="text-[9px] md:text-[10px] ${o.paymentStatus === 'Unpaid' ? 'text-danger' : 'text-success'}">${o.paymentStatus === 'Unpaid' ? 'Belum Lunas' : 'Lunas'}</span>${om.sub ? `<br><span class="text-[9px] text-gray-500">${escapeHTML(om.sub)}</span>` : ''}</td>
                 <td class="p-2 border-r border-line font-bold text-sm">${formatWon(o.total)}</td>
                 <td class="p-2 text-center"><button onclick="window.showReceiptPopup('${o.id}')" class="ui-btn bg-accent border border-line px-3 py-1 text-[10px] w-full">Nota</button></td>
             </tr>`;
@@ -7795,9 +7889,10 @@ measurementId: "G-ZVZ3QHEPKC"
 
     // Proses satu kode hasil scan: tambah ke keranjang POS. Mengembalikan true jika berhasil.
     window.handleScannedCode = async (code, source) => {
-        const c = normBarcode(code);
+        const forced = source === 'ai' && code && typeof code === 'object' ? code : null;
+        const c = forced ? String(forced.id) : normBarcode(code);
         if (!c) return false;
-        const match = window.findBarcodeMatch(c);
+        const match = forced ? { p: forced, variant: null, variantIdx: -1 } : window.findBarcodeMatch(c);
         const p = match ? match.p : null;
         if (!p) {
             scanBeep(false);
@@ -7864,6 +7959,11 @@ measurementId: "G-ZVZ3QHEPKC"
         if (after <= before) { scanBeep(false); return false; }
         scanBeep(true);
         showScanToast(`✔ ${p.name} (${after}x)`, true);
+        if (source === 'ai') {
+            const al = document.getElementById('aiLog');
+            document.getElementById('aiLogWrap').classList.remove('d-none');
+            al.insertAdjacentHTML('afterbegin', `<div class="flex justify-between gap-2 text-xs border-b border-line pb-1"><span class="font-bold truncate">${escapeHTML(p.name)}</span><span class="whitespace-nowrap">${formatWon(p.price)} · ${after}x</span></div>`);
+        }
         if (source === 'camera') {
             document.getElementById('scanStatus').textContent = `✔ ${p.name} ditambahkan (${after}x) — scan berikutnya…`;
             const log = document.getElementById('scanLog');
@@ -7932,6 +8032,213 @@ measurementId: "G-ZVZ3QHEPKC"
         sc.onerror = () => reject(new Error('Pustaka scanner gagal dimuat. Periksa koneksi internet.'));
         document.head.appendChild(sc);
     });
+
+    // ======================================================= //
+    // SCAN TANPA BARCODE (AI GAMBAR)
+    // Mengenali produk dari kamera dengan membandingkan gambar produk yang sudah diunggah di setiap produk.
+    // Seluruhnya berjalan di perangkat (tanpa internet / tanpa unduh model): warna (HSV), tata letak warna & pola tepi.
+    // Hasil berupa kandidat paling mirip -> ketuk untuk menambahkan ke keranjang (anti salah scan).
+    // ======================================================= //
+    const AI = { N: 48, ref: new Map(), ready: false, building: null, stream: null, timer: null, scores: new Map(), facing: 'environment', busy: false };
+    const aiCv = document.createElement('canvas'); aiCv.width = aiCv.height = AI.N;
+    const aiCx = aiCv.getContext('2d', { willReadFrequently: true });
+
+    // Vektor ciri dari area (sx,sy,sw,sh) sumber gambar/video -> {h, l, g}
+    window.aiFeatures = (src, sx, sy, sw, sh) => {
+        const N = AI.N;
+        aiCx.fillStyle = '#fff'; aiCx.fillRect(0, 0, N, N);
+        aiCx.drawImage(src, sx, sy, sw, sh, 0, 0, N, N);
+        const d = aiCx.getImageData(0, 0, N, N).data;
+        // gray-world: samakan pencahayaan/white balance
+        let mr = 0, mg = 0, mb = 0;
+        for (let i = 0; i < d.length; i += 4) { mr += d[i]; mg += d[i + 1]; mb += d[i + 2]; }
+        const px = N * N; mr /= px; mg /= px; mb /= px;
+        const mm = (mr + mg + mb) / 3 || 1;
+        const kr = Math.min(1.6, Math.max(0.6, mm / (mr || 1))), kg = Math.min(1.6, Math.max(0.6, mm / (mg || 1))), kb = Math.min(1.6, Math.max(0.6, mm / (mb || 1)));
+        const H = new Float32Array(28), L = new Float32Array(27), gray = new Float32Array(px);
+        const cell = new Float32Array(9 * 3), cellN = new Float32Array(9);
+        let hs = 0;
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+            const i = (y * N + x) * 4;
+            let r = Math.min(255, d[i] * kr) / 255, g = Math.min(255, d[i + 1] * kg) / 255, b = Math.min(255, d[i + 2] * kb) / 255;
+            gray[y * N + x] = 0.299 * r + 0.587 * g + 0.114 * b;
+            const dx = (x - N / 2 + 0.5) / (N / 2), dy = (y - N / 2 + 0.5) / (N / 2);
+            const w = Math.max(0.15, 1 - 0.55 * (dx * dx + dy * dy)); // bagian tengah lebih berbobot
+            const mx = Math.max(r, g, b), mn = Math.min(r, g, b), df = mx - mn;
+            const s = mx === 0 ? 0 : df / mx;
+            if (s < 0.22 || mx < 0.15) { H[24 + Math.min(3, Math.floor(mx * 4))] += w * 0.6; }
+            else {
+                let h = mx === r ? ((g - b) / df) % 6 : (mx === g ? (b - r) / df + 2 : (r - g) / df + 4);
+                h = (h * 60 + 360) % 360;
+                H[Math.floor(h / 30) % 12 + (s > 0.55 ? 12 : 0)] += w;
+            }
+            hs += w;
+            const c = Math.min(2, Math.floor(x / (N / 3))) + 3 * Math.min(2, Math.floor(y / (N / 3)));
+            cell[c * 3] += r; cell[c * 3 + 1] += g; cell[c * 3 + 2] += b; cellN[c]++;
+        }
+        let sum = 0; for (let i = 0; i < 28; i++) sum += H[i]; sum = sum || 1;
+        for (let i = 0; i < 28; i++) H[i] = Math.sqrt(H[i] / sum);
+        for (let c = 0; c < 9; c++) for (let k = 0; k < 3; k++) L[c * 3 + k] = cell[c * 3 + k] / (cellN[c] || 1);
+        // HOG ringan: 2x2 sel x 8 arah
+        const G = new Float32Array(32);
+        for (let y = 1; y < N - 1; y++) for (let x = 1; x < N - 1; x++) {
+            const gx = gray[y * N + x + 1] - gray[y * N + x - 1], gy = gray[(y + 1) * N + x] - gray[(y - 1) * N + x];
+            const mag = Math.sqrt(gx * gx + gy * gy); if (mag < 0.02) continue;
+            let a = Math.atan2(gy, gx); if (a < 0) a += Math.PI;
+            const bin = Math.min(7, Math.floor(a / Math.PI * 8));
+            G[((y < N / 2 ? 0 : 1) * 2 + (x < N / 2 ? 0 : 1)) * 8 + bin] += mag;
+        }
+        let gn = 0; for (let i = 0; i < 32; i++) gn += G[i] * G[i]; gn = Math.sqrt(gn) || 1;
+        for (let i = 0; i < 32; i++) G[i] /= gn;
+        return { h: H, l: L, g: G };
+    };
+    const aiCos = (a, b) => { let s = 0, na = 0, nb = 0; for (let i = 0; i < a.length; i++) { s += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; } return s / (Math.sqrt(na * nb) || 1); };
+    window.aiSimilarity = (a, b) => {
+        const sh = aiCos(a.h, b.h);
+        let dist = 0; for (let i = 0; i < 27; i++) { const t = a.l[i] - b.l[i]; dist += t * t; }
+        const sl = 1 - Math.min(1, Math.sqrt(dist / 27) * 2.2);
+        const sg = aiCos(a.g, b.g);
+        return 0.5 * sh + 0.28 * sl + 0.22 * sg;
+    };
+
+    const aiLoadImg = (url) => new Promise((res, rej) => {
+        const im = new Image();
+        if (!/^data:/.test(url)) im.crossOrigin = 'anonymous';
+        im.onload = () => res(im); im.onerror = () => rej(new Error('img'));
+        im.src = url;
+    });
+    // Beberapa potongan per gambar produk (penuh, tengah 80%, tengah 60%) supaya tahan perbedaan jarak/zoom.
+    window.aiRefFromImage = (im) => {
+        const w = im.naturalWidth || im.width, h = im.naturalHeight || im.height, m = Math.min(w, h);
+        return [1, 0.8, 0.6].map(f => { const s = m * f; return window.aiFeatures(im, (w - s) / 2, (h - s) / 2, s, s); });
+    };
+    const aiSig = p => String(p.img.length) + ':' + p.img.slice(-32);
+    // Cache ciri di IndexedDB agar tidak dihitung ulang tiap buka.
+    const aiDb = () => new Promise(res => {
+        try { const r = indexedDB.open('sbmart_ai', 1); r.onupgradeneeded = () => r.result.createObjectStore('f'); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch (e) { res(null); }
+    });
+    const aiIdb = (db, mode, fn) => new Promise(res => { if (!db) return res(null); try { const tx = db.transaction('f', mode); const rq = fn(tx.objectStore('f')); tx.oncomplete = () => res(rq ? rq.result : null); tx.onerror = () => res(null); } catch (e) { res(null); } });
+
+    window.aiBuildIndex = async (onProgress) => {
+        if (AI.building) return AI.building;
+        AI.building = (async () => {
+            const prods = (STATE.data.products || []).filter(p => p && p.img && String(p.img).length > 20);
+            const db = await aiDb();
+            const keep = new Set(); let done = 0, bad = 0;
+            for (const p of prods) {
+                keep.add(p.id);
+                const sig = aiSig(p), cur = AI.ref.get(p.id);
+                if (!(cur && cur.sig === sig)) {
+                    let rec = await aiIdb(db, 'readonly', st => st.get(p.id));
+                    if (!(rec && rec.sig === sig && rec.v)) {
+                        try { rec = { sig, v: window.aiRefFromImage(await aiLoadImg(p.img)) }; await aiIdb(db, 'readwrite', st => st.put(rec, p.id)); }
+                        catch (e) { rec = null; bad++; }
+                    }
+                    if (rec) AI.ref.set(p.id, rec); else AI.ref.delete(p.id);
+                }
+                done++;
+                if (onProgress && done % 3 === 0) { onProgress(done, prods.length); await new Promise(r => setTimeout(r, 0)); }
+            }
+            [...AI.ref.keys()].forEach(k => { if (!keep.has(k)) AI.ref.delete(k); });
+            AI.ready = true; AI.bad = bad; AI.total = (STATE.data.products || []).length; AI.withImg = prods.length;
+            if (onProgress) onProgress(prods.length, prods.length);
+        })().finally(() => { AI.building = null; });
+        return AI.building;
+    };
+
+    // Urutan kandidat untuk satu frame (skor dirata-ratakan antar frame agar stabil)
+    window.aiRank = (feat, smooth) => {
+        const out = [];
+        AI.ref.forEach((rec, pid) => {
+            let best = 0; for (const r of rec.v) { const s = window.aiSimilarity(feat, r); if (s > best) best = s; }
+            if (smooth) { const prev = AI.scores.get(pid); best = prev === undefined ? best : prev * 0.4 + best * 0.6; AI.scores.set(pid, best); }
+            out.push({ pid, score: best });
+        });
+        return out.sort((a, b) => b.score - a.score);
+    };
+
+    const aiEl = id => document.getElementById(id);
+    const aiStatus = (t) => { const e = aiEl('aiStatus'); if (e) e.textContent = t; };
+    window.aiRenderCands = (ranked) => {
+        const box = aiEl('aiCands'); if (!box) return;
+        const top = ranked.slice(0, 4);
+        if (!top.length) { box.innerHTML = ''; return; }
+        const gap = top.length > 1 ? top[0].score - top[1].score : 1;
+        STATE.aiTop = top.map(t => t.pid);
+        box.innerHTML = top.map((t, i) => {
+            const p = STATE.data.products.find(x => x.id === t.pid); if (!p) return '';
+            const pct = Math.max(1, Math.min(99, Math.round((t.score - 0.35) / 0.6 * 100)));
+            const sure = i === 0 && t.score >= 0.78 && gap >= 0.04;
+            const off = !p.available;
+            return `<button type="button" class="ai-cand${i === 0 ? ' is-top' : ''}${sure ? ' is-sure' : ''}${off ? ' is-off' : ''}" onclick="window.aiPick('${p.id}')" ${off ? 'data-off="1"' : ''}>
+                <img src="${escapeHTML(p.img || '')}" alt="">
+                <span class="ai-cand-info"><span class="ai-cand-name">${escapeHTML(p.name)}</span><span class="ai-cand-sub">${off ? 'Stok habis / tidak tersedia' : formatWon(p.price)}</span></span>
+                <span class="ai-cand-pct">${sure ? '✔ ' : ''}${pct}%</span>
+            </button>`;
+        }).join('');
+        aiStatus(top[0] && top[0].score >= 0.78 && gap >= 0.04 ? 'Produk terdeteksi — ketuk untuk menambahkan' : 'Arahkan produk ke tengah bingkai (latar polos lebih akurat)');
+    };
+
+    window.aiPick = async (pid) => {
+        const p = STATE.data.products.find(x => x.id === pid); if (!p) return;
+        const ok = await window.handleScannedCode(p, 'ai');
+        if (ok) { AI.scores.clear(); }
+    };
+    window.aiPickBest = () => { if (STATE.aiTop && STATE.aiTop[0]) window.aiPick(STATE.aiTop[0]); };
+
+    window.aiTick = async () => {
+        const v = aiEl('aiVideo');
+        if (AI.busy || !v || !v.videoWidth || !AI.ready) return;
+        AI.busy = true;
+        try {
+            const w = v.videoWidth, h = v.videoHeight, s = Math.min(w, h) * 0.62;
+            const feat = window.aiFeatures(v, (w - s) / 2, (h - s) / 2, s, s);
+            window.aiRenderCands(window.aiRank(feat, true));
+        } catch (e) { /* abaikan frame */ }
+        AI.busy = false;
+    };
+
+    window.openAiScanner = async () => {
+        aiEl('aiCands').innerHTML = '';
+        aiEl('aiLog').innerHTML = ''; aiEl('aiLogWrap').classList.add('d-none');
+        AI.scores.clear(); STATE.aiTop = [];
+        window.openModal('modalAiScan');
+        aiStatus('Menyiapkan kamera…');
+        try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('Kamera tidak didukung browser ini.');
+            await window.aiStartCamera();
+        } catch (e) {
+            aiStatus(/Permission|NotAllowed/i.test(String(e && e.message || e)) ? '❌ Izin kamera ditolak. Izinkan kamera di pengaturan browser.' : '❌ Kamera tidak dapat dibuka. (' + (e && e.message || e) + ')');
+        }
+        const withImg = (STATE.data.products || []).filter(p => p.img && String(p.img).length > 20).length;
+        if (!withImg) { aiStatus('Belum ada produk yang punya gambar. Tambahkan gambar produk di menu Produk.'); return; }
+        const prep = aiEl('aiPrep');
+        prep.classList.remove('d-none');
+        await window.aiBuildIndex((d, t) => { prep.textContent = `Mempelajari gambar produk… ${d}/${t}`; });
+        prep.classList.add('d-none');
+        if (!STATE.aiOpen) return;
+        aiStatus(AI.ref.size ? 'Arahkan produk ke tengah bingkai…' : 'Gambar produk tidak dapat dibaca.');
+    };
+    window.aiStartCamera = async () => {
+        window.aiStopCamera(true);
+        STATE.aiOpen = true;
+        const st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: AI.facing }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+        AI.stream = st;
+        const v = aiEl('aiVideo'); v.srcObject = st; v.muted = true; v.setAttribute('playsinline', '');
+        try { await v.play(); } catch (e) {}
+        AI.timer = setInterval(window.aiTick, 450);
+    };
+    window.aiStopCamera = (keepOpen) => {
+        if (AI.timer) { clearInterval(AI.timer); AI.timer = null; }
+        if (AI.stream) { AI.stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} }); AI.stream = null; }
+        const v = aiEl('aiVideo'); if (v) v.srcObject = null;
+        if (!keepOpen) STATE.aiOpen = false;
+    };
+    window.aiSwitchCamera = async () => {
+        AI.facing = AI.facing === 'environment' ? 'user' : 'environment';
+        try { await window.aiStartCamera(); } catch (e) { aiStatus('❌ Gagal berganti kamera'); }
+    };
+    window.closeAiScanner = () => { window.aiStopCamera(); window.closeModal('modalAiScan'); };
 
     window.openBarcodeScanner = async (mode, targetInput) => {
         STATE.scanMode = mode === 'field' ? 'field' : 'pos';
@@ -9417,7 +9724,7 @@ measurementId: "G-ZVZ3QHEPKC"
             r.count++;
             const total = Number(o.total || 0);
             if (o.type === 'Hutang' && o.paymentStatus === 'Unpaid') { r.unpaid += Math.max(0, total - Number(o.debtPaid || 0)); return; }
-            const key = o.type === 'Hutang' ? 'Hutang (lunas)' : (o.type || 'Lainnya');
+            const key = o.type === 'Hutang' ? (o.payMethod || 'Hutang (lunas)') : (o.type || 'Lainnya');
             r.by[key] = (r.by[key] || 0) + total;
             r.amount += total;
         });
@@ -10479,7 +10786,18 @@ measurementId: "G-ZVZ3QHEPKC"
     const genScanId = () => { const a = new Uint8Array(6); crypto.getRandomValues(a); return Array.from(a).map(b => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join(''); };
     const scanRefs = (id) => db ? [db.collection('scan_sessions').doc(id), db.collection('settings').doc('scan_' + id)] : [];
     const getRemoteSession = () => { try { return JSON.parse(localStorage.getItem(REMOTE_KEY) || 'null'); } catch (e) { return null; } };
-    const scanLink = (id) => location.href.split('#')[0].split('?')[0] + '?scan=' + id;
+    // Alamat link QR HP scanner: memakai "Alamat aplikasi" di Pengaturan (domain sendiri) bila diisi,
+    // selain itu alamat yang sedang dibuka di perangkat kasir.
+    window.normScanBaseUrl = (v) => {
+        let u = String(v || '').trim();
+        if (!u) return '';
+        if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+        try { const x = new URL(u); if (!/^https?:$/.test(x.protocol) || !x.hostname.includes('.')) return ''; return (x.origin + x.pathname).replace(/\/+$/, ''); } catch (e) { return ''; }
+    };
+    const scanLink = (id) => {
+        const base = window.normScanBaseUrl(STATE.data.settings.scanBaseUrl);
+        return (base ? base + '/' : location.href.split('#')[0].split('?')[0]) + '?scan=' + id;
+    };
 
     window.ensureRemoteSession = async (forceNew) => {
         let ses = getRemoteSession();
